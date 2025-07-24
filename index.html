@@ -1,10 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="https://raw.githubusercontent.com/widbuntu/vbdb-info/a40c20dac184df3f495587843e59a83ad91cf5c8/assets/favicon.svg">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="https://raw.githubusercontent.com/widbuntu/vbdb-info/a40c20dac184df3f495587843e59a83ad91cf5c8/assets/favicon.svg"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VBDB</title>
+    <!-- Start Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // https://github.com/rafgraph/spa-github-pages
+      // Copyright (c) 2016 Rafael Pedicini, licensed under the MIT License
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
+    <!-- End Single Page Apps for GitHub Pages -->
   </head>
   <body>
     <div id="app"></div>
