@@ -36,12 +36,12 @@ export default {
             <CCCAANews />
           </v-col>
         </div>
-        <!-- <v-col cols="12" sm="6" md="4">
-            <NCAANews division="d2" />
-          </v-col>
-          <v-col cols="12" sm="12" md="4">
-            <NCAANews division="d3" />
-          </v-col> -->
+        <v-col cols="12" sm="6" md="4">
+          <NCAANews division="d2" />
+        </v-col>
+        <v-col cols="12" sm="12" md="4">
+          <NCAANews division="d3" />
+        </v-col>
       </v-col>
 
       <!-- Rankings sidebar -->

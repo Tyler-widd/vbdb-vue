@@ -129,16 +129,21 @@ fetchRSSFeed();
 </script>
 <template>
   <v-card>
-    <v-card-title class="text-h6 d-flex align-center">
-      NAIA
-    </v-card-title>
+    <v-card-title class="text-h6 d-flex align-center"> NAIA </v-card-title>
     <v-card-text v-if="latestItem">
       <div v-if="latestItem.image">
         <v-img :src="latestItem.image" cover height="250" />
         <v-card-title class="pa-0 text-wrap">
           {{ latestItem.title }}
-          <v-btn :href="latestItem.link" class="text-body-1 font-weight-regular" rounded target="_blank" color="primary"
-            variant="text" density="compact">
+          <v-btn
+            :href="latestItem.link"
+            class="text-body-1 font-weight-regular"
+            rounded
+            target="_blank"
+            color="primary"
+            variant="text"
+            density="compact"
+          >
             Read More
           </v-btn>
         </v-card-title>

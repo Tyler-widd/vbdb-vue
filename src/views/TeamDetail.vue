@@ -1,14 +1,12 @@
 <!-- views/TeamDetail.vue -->
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import Header from "./TeamDetail/Header.vue";
 import ScoreCard from "./TeamDetail/ScoreCard.vue";
-import apiService from "../services/apiService.js";
 
 // Get route and router instances
 const route = useRoute();
-const router = useRouter();
 
 // Props from route params
 const props = defineProps({
@@ -33,28 +31,6 @@ const loading = ref(false);
 const error = ref(null);
 const selectedYear = ref("All");
 const teamRecord = ref("");
-
-// Parallel fetch for team data and games
-const fetchTeamData = async (teamId) => {
-  loading.value = true;
-  error.value = null;
-
-  try {
-    // Fetch both in parallel
-    const [teamData, gamesData] = await Promise.all([
-      apiService.getTeam(teamId),
-      apiService.getTeamGames(teamId),
-    ]);
-
-    teamRecords.value = teamData;
-    teamHistoryRecords.value = gamesData;
-  } catch (err) {
-    console.error("Error fetching team data:", err);
-    error.value = "Failed to load team data";
-  } finally {
-    loading.value = false;
-  }
-};
 
 // Computed property to get unique years for dropdown
 const availableYears = computed(() => {
