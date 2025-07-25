@@ -144,14 +144,8 @@ const emitFilterChange = () => {
           :items="allDivisions"
           :loading="loading"
           prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          rounded
-          flat
           label="Division"
-          hide-details
           :class="smAndDown ? 'mb-2' : 'mb-2 mr-2'"
-          density="compact"
-          clearable
           @update:model-value="onDivisionChange"
         />
       </v-col>

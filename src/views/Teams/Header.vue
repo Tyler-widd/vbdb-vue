@@ -1,6 +1,9 @@
 <!-- Teams/Header.vue -->
 <script setup>
 import { computed } from "vue";
+import { useSchoolsStore } from "@/composables/useSchoolsStore";
+
+const { getDivisions } = useSchoolsStore();
 
 // Define props to receive data from parent
 const props = defineProps({
@@ -32,9 +35,7 @@ const props = defineProps({
 
 // Get unique divisions from schools data
 const divisionItems = computed(() => {
-  return [...new Set(props.schools.map((school) => school.division))]
-    .filter(Boolean)
-    .sort();
+  return getDivisions();
 });
 
 // Define emits to communicate with parent
@@ -54,7 +55,7 @@ const onAutocompleteUpdate = (value) => {
 const onSearchUpdate = (value) => {
   emit("update:searchQuery", value);
   if (!value) {
-    emit("update:selectedSchool", null); // Clear selection when search is cleared
+    emit("update:selectedSchool", null);
   }
 };
 

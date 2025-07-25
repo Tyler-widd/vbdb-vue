@@ -351,15 +351,7 @@ onMounted(() => {
   <div class="d-flex justify-space-between align-center mb-4">
     <div class="d-flex align-center">
       <span class="text-body-2 mr-3">Items per page:</span>
-      <v-select
-        v-model="itemsPerPage"
-        :items="paginationOptions"
-        variant="outlined"
-        rounded
-        density="compact"
-        hide-details
-        style="max-width: 100px"
-      />
+      <v-select v-model="itemsPerPage" :items="paginationOptions" />
     </div>
 
     <div v-if="games.length > 0" class="text-body-2 text-grey">
@@ -373,9 +365,6 @@ onMounted(() => {
     :items-per-page="-1"
     :loading="loading"
     :sort-by="[{ key: 'date', order: 'desc' }]"
-    class="rounded-lg"
-    density="compact"
-    hide-default-footer
   >
     <!-- Date column -->
     <template v-slot:item.date="{ item }">

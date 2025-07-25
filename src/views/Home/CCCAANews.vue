@@ -5,7 +5,8 @@ const loading = ref(false);
 const error = ref(null);
 const latestItem = ref(null);
 
-const RSS_URL = "https://3c2asports.org/sports/wvball/headlines-featured?feed=rss_2.0";
+const RSS_URL =
+  "https://3c2asports.org/sports/wvball/headlines-featured?feed=rss_2.0";
 
 // CORS proxy
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";
@@ -51,7 +52,7 @@ const fetchRSSFeed = async () => {
       guid: getTextContent(firstItem, "guid"),
       // Get image from enclosure or media:content
       image: getImageUrl(firstItem),
-      category: "3C2A Women's Volleyball" // Default since this RSS doesn't have category per item
+      category: "3C2A Women's Volleyball", // Default since this RSS doesn't have category per item
     };
   } catch (err) {
     console.error("Error fetching RSS feed:", err);
@@ -70,13 +71,13 @@ const getTextContent = (parent, tagName) => {
 // Get image URL from enclosure or media:content elements
 const getImageUrl = (item) => {
   let imageUrl = null;
-  
+
   // Try to get from enclosure first
   const enclosure = item.querySelector("enclosure");
   if (enclosure && enclosure.getAttribute("url")) {
     imageUrl = enclosure.getAttribute("url");
   }
-  
+
   // Try to get from media:content if enclosure didn't work
   if (!imageUrl) {
     const mediaContent = item.querySelector("media\\:content, content");
@@ -84,25 +85,25 @@ const getImageUrl = (item) => {
       imageUrl = mediaContent.getAttribute("url");
     }
   }
-  
+
   // If we found an image URL, modify the dimensions
   if (imageUrl) {
     // Create URL object to easily manipulate query parameters
     try {
       const url = new URL(imageUrl);
-      
+
       // Update the max_width and max_height parameters
-      url.searchParams.set('max_width', '660');
-      url.searchParams.set('max_height', '620');
-      
+      url.searchParams.set("max_width", "660");
+      url.searchParams.set("max_height", "620");
+
       return url.toString();
     } catch (error) {
       // If URL parsing fails, return original URL
-      console.warn('Failed to parse image URL:', error);
+      console.warn("Failed to parse image URL:", error);
       return imageUrl;
     }
   }
-  
+
   return null;
 };
 
@@ -129,25 +130,30 @@ fetchRSSFeed();
 
 <template>
   <v-card>
-    <v-card-title class="text-h6 d-flex align-center">
-      CCCAA
-    </v-card-title>
-        <v-card-text v-if="latestItem">
-          <div v-if="latestItem.image">
-            <v-img :src="latestItem.image" cover height="250"/>
-            <v-card-title class="pa-0 text-wrap">
-              {{ latestItem.title }}
-              <v-btn :href="latestItem.link" class="text-body-1 font-weight-regular" rounded target="_blank"
-                color="primary" variant="text" density="compact">
-                Read More
-              </v-btn>
-            </v-card-title>
-            <v-card-subtitle>
-              <span class="text-caption">
-                Published: {{ formatDate(latestItem.pubDate) }}
-              </span>
-            </v-card-subtitle>
-          </div>
-        </v-card-text>
+    <v-card-title class="text-h6 d-flex align-center"> CCCAA </v-card-title>
+    <v-card-text v-if="latestItem">
+      <div v-if="latestItem.image">
+        <v-img :src="latestItem.image" cover height="250" />
+        <v-card-title class="pa-0 text-wrap">
+          {{ latestItem.title }}
+          <v-btn
+            :href="latestItem.link"
+            class="text-body-1 font-weight-regular"
+            rounded
+            target="_blank"
+            color="primary"
+            variant="text"
+            density="compact"
+          >
+            Read More
+          </v-btn>
+        </v-card-title>
+        <v-card-subtitle>
+          <span class="text-caption">
+            Published: {{ formatDate(latestItem.pubDate) }}
+          </span>
+        </v-card-subtitle>
+      </div>
+    </v-card-text>
   </v-card>
 </template>

@@ -23,8 +23,8 @@ const RSS_URL = computed(() => {
 // Division display names
 const divisionNames = {
   d1: "Division I",
-  // 'd2': 'Division II',
-  // 'd3': 'Division III'
+  d2: "Division II",
+  d3: "Division III",
 };
 
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";

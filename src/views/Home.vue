@@ -1,20 +1,25 @@
 <!-- views/Home.vue -->
 <script>
+import { ref, onMounted } from "vue";
 import RankingSection from "./Home/RankingSection.vue";
 import TodaysScores from "./Home/TodaysScores.vue";
 import NCAANews from "./Home/NCAANews.vue";
-import NAIANews from "./Home/NAIANews.vue";
+// import NAIANews from "./Home/NAIANews.vue";
 import CCCAANews from "./Home/CCCAANews.vue";
 
 export default {
   components: {
     NCAANews,
-    NAIANews,
+    // NAIANews,
     CCCAANews,
     RankingSection,
     TodaysScores,
   },
 };
+
+onMounted(() => {
+  fetchTeamData();
+});
 </script>
 
 <template>
@@ -36,12 +41,12 @@ export default {
             <CCCAANews />
           </v-col>
         </div>
-        <v-col cols="12" sm="6" md="4">
+        <!-- <v-col cols="12" sm="6" md="4">
           <NCAANews division="d2" />
         </v-col>
         <v-col cols="12" sm="12" md="4">
           <NCAANews division="d3" />
-        </v-col>
+        </v-col> -->
       </v-col>
 
       <!-- Rankings sidebar -->

@@ -1,38 +1,29 @@
-<!-- views/Teams.vue -->
+<!-- views/Teams.vue - Fixed -->
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import Header from "./Teams/Header.vue";
 import TeamsTable from "./Teams/TeamsTable.vue";
 
-// Reactive data
-const schools = ref([]);
-const loading = ref(false);
+import { useSchoolsStore } from "@/composables/useSchoolsStore";
+
+// Get schools store
+const { schools, loading, error, fetchSchools, getConferences } =
+  useSchoolsStore();
+
+// Local filter states
 const selectedSchool = ref(null);
 const searchQuery = ref("");
 const selectedDivision = ref(null);
 const selectedConference = ref(null);
 
-// Computed unique conferences based on selected division
+onMounted(() => {
+  fetchSchools();
+});
+
+// Fix: Use selectedDivision.value instead of props.selectedDivision
 const filteredConferences = computed(() => {
-  let conferences;
-
-  if (!selectedDivision.value) {
-    // If no division selected, return all unique conferences
-    conferences = [
-      ...new Set(schools.value.map((school) => school.conference)),
-    ].filter(Boolean); // Remove null/undefined values
-  } else {
-    // Filter conferences by selected division
-    conferences = [
-      ...new Set(
-        schools.value
-          .filter((school) => school.division === selectedDivision.value)
-          .map((school) => school.conference)
-      ),
-    ].filter(Boolean); // Remove null/undefined values
-  }
-
-  return conferences.sort().map((conf) => ({ title: conf, value: conf }));
+  const conferences = getConferences(selectedDivision.value);
+  return conferences.map((conf) => ({ title: conf, value: conf }));
 });
 
 // Computed filtered schools based on all filters
@@ -72,20 +63,13 @@ const filteredSchools = computed(() => {
   return filtered;
 });
 
-// Watch for division changes to clear conference if it's no longer valid
+// Also simplify this function to use the store method
 const handleDivisionChange = (newDivision) => {
   selectedDivision.value = newDivision;
 
-  // Clear conference if it's not available in the new division
+  // Use store method instead of manual calculation
   if (selectedConference.value && newDivision) {
-    const availableConferences = [
-      ...new Set(
-        schools.value
-          .filter((school) => school.division === newDivision)
-          .map((school) => school.conference)
-      ),
-    ];
-
+    const availableConferences = getConferences(newDivision); // ← Simplified this
     if (!availableConferences.includes(selectedConference.value)) {
       selectedConference.value = null;
     }
