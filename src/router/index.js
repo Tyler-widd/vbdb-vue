@@ -19,12 +19,14 @@ const routes = [
   {
     path: "/teams",
     name: "Teams",
-    component: Teams,
+    component: () =>
+      import(/* webpackChunkName: "teams" */ "@/views/Teams.vue"),
   },
   {
     path: "/teams/:id",
     name: "TeamDetail",
-    component: TeamDetail,
+    component: () =>
+      import(/* webpackChunkName: "team-detail" */ "@/views/TeamDetail.vue"),
     props: true,
   },
   {

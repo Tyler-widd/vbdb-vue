@@ -2,13 +2,14 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import { useDisplay } from "vuetify";
+import { debounce } from "@/utils/debounce";
 
 const emit = defineEmits(["filter-change"]);
 
 const { smAndDown } = useDisplay();
 
 // API base URL - adjust this to your API URL
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://api.volleyballdatabased.com";
 
 // Data refs
 const allGames = ref([]);
@@ -32,6 +33,11 @@ const divisions = computed(() => {
     .sort()
     .map((div) => ({ title: div, value: div }));
 });
+
+// Debounce the filter change
+const debouncedEmitFilterChange = debounce(() => {
+  emitFilterChange();
+}, 300);
 
 // Filter conferences based on selected division
 const conferences = computed(() => {
@@ -222,6 +228,11 @@ watch(selectedConference, (newConference) => {
       selectedSchool.value = null;
     }
   }
+});
+
+// Use in watchers
+watch(searchQuery, () => {
+  debouncedEmitFilterChange();
 });
 
 onMounted(async () => {

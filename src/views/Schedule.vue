@@ -3,9 +3,10 @@
 import { ref, onMounted } from "vue";
 import Header from "./Schedule/Header.vue";
 import Table from "./Schedule/Table.vue";
+import apiService from "../services/apiService.js";
 
 // API base URL
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://api.volleyballdatabased.com";
 
 // Shared data
 const scheduleData = ref([]);
@@ -41,56 +42,16 @@ const removeDuplicates = (data) => {
 const fetchSchedule = async () => {
   loading.value = true;
   try {
-    const response = await fetch(`${API_BASE}/schedule`);
-    if (response.ok) {
-      const data = await response.json();
+    // Only fetch current season by default
+    const currentSeason = "2024-25";
+    const response = await apiService.getMegaGames({
+      season: currentSeason,
+      limit: 100, // Start with limited data
+    });
 
-      // Remove duplicates first
-      const uniqueData = removeDuplicates(data);
-
-      // Sort games by date and time (newest first based on your original sort)
-      scheduleData.value = uniqueData.sort((a, b) => {
-        // Parse dates properly
-        const parseDateTime = (dateStr, timeStr) => {
-          if (!dateStr) return new Date(0);
-
-          // Handle MM/DD/YYYY format
-          let parsedDate;
-          if (dateStr.includes("/")) {
-            const [month, day, year] = dateStr.split("/");
-            parsedDate = new Date(year, month - 1, day);
-          } else {
-            parsedDate = new Date(dateStr);
-          }
-
-          // Add time if available
-          if (timeStr) {
-            const [hours, minutes] = timeStr.split(":");
-            parsedDate.setHours(parseInt(hours), parseInt(minutes));
-          }
-
-          return parsedDate;
-        };
-
-        const dateA = parseDateTime(a.date, a.time);
-        const dateB = parseDateTime(b.date, b.time);
-
-        // Sort newest first (descending)
-        return dateB - dateA;
-      });
-
-      console.log(
-        `Loaded ${uniqueData.length} unique games (removed ${
-          data.length - uniqueData.length
-        } duplicates)`
-      );
-    } else {
-      console.error("Failed to fetch schedule:", response.statusText);
-      scheduleData.value = [];
-    }
+    scheduleData.value = removeDuplicates(response);
   } catch (error) {
     console.error("Error fetching schedule:", error);
-    scheduleData.value = [];
   } finally {
     loading.value = false;
   }

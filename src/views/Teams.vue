@@ -3,6 +3,7 @@
 import { ref, onMounted, computed } from "vue";
 import Header from "./Teams/Header.vue";
 import TeamsTable from "./Teams/TeamsTable.vue";
+import cacheService from "@/services/cacheServices";
 
 // Reactive data
 const schools = ref([]);
@@ -94,14 +95,24 @@ const handleDivisionChange = (newDivision) => {
 
 // Fetch schools data
 const fetchSchools = async () => {
+  // Check cache first
+  const cacheKey = "schools-data";
+  const cachedData = cacheService.get(cacheKey);
+
+  if (cachedData) {
+    schools.value = cachedData;
+    return;
+  }
+
   loading.value = true;
   try {
-    const response = await fetch("http://localhost:4000/schools");
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const response = await fetch("https://api.volleyballdatabased.com/schools");
+    if (response.ok) {
+      const data = await response.json();
+      schools.value = data;
+      // Cache for 10 minutes
+      cacheService.set(cacheKey, data, 10);
     }
-    const data = await response.json();
-    schools.value = data;
   } catch (error) {
     console.error("Error fetching schools:", error);
   } finally {

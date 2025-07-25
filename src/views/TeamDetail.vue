@@ -4,6 +4,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Header from "./TeamDetail/Header.vue";
 import ScoreCard from "./TeamDetail/ScoreCard.vue";
+import apiService from "../services/apiService.js";
 
 // Get route and router instances
 const route = useRoute();
@@ -33,22 +34,22 @@ const error = ref(null);
 const selectedYear = ref("All");
 const teamRecord = ref("");
 
-// Fetch team data by ID
-const fetchTeam = async (teamId) => {
+// Parallel fetch for team data and games
+const fetchTeamData = async (teamId) => {
   loading.value = true;
   error.value = null;
 
   try {
-    const response = await fetch(`http://localhost:4000/teams/${teamId}`);
+    // Fetch both in parallel
+    const [teamData, gamesData] = await Promise.all([
+      apiService.getTeam(teamId),
+      apiService.getTeamGames(teamId),
+    ]);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    teamRecords.value = data;
+    teamRecords.value = teamData;
+    teamHistoryRecords.value = gamesData;
   } catch (err) {
-    console.error("Error fetching team:", err);
+    console.error("Error fetching team data:", err);
     error.value = "Failed to load team data";
   } finally {
     loading.value = false;
@@ -110,7 +111,7 @@ watch(
   () => route.params.id,
   (newId) => {
     if (newId) {
-      fetchTeam(newId);
+      fetchTeamData(newId);
     }
   },
   { immediate: true }
@@ -119,7 +120,7 @@ watch(
 // Load data on component mount
 onMounted(async () => {
   if (props.id) {
-    fetchTeam(props.id);
+    fetchTeamData(props.id);
   }
 });
 </script>

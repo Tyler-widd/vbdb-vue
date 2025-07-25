@@ -3,6 +3,7 @@
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
+import apiService from "../../services/apiService.js";
 
 // Router and display composables
 const router = useRouter();
@@ -16,7 +17,7 @@ const props = defineProps({
 });
 
 // API base URL
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://api.volleyballdatabased.com";
 
 // Data refs
 const games = ref([]);
@@ -306,7 +307,23 @@ const onItemsPerPageChange = () => {
   currentPage.value = 1;
   fetchGames();
 };
+const loadItems = async ({ page, itemsPerPage, sortBy }) => {
+  const offset = (page - 1) * itemsPerPage;
 
+  try {
+    const data = await apiService.getMegaGames({
+      limit: itemsPerPage,
+      offset: offset,
+      sort: sortBy[0]?.key || "date",
+      order: sortBy[0]?.order || "desc",
+    });
+
+    games.value = data.items;
+    totalGames.value = data.total;
+  } catch (error) {
+    console.error("Error loading items:", error);
+  }
+};
 // Table headers - updated layout
 const headers = ref([
   {
@@ -370,9 +387,13 @@ onMounted(() => {
   <v-data-table
     :headers="headers"
     :items="games"
-    :items-per-page="-1"
+    :items-per-page="50"
     :loading="loading"
+    :options.sync="options"
+    @update:options="loadItems"
+    virtual
     :sort-by="[{ key: 'date', order: 'desc' }]"
+    :server-items-length="totalGames"
     class="rounded-lg"
     density="compact"
     hide-default-footer
