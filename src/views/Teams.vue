@@ -20,7 +20,6 @@ onMounted(() => {
   fetchSchools();
 });
 
-// Fix: Use selectedDivision.value instead of props.selectedDivision
 const filteredConferences = computed(() => {
   const conferences = getConferences(selectedDivision.value);
   return conferences.map((conf) => ({ title: conf, value: conf }));
