@@ -5,7 +5,7 @@ import Header from "./Schedule/Header.vue";
 import Table from "./Schedule/Table.vue";
 
 // API base URL
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://api.volleyballdatabased.com";
 
 // Shared data
 const scheduleData = ref([]);

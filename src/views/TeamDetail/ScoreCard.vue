@@ -32,7 +32,9 @@ const fetchTeamHistory = async (teamId) => {
   error.value = null;
 
   try {
-    const response = await fetch(`http://localhost:4000/games/${teamId}`);
+    const response = await fetch(
+      `https://api.volleyballdatabased.com/games/${teamId}`
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

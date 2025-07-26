@@ -16,7 +16,7 @@ export function useGamesStore() {
     error.value = null;
 
     try {
-      const response = await fetch("http://localhost:4000/games");
+      const response = await fetch("https://api.volleyballdatabased.com/games");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
