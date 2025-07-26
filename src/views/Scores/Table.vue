@@ -25,7 +25,7 @@ const props = defineProps({
 });
 
 // API base URL
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://api.volleyballdatabased.com/";
 
 // Data refs
 const games = ref([]);
