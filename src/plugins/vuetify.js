@@ -43,7 +43,6 @@ export default createVuetify({
       hideDetails: true,
       density: "compact",
       rounded: true,
-      prependInnerIcon: "mdi-magnify",
     },
     VTextField: {
       variant: "outlined",
@@ -51,7 +50,6 @@ export default createVuetify({
       hideDetails: true,
       density: "compact",
       rounded: true,
-      prependInnerIcon: "mdi-magnify",
     },
     VSelect: {
       variant: "outlined",

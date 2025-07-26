@@ -67,6 +67,7 @@ const handleConferenceChange = (value) => {
       <v-col cols="12">
         <v-text-field
           label="Search teams, date, or time"
+          prepend-inner-icon="mdi-magnify"
           :disabled="loading"
           clearable
           @update:model-value="handleSearchChange"
