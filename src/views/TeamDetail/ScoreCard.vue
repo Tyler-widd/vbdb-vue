@@ -33,7 +33,11 @@ const fetchTeamHistory = async (teamId) => {
 
   try {
     const response = await fetch(
+<<<<<<< HEAD
       `https://api.volleyballdatabased.com/games/${teamId}`
+=======
+      `https://api.volleyballdatabased.com//games/${teamId}`
+>>>>>>> f2443cd9a110be823f2c2a52b69362ad170ad700
     );
 
     if (!response.ok) {

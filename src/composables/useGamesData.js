@@ -12,7 +12,13 @@ export function useGamesData() {
 
     try {
       // If the JSON file is in your public folder
+<<<<<<< HEAD
       const response = await fetch("https://api.volleyballdatabased.com/games");
+=======
+      const response = await fetch(
+        "https://api.volleyballdatabased.com//games"
+      );
+>>>>>>> f2443cd9a110be823f2c2a52b69362ad170ad700
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

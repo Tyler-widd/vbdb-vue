@@ -12,7 +12,11 @@ const { smAndDown } = useDisplay();
 const { games, fetchGames, getDivisions, getConferences } = useGamesStore();
 
 // API base URL - adjust this to your API URL
+<<<<<<< HEAD
 const API_BASE = "https://api.volleyballdatabased.com";
+=======
+const API_BASE = "https://api.volleyballdatabased.com/";
+>>>>>>> f2443cd9a110be823f2c2a52b69362ad170ad700
 
 // Data refs
 const availableSeasons = ref([]);
