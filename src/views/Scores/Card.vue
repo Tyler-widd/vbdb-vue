@@ -80,10 +80,6 @@ const formattedGames = computed(() => {
       conference: game.team_2_conference,
     };
 
-    // Determine winner and calculate set scores
-    const isTeam1Winner = game.winner_id === game.team_1_id;
-    const isTeam2Winner = game.winner_id === game.team_2_id;
-
     let team1SetsWon = 0;
     let team2SetsWon = 0;
 
@@ -124,6 +120,9 @@ const formattedGames = computed(() => {
         team2SetsWon = 3;
       }
     }
+
+    const isTeam1Winner = team1SetsWon > team2SetsWon;
+    const isTeam2Winner = team1SetsWon < team2SetsWon;
 
     // Format date
     const dateObj = new Date(game.date);
@@ -202,7 +201,11 @@ onMounted(async () => {
             class="d-flex align-center"
             :class="smAndDown ? 'pa-1' : 'px-2'"
           >
-            <v-avatar :size="xs ? 28 : smAndDown ? 32 : 40" rounded="0">
+            <v-avatar
+              :size="xs ? 28 : smAndDown ? 32 : 40"
+              rounded="0"
+              class="mx-2"
+            >
               <v-img
                 v-if="game.team1.img"
                 :src="game.team1.img"
@@ -211,12 +214,13 @@ onMounted(async () => {
               <v-icon v-else :size="xs ? 20 : 24">mdi-school</v-icon>
             </v-avatar>
             <div
-              class="ml-1 ml-sm-2 d-flex flex-column flex-grow-1 overflow-hidden"
+              :class="smAndDown ? '' : 'mx-4'"
+              class="d-flex flex-column align-start text-wrap"
             >
               <v-btn
                 variant="text"
                 density="compact"
-                class="text-primary font-weight-regular justify-start pa-0 text-truncate"
+                class="text-primary justify-start pa-0 text-truncate"
                 :class="
                   xs
                     ? 'text-caption'
@@ -226,7 +230,12 @@ onMounted(async () => {
                 "
                 @click="navigateToTeam(game.team_1_id)"
                 :disabled="!game.team1.id"
-                style="min-width: 0; max-width: 100%"
+                style="
+                  min-width: 0;
+                  max-width: 100%;
+                  text-align: left;
+                  white-space: normal !important;
+                "
               >
                 {{ smAndDown ? game.team1.short_name : game.team1.name }}
               </v-btn>
@@ -241,27 +250,22 @@ onMounted(async () => {
 
           <!-- Score section -->
           <v-col
-            :cols="xs ? 2 : 4"
-            class="d-flex flex-column align-center px-1"
+            :cols="smAndDown ? 2 : 4"
+            class="d-flex flex-column align-center mt-2"
           >
             <div v-if="game.hasResult" class="d-flex align-center">
               <span
                 class="font-weight-bold text-center"
-                :class="[
-                  xs ? 'text-body-2' : smAndDown ? 'text-body-1' : 'text-h5',
-                  game.isTeam1Winner ? 'text-success' : '',
-                ]"
+                :class="[game.isTeam1Winner ? 'text-success' : '']"
                 style="min-width: 16px"
               >
                 {{ game.team1SetsWon }}
               </span>
               <span class="mx-1 text-medium-emphasis">-</span>
+
               <span
                 class="font-weight-bold text-center"
-                :class="[
-                  xs ? 'text-body-2' : smAndDown ? 'text-body-1' : 'text-h5',
-                  game.isTeam2Winner ? 'text-success' : '',
-                ]"
+                :class="[game.isTeam2Winner ? 'text-success' : '']"
                 style="min-width: 16px"
               >
                 {{ game.team2SetsWon }}
@@ -279,21 +283,32 @@ onMounted(async () => {
             <div
               v-if="game.individualSets.length > 0 && !xs"
               class="d-flex flex-wrap justify-center mt-1"
-              style="gap: 4px"
+              style="gap: 8px"
             >
               <span
                 v-for="(set, index) in game.individualSets"
                 :key="set.setNumber"
-                class="text-caption"
-                style="white-space: nowrap"
+                class="text-body-1"
               >
-                <span :class="{ 'font-weight-bold': set.team1Won }">{{
-                  set.team1Score
-                }}</span
-                >-<span :class="{ 'font-weight-bold': set.team2Won }">{{
-                  set.team2Score
-                }}</span
-                ><span v-if="index < game.individualSets.length - 1">,</span>
+                <span
+                  v-if="set.team1Won"
+                  :class="{
+                    'text-success fong-weight-strong': set.team1Won,
+                  }"
+                  >{{ set.team1Score }}
+                </span>
+                <span v-else class="font-weight-thin"
+                  >{{ set.team1Score }} </span
+                >-<span
+                  v-if="set.team2Won"
+                  :class="{
+                    'text-success fong-weight-strong': set.team2Won,
+                  }"
+                  >{{ set.team2Score }}
+                </span>
+                <span v-else class="font-weight-thin"
+                  >{{ set.team2Score }} </span
+                ><span v-if="index < game.individualSets.length - 1"> , </span>
               </span>
             </div>
 
@@ -308,17 +323,18 @@ onMounted(async () => {
 
           <!-- Team 2 -->
           <v-col
-            :cols="xs ? 5 : smAndDown ? 4 : 3"
+            :cols="xs ? 5 : smAndDown ? 4 : 4"
             class="d-flex align-center justify-end"
-            :class="smAndDown ? 'pa-1' : ''"
+            :class="smAndDown ? 'my-2' : ''"
           >
             <div
-              class="mr-1 mr-sm-2 d-flex flex-column align-end flex-grow-1 overflow-hidden"
+              :class="smAndDown ? '' : 'mx-4'"
+              class="d-flex flex-column align-end text-wrap"
             >
               <v-btn
                 variant="text"
                 density="compact"
-                class="text-primary font-weight-regular justify-end pa-0 text-truncate"
+                class="text-primary justify-end pa-0 text-wrap"
                 :class="
                   xs
                     ? 'text-caption'
@@ -328,7 +344,12 @@ onMounted(async () => {
                 "
                 @click="navigateToTeam(game.team2.id)"
                 :disabled="!game.team2.id"
-                style="min-width: 0; max-width: 100%; text-align: right"
+                style="
+                  min-width: 0;
+                  max-width: 100%;
+                  text-align: right;
+                  white-space: normal !important;
+                "
               >
                 {{ smAndDown ? game.team2.short_name : game.team2.name }}
               </v-btn>
@@ -339,7 +360,11 @@ onMounted(async () => {
                 {{ game.team2.conference }}
               </span>
             </div>
-            <v-avatar :size="xs ? 28 : smAndDown ? 32 : 40" rounded="0">
+            <v-avatar
+              :size="xs ? 28 : smAndDown ? 32 : 40"
+              rounded="0"
+              class="mx-2"
+            >
               <v-img
                 v-if="game.team2.img"
                 :src="game.team2.img"
@@ -348,17 +373,23 @@ onMounted(async () => {
               <v-icon v-else :size="xs ? 20 : 24">mdi-school</v-icon>
             </v-avatar>
           </v-col>
-
-          <!-- Chevron button - only show on desktop -->
-          <v-col v-if="!smAndDown" cols="auto" class="d-flex justify-end pa-0">
-            <v-btn
-              icon="mdi-chevron-right"
-              variant="text"
-              :href="game.box_score"
-              target="_blank"
-              :disabled="!game.box_score"
-            />
-          </v-col>
+        </v-row>
+        <!-- Box score link for mobile -->
+        <v-row
+          v-if="game.box_score && !smAndDown"
+          class="text-center justify-center mt-2"
+          dense
+          no-gutters
+        >
+          <v-btn
+            variant="tonal"
+            :href="game.box_score"
+            target="_blank"
+            prepend-icon="mdi-open-in-new"
+            class="d-flex w-25 mb-1"
+          >
+            Box Score
+          </v-btn>
         </v-row>
 
         <!-- Mobile-only expandable section for extra details -->
@@ -371,7 +402,7 @@ onMounted(async () => {
                 game.box_score)
             "
           >
-            <v-divider class="mt-2 mb-1" />
+            <v-divider />
             <v-row class="ma-0 pa-2" no-gutters>
               <v-col cols="12">
                 <!-- Individual set scores for mobile -->
@@ -380,24 +411,32 @@ onMounted(async () => {
                   class="d-flex flex-wrap justify-center mb-2"
                   style="gap: 4px"
                 >
-                  <span class="text-caption text-medium-emphasis mr-1"
-                    >Sets:</span
-                  >
                   <span
                     v-for="(set, index) in game.individualSets"
                     :key="set.setNumber"
-                    class="text-caption"
-                    style="white-space: nowrap"
+                    class="text-body-1"
                   >
-                    <span :class="{ 'font-weight-bold': set.team1Won }">{{
-                      set.team1Score
-                    }}</span
-                    >-<span :class="{ 'font-weight-bold': set.team2Won }">{{
-                      set.team2Score
-                    }}</span
-                    ><span v-if="index < game.individualSets.length - 1"
-                      >,</span
-                    >
+                    <span
+                      v-if="set.team1Won"
+                      :class="{
+                        'text-success fong-weight-strong': set.team1Won,
+                      }"
+                      >{{ set.team1Score }}
+                    </span>
+                    <span v-else class="font-weight-thin"
+                      >{{ set.team1Score }} </span
+                    >-<span
+                      v-if="set.team2Won"
+                      :class="{
+                        'text-success fong-weight-strong': set.team2Won,
+                      }"
+                      >{{ set.team2Score }}
+                    </span>
+                    <span v-else class="font-weight-thin"
+                      >{{ set.team2Score }} </span
+                    ><span v-if="index < game.individualSets.length - 1">
+                      ,
+                    </span>
                   </span>
                 </div>
 
@@ -413,11 +452,11 @@ onMounted(async () => {
                 <!-- Box score link for mobile -->
                 <div v-if="game.box_score" class="text-center mt-2">
                   <v-btn
-                    size="small"
                     variant="tonal"
                     :href="game.box_score"
                     target="_blank"
                     prepend-icon="mdi-open-in-new"
+                    class="d-flex"
                   >
                     Box Score
                   </v-btn>
@@ -447,3 +486,11 @@ onMounted(async () => {
     </div>
   </v-card>
 </template>
+
+<style>
+.v-btn__content {
+  grid-area: content;
+  justify-content: center !important;
+  white-space: wrap !important;
+}
+</style>

@@ -2,7 +2,7 @@
 import { ref, readonly, computed } from "vue";
 
 // Global state - shared across all components
-const games = ref([]); // Fixed: was "schools" in original
+const games = ref([]);
 const loading = ref(false);
 const error = ref(null);
 let dataLoaded = false;
@@ -10,7 +10,7 @@ let dataLoaded = false;
 export function useGamesStore() {
   const fetchGames = async () => {
     // Only fetch once
-    if (dataLoaded && games.value.length > 0) return; // Fixed: was "Games.value"
+    if (dataLoaded && games.value.length > 0) return;
 
     loading.value = true;
     error.value = null;
@@ -180,7 +180,7 @@ export function useGamesStore() {
 
   return {
     // Read-only state
-    games: readonly(games), // Fixed: was "schools"
+    games: readonly(games),
     loading: readonly(loading),
     error: readonly(error),
 

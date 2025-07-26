@@ -114,7 +114,7 @@ const schoolOptions = computed(() => {
 // Fetch available seasons from API
 const fetchSeasons = async () => {
   try {
-    const response = await fetch(`${API_BASE}/seasons`);
+    const response = await fetch(`${API_BASE}/games`);
     if (response.ok) {
       availableSeasons.value = await response.json();
 

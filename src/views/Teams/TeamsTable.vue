@@ -2,6 +2,9 @@
 <script setup>
 import { useRouter } from "vue-router";
 
+import { useDisplay } from "vuetify";
+const { smAndDown } = useDisplay();
+
 // Define props to receive data from parent
 const props = defineProps({
   filteredSchools: {
@@ -22,12 +25,12 @@ const headers = [
     sortable: true,
   },
   {
-    title: "Division",
+    title: smAndDown ? "Div" : "Division",
     key: "division",
     sortable: true,
   },
   {
-    title: "Conference",
+    title: smAndDown ? "Conf" : "Conference",
     key: "conference",
     sortable: true,
   },
@@ -61,6 +64,7 @@ const goToTeam = (team) => {
   <v-data-table
     :headers="headers"
     :items="filteredSchools"
+    :hide-default-footer="false"
     :loading="loading"
     @update:page="updatePage"
     density="compact"
@@ -74,21 +78,28 @@ const goToTeam = (team) => {
     </template>
     <!-- Custom school name column -->
     <template v-slot:item.name_official="{ item }">
-      <v-avatar size="50" class="ma-1" tile>
-        <v-img :src="item.img" :alt="item.name_official">
-          <!-- Fallback if image fails to load -->
-          <template v-slot:error>
-            <v-icon color="grey">mdi-school</v-icon>
-          </template>
-        </v-img>
-      </v-avatar>
-      <v-btn
-        variant="text"
-        class="text-body-1 font-weight-light"
-        @click="goToTeam(item)"
-      >
-        {{ item.name_official }}
-      </v-btn>
+      <div class="d-flex align-center">
+        <v-avatar :size="smAndDown ? '40' : '50'" class="ma-1" tile>
+          <v-img :src="item.img" :alt="item.name_official">
+            <!-- Fallback if image fails to load -->
+            <template v-slot:error>
+              <v-icon color="grey">mdi-school</v-icon>
+            </template>
+          </v-img>
+        </v-avatar>
+        <div
+          :class="smAndDown ? '' : 'mx-4'"
+          class="d-flex flex-column text-wrap"
+        >
+          <v-btn
+            variant="text"
+            :class="smAndDown ? 'text-body-2' : 'text-body-1 font-weight-light'"
+            @click="goToTeam(item)"
+          >
+            {{ smAndDown ? item.school_short : item.name_official }}
+          </v-btn>
+        </div>
+      </div>
     </template>
 
     <!-- Loading state -->
@@ -97,3 +108,10 @@ const goToTeam = (team) => {
     </template>
   </v-data-table>
 </template>
+
+<style>
+.v-table__wrapper table tbody tr td,
+.v-table__wrapper table thead tr th {
+  padding: 0px 0px !important;
+}
+</style>
