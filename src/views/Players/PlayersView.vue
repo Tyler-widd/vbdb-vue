@@ -1,4 +1,4 @@
-<!-- views/Teams.vue -->
+<!-- Players/PlayersView.vue -->
 <script setup>
 // You can add your teams logic here
 </script>
@@ -12,10 +12,10 @@
             class="text-h4 mb-4"
             style="color: var(--v-theme-primary)"
           >
-            Teams
+            Players
           </v-card-title>
           <v-card-text style="color: var(--v-theme-on-surface)">
-            <p class="text-h6 mb-4">Welcome to the Rankings page!</p>
+            <p class="text-h6 mb-4">Welcome to the Players page!</p>
           </v-card-text>
         </v-card>
       </v-col>

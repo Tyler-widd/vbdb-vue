@@ -1,14 +1,33 @@
+<!-- Home/News/NCAANews.vue -->
 <script setup>
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
+
+// Props
+const props = defineProps({
+  division: {
+    type: String,
+    required: true,
+    // validator: (value) => ["d1", "d2", "d3"].includes(value),
+    validator: (value) => ["d1"].includes(value),
+  },
+});
 
 const loading = ref(false);
 const error = ref(null);
 const latestItem = ref(null);
 
-const RSS_URL =
-  "https://3c2asports.org/sports/wvball/headlines-featured?feed=rss_2.0";
+// Computed RSS URL based on division prop
+const RSS_URL = computed(() => {
+  return `https://www.ncaa.com/news/volleyball-women/${props.division}/rss.xml`;
+});
 
-// CORS proxy
+// Division display names
+const divisionNames = {
+  d1: "Division I",
+  d2: "Division II",
+  d3: "Division III",
+};
+
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";
 
 const fetchRSSFeed = async () => {
@@ -16,8 +35,9 @@ const fetchRSSFeed = async () => {
   error.value = null;
 
   try {
-    // Using CORS proxy to bypass CORS restrictions
-    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(RSS_URL)}`);
+    const response = await fetch(
+      `${CORS_PROXY}${encodeURIComponent(RSS_URL.value)}`
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -27,32 +47,29 @@ const fetchRSSFeed = async () => {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, "text/xml");
 
-    // Check for parsing errors
     const parserError = xmlDoc.querySelector("parsererror");
     if (parserError) {
       throw new Error("Failed to parse XML");
     }
 
-    // Get all items
     const items = xmlDoc.querySelectorAll("item");
 
     if (items.length === 0) {
       throw new Error("No items found in RSS feed");
     }
 
-    // Get the first (most recent) item
     const firstItem = items[0];
 
-    // Extract data from the first item
     latestItem.value = {
       title: getTextContent(firstItem, "title"),
       link: getTextContent(firstItem, "link"),
       description: getTextContent(firstItem, "description"),
       pubDate: getTextContent(firstItem, "pubDate"),
-      guid: getTextContent(firstItem, "guid"),
-      // Get image from enclosure or media:content
-      image: getImageUrl(firstItem),
-      category: "3C2A Women's Volleyball", // Default since this RSS doesn't have category per item
+      category: getTextContent(firstItem, "category"),
+      image: extractImageFromDescription(
+        getTextContent(firstItem, "description")
+      ),
+      enclosure: getTextContent(firstItem, "enclosure"),
     };
   } catch (err) {
     console.error("Error fetching RSS feed:", err);
@@ -62,55 +79,20 @@ const fetchRSSFeed = async () => {
   }
 };
 
-// Helper function to safely get text content from XML elements
 const getTextContent = (parent, tagName) => {
   const element = parent.querySelector(tagName);
   return element ? element.textContent.trim() : "";
 };
 
-// Get image URL from enclosure or media:content elements
-const getImageUrl = (item) => {
-  let imageUrl = null;
-
-  // Try to get from enclosure first
-  const enclosure = item.querySelector("enclosure");
-  if (enclosure && enclosure.getAttribute("url")) {
-    imageUrl = enclosure.getAttribute("url");
-  }
-
-  // Try to get from media:content if enclosure didn't work
-  if (!imageUrl) {
-    const mediaContent = item.querySelector("media\\:content, content");
-    if (mediaContent && mediaContent.getAttribute("url")) {
-      imageUrl = mediaContent.getAttribute("url");
-    }
-  }
-
-  // If we found an image URL, modify the dimensions
-  if (imageUrl) {
-    // Create URL object to easily manipulate query parameters
-    try {
-      const url = new URL(imageUrl);
-
-      // Update the max_width and max_height parameters
-      url.searchParams.set("max_width", "660");
-      url.searchParams.set("max_height", "620");
-
-      return url.toString();
-    } catch (error) {
-      // If URL parsing fails, return original URL
-      console.warn("Failed to parse image URL:", error);
-      return imageUrl;
-    }
-  }
-
-  return null;
+const extractImageFromDescription = (description) => {
+  if (!description) return null;
+  const imgRegex = /<img[^>]+src="([^">]+)"/;
+  const match = description.match(imgRegex);
+  return match ? match[1] : null;
 };
 
-// Format date for display
 const formatDate = (dateString) => {
   if (!dateString) return "";
-
   try {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -125,21 +107,25 @@ const formatDate = (dateString) => {
 };
 
 // Auto-fetch on component mount
-fetchRSSFeed();
+onMounted(() => {
+  fetchRSSFeed();
+});
 </script>
 
 <template>
-  <v-card>
-    <v-card-title class="text-h6 d-flex align-center"> CCCAA </v-card-title>
+  <v-card height="auto">
+    <v-card-title class="text-h6 d-flex align-center">
+      NCAA {{ divisionNames[division] }}
+    </v-card-title>
+
     <v-card-text v-if="latestItem">
       <div v-if="latestItem.image">
-        <v-img :src="latestItem.image" cover height="250" />
-        <v-card-title class="pa-0 text-wrap">
+        <v-img :src="latestItem.image" cover />
+        <v-card-title class="pa-0 text-body-1 text-wrap">
           {{ latestItem.title }}
           <v-btn
             :href="latestItem.link"
             class="text-body-1 font-weight-regular"
-            rounded
             target="_blank"
             color="primary"
             variant="text"

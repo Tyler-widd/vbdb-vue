@@ -1,10 +1,10 @@
 <script>
 import NavBar from "./NavBar.vue";
-import RankingSection from "../views/Home/RankingSection.vue";
+import RankingSection from "../views/Home/SideContent/RankingSection.vue";
 import Scores from "../views/Home/Scores.vue";
-import NCAANews from "../views/Home/NCAANews.vue";
-import NAIANews from "../views/Home/NAIANews.vue";
-import CCCAANews from "../views/Home/CCCAANews.vue";
+import NCAANews from "../views/Home/News/NCAANews.vue";
+import NAIANews from "../views/Home/News/NAIANews.vue";
+import CCCAANews from "../views/Home/News/CCCAANews.vue";
 
 export default {
   components: {

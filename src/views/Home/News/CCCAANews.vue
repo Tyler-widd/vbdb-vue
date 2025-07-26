@@ -1,3 +1,4 @@
+<!-- Home/News/CCCAANews.vue -->
 <script setup>
 import { ref } from "vue";
 
@@ -6,7 +7,7 @@ const error = ref(null);
 const latestItem = ref(null);
 
 const RSS_URL =
-  "https://www.naia.org/sports/wvball/headlines-featured?feed=rss_2.0";
+  "https://3c2asports.org/sports/wvball/headlines-featured?feed=rss_2.0";
 
 // CORS proxy
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";
@@ -52,7 +53,7 @@ const fetchRSSFeed = async () => {
       guid: getTextContent(firstItem, "guid"),
       // Get image from enclosure or media:content
       image: getImageUrl(firstItem),
-      category: "Women's Volleyball", // Default since this RSS doesn't have category per item
+      category: "3C2A Women's Volleyball", // Default since this RSS doesn't have category per item
     };
   } catch (err) {
     console.error("Error fetching RSS feed:", err);
@@ -127,9 +128,10 @@ const formatDate = (dateString) => {
 // Auto-fetch on component mount
 fetchRSSFeed();
 </script>
+
 <template>
   <v-card>
-    <v-card-title class="text-h6 d-flex align-center"> NAIA </v-card-title>
+    <v-card-title class="text-h6 d-flex align-center"> CCCAA </v-card-title>
     <v-card-text v-if="latestItem">
       <div v-if="latestItem.image">
         <v-img :src="latestItem.image" cover height="250" />

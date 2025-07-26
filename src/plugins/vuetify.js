@@ -1,3 +1,4 @@
+// vuetify.js
 import "@mdi/font/css/materialdesignicons.css";
 import "vuetify/styles";
 
@@ -33,11 +34,18 @@ export default createVuetify({
       variant: "text",
     },
     VDataTable: {
-      hideDefaultFooter: true,
       density: "compact",
       class: "rounded-lg",
     },
     VAutocomplete: {
+      variant: "outlined",
+      flat: true,
+      hideDetails: true,
+      density: "compact",
+      rounded: true,
+      prependInnerIcon: "mdi-magnify",
+    },
+    VTextField: {
       variant: "outlined",
       flat: true,
       hideDetails: true,
@@ -54,6 +62,9 @@ export default createVuetify({
     VCardTitle: {
       flat: true,
       color: "red",
+    },
+    VAvatar: {
+      tile: true,
     },
   },
 });
