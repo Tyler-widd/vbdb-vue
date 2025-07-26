@@ -3,10 +3,19 @@
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
+import { useGamesStore } from "@/composables/useGamesStore";
 
 // Router and display composables
 const router = useRouter();
 const { smAndDown } = useDisplay();
+
+// Use the games store for filtering
+const {
+  searchGames,
+  getGamesByDivision,
+  getGamesByConference,
+  getGamesByTeam,
+} = useGamesStore();
 
 const props = defineProps({
   filters: {
@@ -22,39 +31,14 @@ const API_BASE = "http://localhost:4000";
 const games = ref([]);
 const loading = ref(false);
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(25);
 const hasMore = ref(true);
 const totalGames = ref(0);
 
 // Pagination
 const paginationOptions = [10, 25, 50, 100, 200, 500];
 
-// Function to deduplicate games based on multiple criteria
-const deduplicateGames = (gamesList) => {
-  const seen = new Set();
-  const result = [];
-
-  gamesList.forEach((game) => {
-    const homeTeam = game.home_team_name || "";
-    const awayTeam = game.away_team_name || "";
-    const date = game.date || "";
-    const matchId = game.match_id || "";
-    const uniqueKey = `${matchId}_${date}_${homeTeam}_${awayTeam}`;
-
-    if (!seen.has(uniqueKey)) {
-      seen.add(uniqueKey);
-      result.push(game);
-    }
-  });
-
-  return result;
-};
-
-const dateSort = (a, b) => {
-  return new Date(a) - new Date(b);
-};
-
-// Updated fetchGames function in Table.vue
+// Updated fetchGames function to use your /games endpoint
 const fetchGames = async (loadingMore = false) => {
   if (!loadingMore) {
     loading.value = true;
@@ -67,41 +51,37 @@ const fetchGames = async (loadingMore = false) => {
   try {
     const params = new URLSearchParams();
 
-    // Only add season parameter if a specific season is selected
-    // If props.filters.season is null (All Seasons), don't add the parameter
+    // Build query parameters based on filters
     if (props.filters.season) {
       params.append("season", props.filters.season);
-    } else {
-      // Optionally, you can add a comment or log to indicate all seasons are being fetched
-      console.log("Fetching games for all seasons");
     }
 
-    // Default to D-I if no division is selected
-    const division = props.filters.division || "D-I";
-    params.append("division", division);
+    if (props.filters.division) {
+      params.append("division", props.filters.division);
+    }
 
     if (props.filters.conference) {
       params.append("conference", props.filters.conference);
     }
 
+    // For team filtering, we'll need to use a different approach since your endpoint
+    // expects team_id in the URL path. We'll filter client-side for now.
+
+    let url = `${API_BASE}/games`;
+
+    // If a specific team is selected, use the team-specific endpoint
     if (props.filters.school) {
-      params.append("team", props.filters.school);
+      url = `${API_BASE}/games/${props.filters.school}`;
+      // Add season parameter if specified
+      if (props.filters.season) {
+        params.append("season", props.filters.season);
+      }
     }
 
-    // Add pagination
-    params.append("limit", itemsPerPage.value.toString());
-    params.append(
-      "offset",
-      ((currentPage.value - 1) * itemsPerPage.value).toString()
-    );
-
-    // Add ordering to ensure consistent results
-    params.append("order", "date");
-    params.append("sort", "desc");
-
-    const url = `${API_BASE}/megagames${
-      params.toString() ? "?" + params.toString() : ""
-    }`;
+    // Add query parameters if any
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
 
     const response = await fetch(url);
     if (response.ok) {
@@ -110,36 +90,54 @@ const fetchGames = async (loadingMore = false) => {
       // Deduplicate games
       fetchedGames = deduplicateGames(fetchedGames);
 
-      // Check if we've reached the end
-      if (fetchedGames.length < itemsPerPage.value) {
-        hasMore.value = true;
+      // Client-side filtering
+      if (props.filters.division && !props.filters.school) {
+        fetchedGames = fetchedGames.filter(
+          (game) =>
+            game.team_1_division === props.filters.division ||
+            game.team_2_division === props.filters.division
+        );
       }
 
-      // Client-side search filter (only for text search)
+      if (props.filters.conference && !props.filters.school) {
+        fetchedGames = fetchedGames.filter(
+          (game) =>
+            game.team_1_conference === props.filters.conference ||
+            game.team_2_conference === props.filters.conference
+        );
+      }
+
+      // Client-side search filter
       if (props.filters.search) {
         fetchedGames = fetchedGames.filter((game) => {
           const searchTerm = props.filters.search.toLowerCase();
           return (
-            (game.home_team_name &&
-              game.home_team_name.toLowerCase().includes(searchTerm)) ||
-            (game.away_team_name &&
-              game.away_team_name.toLowerCase().includes(searchTerm))
+            (game.team_1_name &&
+              game.team_1_name.toLowerCase().includes(searchTerm)) ||
+            (game.team_2_name &&
+              game.team_2_name.toLowerCase().includes(searchTerm)) ||
+            (game.location && game.location.toLowerCase().includes(searchTerm))
           );
         });
       }
 
-      if (loadingMore) {
-        // For load more, we need to deduplicate against existing games too
-        const combinedGames = [...games.value, ...fetchedGames];
-        const deduplicatedCombined = deduplicateGames(combinedGames);
+      // Sort by date (newest first)
+      fetchedGames.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        games.value = deduplicatedCombined;
+      // Apply pagination client-side
+      const startIndex = (currentPage.value - 1) * itemsPerPage.value;
+      const endIndex = startIndex + itemsPerPage.value;
+      const paginatedGames = fetchedGames.slice(startIndex, endIndex);
+
+      if (loadingMore) {
+        games.value = [...games.value, ...paginatedGames];
       } else {
-        games.value = fetchedGames;
+        games.value = paginatedGames;
       }
 
-      // Update total count after deduplication and filtering
-      totalGames.value = games.value.length;
+      // Check if we have more data
+      hasMore.value = endIndex < fetchedGames.length;
+      totalGames.value = fetchedGames.length;
     } else {
       console.error("Failed to fetch games:", response.statusText);
       if (!loadingMore) {
@@ -157,6 +155,7 @@ const fetchGames = async (loadingMore = false) => {
     loading.value = false;
   }
 };
+
 // Format time for display
 const formatTime = (time) => {
   if (!time) return "";
@@ -169,120 +168,110 @@ const formatDate = (date) => {
   if (!date) return "";
 
   const dateObj = new Date(date);
-
-  // Format: YYYY-MM-DD
   const year = dateObj.getFullYear();
   const month = String(dateObj.getMonth() + 1).padStart(2, "0");
   const day = String(dateObj.getDate()).padStart(2, "0");
   const formattedDate = `${year}-${month}-${day}`;
 
-  // Get abbreviated weekday
   const weekday = dateObj.toLocaleDateString("en-US", { weekday: "short" });
-
   return `${formattedDate}, ${weekday}`;
 };
 
 // Get score display with winner information
 const getScoreInfo = (item) => {
-  if (!item.winner_name && !item.home_set_1)
+  if (!item.winner_id && !item.set_1_team_1)
     return { score: "TBD", winner: null };
 
   const sets = [];
   for (let i = 1; i <= 5; i++) {
-    const homeScore = item[`home_set_${i}`];
-    const awayScore = item[`away_set_${i}`];
-    if (homeScore !== null && awayScore !== null) {
-      // Skip 0-0 scores
-      if (homeScore === 0 && awayScore === 0) continue;
-      sets.push(`${awayScore}-${homeScore}`); // away-home format
+    const team1Score = item[`set_${i}_team_1`];
+    const team2Score = item[`set_${i}_team_2`];
+    if (team1Score !== null && team2Score !== null) {
+      if (team1Score === 0 && team2Score === 0) continue;
+      sets.push(`${team2Score}-${team1Score}`); // team2-team1 format
     }
   }
 
   return {
-    score:
-      sets.length > 0 ? sets.join(", ") : item.winner_name ? "Final" : "TBD",
-    winner: item.winner_name,
+    score: sets.length > 0 ? sets.join(", ") : item.winner_id ? "Final" : "TBD",
+    winner: item.winner_id,
   };
 };
 
-// Determine team names and images (updated for megagames format)
-const getHomeTeam = (item) => {
+// Determine team names and images
+const getTeam1 = (item) => {
   return {
-    name: item.home_team_name || "TBD",
-    img: item.home_team_img || null,
-    id: item.home_team_id || null,
-    conf: item.home_conference || null,
+    name: item.team_1_name || "TBD",
+    img: item.team_1_img || null,
+    id: item.team_1_id || null,
+    conf: item.team_1_conference || null,
   };
 };
 
-const getAwayTeam = (item) => {
+const getTeam2 = (item) => {
   return {
-    name: item.away_team_name || "TBD",
-    img: item.away_team_img || null,
-    id: item.away_team_id || null,
-    conf: item.away_conference || null,
+    name: item.team_2_name || "TBD",
+    img: item.team_2_img || null,
+    id: item.team_2_id || null,
+    conf: item.team_2_conference || null,
   };
 };
 
 const getFormattedScore = (item) => {
-  if (!item.winner_name && !item.home_set_1)
+  if (!item.winner_id && !item.set_1_team_1)
     return { text: "TBD", isColorized: false };
 
   const sets = [];
-  const awayTeamName = item.away_team_name;
-  const homeTeamName = item.home_team_name;
-  const isAwayWinner = item.winner_name === awayTeamName;
-  const isHomeWinner = item.winner_name === homeTeamName;
+  const team1Name = item.team_1_name;
+  const team2Name = item.team_2_name;
+  const isTeam1Winner = item.winner_id === item.team_1_id;
+  const isTeam2Winner = item.winner_id === item.team_2_id;
 
   for (let i = 1; i <= 5; i++) {
-    const homeScore = item[`home_set_${i}`];
-    const awayScore = item[`away_set_${i}`];
-    if (homeScore !== null && awayScore !== null) {
-      // Skip 0-0 scores
-      if (homeScore === 0 && awayScore === 0) continue;
+    const team1Score = item[`set_${i}_team_1`];
+    const team2Score = item[`set_${i}_team_2`];
+    if (team1Score !== null && team2Score !== null) {
+      if (team1Score === 0 && team2Score === 0) continue;
 
       sets.push({
-        away: awayScore,
-        home: homeScore,
-        awayWon: awayScore > homeScore,
-        homeWon: homeScore > awayScore,
+        team1: team1Score,
+        team2: team2Score,
+        team1Won: team1Score > team2Score,
+        team2Won: team2Score > team1Score,
       });
     }
   }
 
   return {
     sets,
-    isAwayWinner,
-    isHomeWinner,
+    isTeam1Winner,
+    isTeam2Winner,
     hasResult: sets.length > 0,
   };
 };
 
 // Get winner color class
-const getWinnerClass = (item, teamName) => {
-  const scoreInfo = getScoreInfo(item);
-  if (!scoreInfo.winner) return "";
-
-  return scoreInfo.winner === teamName ? "text-success" : "text-error";
+const getWinnerClass = (item, teamId) => {
+  if (!item.winner_id) return "";
+  return item.winner_id === teamId
+    ? "text-success font-weight-bold"
+    : "text-error";
 };
 
 const getWinnerImg = (item) => {
-  if (!item.winner_name) return null;
+  if (!item.winner_id) return null;
 
-  const homeTeam = getHomeTeam(item);
-  const awayTeam = getAwayTeam(item);
+  const team1 = getTeam1(item);
+  const team2 = getTeam2(item);
 
-  // Check if winner matches home team
-  if (item.winner_name === homeTeam.name) {
-    return homeTeam.img;
+  if (item.winner_id === team1.id) {
+    return team1.img;
   }
 
-  // Check if winner matches away team
-  if (item.winner_name === awayTeam.name) {
-    return awayTeam.img;
+  if (item.winner_id === team2.id) {
+    return team2.img;
   }
 
-  // If no match found, return null
   return null;
 };
 
@@ -307,7 +296,7 @@ const onItemsPerPageChange = () => {
   fetchGames();
 };
 
-// Table headers - updated layout
+// Table headers
 const headers = ref([
   {
     title: "Date",
@@ -317,8 +306,8 @@ const headers = ref([
     align: "start",
     sort: dateSort,
   },
-  { title: "Home Team", key: "home_team", sortable: true, width: "auto" },
-  { title: "Away Team", key: "away_team", sortable: true, width: "auto" },
+  { title: "Team 1", key: "team_1", sortable: true, width: "auto" },
+  { title: "Team 2", key: "team_2", sortable: true, width: "auto" },
   {
     title: "Score",
     key: "score",
@@ -328,7 +317,7 @@ const headers = ref([
   },
 ]);
 
-// Watch for filter changes - reset page when filters change
+// Watch for filter changes
 watch(
   () => props.filters,
   () => {
@@ -351,11 +340,16 @@ onMounted(() => {
   <div class="d-flex justify-space-between align-center mb-4">
     <div class="d-flex align-center">
       <span class="text-body-2 mr-3">Items per page:</span>
-      <v-select v-model="itemsPerPage" :items="paginationOptions" />
+      <v-select
+        v-model="itemsPerPage"
+        :items="paginationOptions"
+        density="compact"
+        style="width: 100px"
+      />
     </div>
 
     <div v-if="games.length > 0" class="text-body-2 text-grey">
-      Showing {{ totalGames }} games
+      Showing {{ games.length }} of {{ totalGames }} games
     </div>
   </div>
 
@@ -379,14 +373,14 @@ onMounted(() => {
       </v-chip>
     </template>
 
-    <!-- Home Team column -->
-    <template v-slot:item.home_team="{ item }">
+    <!-- Team 1 column -->
+    <template v-slot:item.team_1="{ item }">
       <div class="d-flex align-center">
         <v-avatar size="32" class="mr-3" tile>
           <v-img
-            v-if="getHomeTeam(item).img"
-            :src="getHomeTeam(item).img"
-            :alt="getHomeTeam(item).name"
+            v-if="getTeam1(item).img"
+            :src="getTeam1(item).img"
+            :alt="getTeam1(item).name"
             contain
           />
           <v-icon v-else>mdi-school</v-icon>
@@ -398,34 +392,33 @@ onMounted(() => {
             class="text-primary font-weight-regular justify-start text-left"
             :class="[
               smAndDown ? 'text-caption' : 'text-body-1',
-              getWinnerClass(item, getHomeTeam(item).name),
+              getWinnerClass(item, getTeam1(item).id),
             ]"
-            @click="navigateToTeam(getHomeTeam(item).id)"
-            :disabled="!getHomeTeam(item).id"
+            @click="navigateToTeam(getTeam1(item).id)"
+            :disabled="!getTeam1(item).id"
             style="
               min-width: 0;
               padding-left: 0 !important;
               padding-right: 0 !important;
             "
           >
-            {{ getHomeTeam(item).name }}
+            {{ getTeam1(item).name }}
           </v-btn>
-
           <span class="text-caption font-italic">{{
-            getHomeTeam(item).conf
+            getTeam1(item).conf
           }}</span>
         </div>
       </div>
     </template>
 
-    <!-- Away Team column -->
-    <template v-slot:item.away_team="{ item }">
+    <!-- Team 2 column -->
+    <template v-slot:item.team_2="{ item }">
       <div class="d-flex align-center">
         <v-avatar size="32" class="mr-3" tile>
           <v-img
-            v-if="getAwayTeam(item).img"
-            :src="getAwayTeam(item).img"
-            :alt="getAwayTeam(item).name"
+            v-if="getTeam2(item).img"
+            :src="getTeam2(item).img"
+            :alt="getTeam2(item).name"
             contain
           />
           <v-icon v-else>mdi-school</v-icon>
@@ -437,26 +430,26 @@ onMounted(() => {
             class="text-primary font-weight-medium justify-start text-left"
             :class="[
               smAndDown ? 'text-caption' : 'text-body-2',
-              getWinnerClass(item, getAwayTeam(item).name),
+              getWinnerClass(item, getTeam2(item).id),
             ]"
-            @click="navigateToTeam(getAwayTeam(item).id)"
-            :disabled="!getAwayTeam(item).id"
+            @click="navigateToTeam(getTeam2(item).id)"
+            :disabled="!getTeam2(item).id"
             style="
               min-width: 0;
               padding-left: 0 !important;
               padding-right: 0 !important;
             "
           >
-            {{ getAwayTeam(item).name }}
+            {{ getTeam2(item).name }}
           </v-btn>
           <span class="text-caption font-italic">{{
-            getHomeTeam(item).conf
+            getTeam2(item).conf
           }}</span>
         </div>
       </div>
     </template>
 
-    <!-- Score column (now in the middle) -->
+    <!-- Score column -->
     <template v-slot:item.score="{ item }">
       <v-btn
         class="text-body-1"
@@ -467,7 +460,7 @@ onMounted(() => {
         <template v-if="getFormattedScore(item).hasResult">
           <!-- Display winner icon if available -->
           <v-avatar v-if="getWinnerImg(item)" size="30" class="mr-2" tile>
-            <v-img :src="getWinnerImg(item)" :alt="item.winner_name" contain />
+            <v-img :src="getWinnerImg(item)" :alt="'Winner'" contain />
           </v-avatar>
 
           <!-- Score display -->
@@ -478,13 +471,13 @@ onMounted(() => {
           >
             <span v-if="index > 0" class="font-weight-thin">, </span>
             <span
-              :class="set.awayWon ? 'font-weight-bold' : 'font-weight-thin'"
-              >{{ set.away }}</span
+              :class="set.team1Won ? 'font-weight-bold' : 'font-weight-thin'"
+              >{{ set.team1 }}</span
             >
             <span class="font-weight-thin">-</span>
             <span
-              :class="set.homeWon ? 'font-weight-bold' : 'font-weight-thin'"
-              >{{ set.home }}</span
+              :class="set.team2Won ? 'font-weight-bold' : 'font-weight-thin'"
+              >{{ set.team2 }}</span
             >
           </template>
           <span class="font-weight-thin">)</span>
@@ -503,9 +496,7 @@ onMounted(() => {
       <div class="text-center pa-4">
         <v-icon size="48" color="grey">mdi-database-search</v-icon>
         <div class="text-h6 mt-2">No games found</div>
-        <div class="text-body-2 text-grey">
-          Try selecting a different season or school
-        </div>
+        <div class="text-body-2 text-grey">Try adjusting your filters</div>
       </div>
     </template>
   </v-data-table>
@@ -527,7 +518,7 @@ onMounted(() => {
 <style>
 .v-table__wrapper table tbody tr td,
 .v-table__wrapper table thead tr th {
-  padding: 0 !important;
+  padding: 8px 16px !important;
 }
 
 /* Ensure buttons align text to the left */

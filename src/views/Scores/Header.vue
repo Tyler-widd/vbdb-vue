@@ -2,16 +2,19 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import { useDisplay } from "vuetify";
+import { useGamesStore } from "@/composables/useGamesStore";
 
 const emit = defineEmits(["filter-change"]);
 
 const { smAndDown } = useDisplay();
 
+// Use the games store
+const { games, fetchGames, getDivisions, getConferences } = useGamesStore();
+
 // API base URL - adjust this to your API URL
 const API_BASE = "http://localhost:4000";
 
 // Data refs
-const allGames = ref([]);
 const availableSeasons = ref([]);
 const selectedSchool = ref(null);
 const selectedDivision = ref(null);
@@ -19,49 +22,16 @@ const selectedConference = ref(null);
 const selectedSeason = ref("2024-25");
 const searchQuery = ref("");
 
-// Get unique divisions from all games
+// Get unique divisions from games store
 const divisions = computed(() => {
-  const divs = new Set();
-
-  allGames.value.forEach((game) => {
-    if (game.home_division) divs.add(game.home_division);
-    if (game.away_division) divs.add(game.away_division);
-  });
-
-  return Array.from(divs)
-    .sort()
-    .map((div) => ({ title: div, value: div }));
+  const divs = getDivisions();
+  return divs.map((div) => ({ title: div, value: div }));
 });
 
-// Filter conferences based on selected division
+// Filter conferences based on selected division using games store
 const conferences = computed(() => {
-  const confs = new Set();
-
-  allGames.value.forEach((game) => {
-    // If division is selected, only include conferences from that division
-    if (selectedDivision.value) {
-      if (
-        game.home_division === selectedDivision.value &&
-        game.home_conference
-      ) {
-        confs.add(game.home_conference);
-      }
-      if (
-        game.away_division === selectedDivision.value &&
-        game.away_conference
-      ) {
-        confs.add(game.away_conference);
-      }
-    } else {
-      // If no division selected, include all conferences
-      if (game.home_conference) confs.add(game.home_conference);
-      if (game.away_conference) confs.add(game.away_conference);
-    }
-  });
-
-  return Array.from(confs)
-    .sort()
-    .map((conf) => ({ title: conf, value: conf }));
+  const confs = getConferences(selectedDivision.value);
+  return confs.map((conf) => ({ title: conf, value: conf }));
 });
 
 // Season options from database
@@ -85,27 +55,27 @@ const seasons = computed(() => {
 const schoolOptions = computed(() => {
   const teams = new Map(); // Use Map to avoid duplicates
 
-  allGames.value.forEach((game) => {
-    // Process home team
-    const homeTeam = {
-      name: game.home_team_name,
-      id: game.home_team_id,
-      img: game.home_team_img,
-      division: game.home_division,
-      conference: game.home_conference,
+  games.value.forEach((game) => {
+    // Process team 1
+    const team1 = {
+      name: game.team_1_name,
+      id: game.team_1_id,
+      img: game.team_1_img,
+      division: game.team_1_division,
+      conference: game.team_1_conference,
     };
 
-    // Process away team
-    const awayTeam = {
-      name: game.away_team_name,
-      id: game.away_team_id,
-      img: game.away_team_img,
-      division: game.away_division,
-      conference: game.away_conference,
+    // Process team 2
+    const team2 = {
+      name: game.team_2_name,
+      id: game.team_2_id,
+      img: game.team_2_img,
+      division: game.team_2_division,
+      conference: game.team_2_conference,
     };
 
     // Check if teams match filters
-    [homeTeam, awayTeam].forEach((team) => {
+    [team1, team2].forEach((team) => {
       if (!team.name || !team.id) return;
 
       let includeTeam = true;
@@ -141,20 +111,6 @@ const schoolOptions = computed(() => {
   );
 });
 
-// Fetch all games data to build filter options
-const fetchAllGames = async () => {
-  try {
-    const response = await fetch(`${API_BASE}/megagames`);
-    if (response.ok) {
-      allGames.value = await response.json();
-    } else {
-      console.error("Failed to fetch games:", response.statusText);
-    }
-  } catch (error) {
-    console.error("Error fetching games:", error);
-  }
-};
-
 // Fetch available seasons from API
 const fetchSeasons = async () => {
   try {
@@ -163,12 +119,10 @@ const fetchSeasons = async () => {
       availableSeasons.value = await response.json();
 
       // Only set default season if no season is currently selected
-      // This prevents overriding the "All Seasons" choice
       if (
         availableSeasons.value.length > 0 &&
         selectedSeason.value === undefined
       ) {
-        // You can choose to default to current season or keep as null for "All Seasons"
         selectedSeason.value = "2024-25"; // Or set to null for All Seasons default
       }
     } else {
@@ -225,7 +179,8 @@ watch(selectedConference, (newConference) => {
 });
 
 onMounted(async () => {
-  await fetchAllGames(); // Fetch games data first to build filter options
+  // Ensure games data is loaded first
+  await fetchGames();
   await fetchSeasons();
 
   // Emit initial filter state after data is loaded
@@ -237,7 +192,7 @@ onMounted(async () => {
 
 <template>
   <v-card color="surface" class="pa-4">
-    <v-card-title class="text-h5 pa-0 pl-2"> Scores </v-card-title>
+    <v-card-title class="text-h5 pa-0 pl-2 mb-4"> Scores </v-card-title>
 
     <!-- First row: Division and Conference -->
     <v-row dense no-gutters>
