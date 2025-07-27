@@ -36,32 +36,8 @@ const scores = [
 <template>
   <div>
     <!-- Top Scores Bar -->
-    <v-app-bar class="flat" color="primary" height="40">
-      <v-container fluid class="pa-0">
-        <v-row no-gutters align="center" justify="center">
-          <v-col>
-            <div class="d-flex justify-center align-center">
-              <div
-                v-for="(score, index) in scores"
-                :key="index"
-                class="mx-4 text-caption d-flex align-center"
-              >
-                <span class="text-white">
-                  {{ score.team1 }} {{ score.score1 }} - {{ score.score2 }}
-                  {{ score.team2 }}
-                </span>
-                <v-divider
-                  v-if="index < scores.length - 1"
-                  vertical
-                  class="mx-3"
-                  color="white"
-                  opacity="0.5"
-                />
-              </div>
-            </div>
-          </v-col>
-        </v-row>
-      </v-container>
+    <v-app-bar class="flat pl-4" color="primary" height="40">
+      Score Cards
     </v-app-bar>
 
     <!-- Main Navigation Bar -->
@@ -74,12 +50,14 @@ const scores = [
         <v-spacer></v-spacer>
         <v-tabs center-active align-tabs="center">
           <div class="d-flex align-center">
-            <v-img
-              :src="`https://raw.githubusercontent.com/widbuntu/vbdb-info/a40c20dac184df3f495587843e59a83ad91cf5c8/assets/favicon.svg`"
-              width="50"
-              height="50"
-              class="mr-8"
-            />
+            <router-link to="/" class="inline-block">
+              <v-img
+                :src="`https://raw.githubusercontent.com/widbuntu/vbdb-info/a40c20dac184df3f495587843e59a83ad91cf5c8/assets/favicon.svg`"
+                width="50"
+                height="50"
+                class="mr-8 cursor-pointer"
+              />
+            </router-link>
             <div v-for="t in tabs" :key="t.value">
               <v-btn
                 class="text-body-1 font-weight-regular ma-4"
@@ -96,11 +74,14 @@ const scores = [
 
       <!-- Mobile Logo (centered) -->
       <div class="d-md-none w-75 d-flex justify-center">
-        <v-img
-          :src="`https://raw.githubusercontent.com/widbuntu/vbdb-info/a40c20dac184df3f495587843e59a83ad91cf5c8/assets/favicon.svg`"
-          width="40"
-          height="40"
-        />
+        <router-link to="/" class="inline-block">
+          <v-img
+            :src="`https://raw.githubusercontent.com/widbuntu/vbdb-info/a40c20dac184df3f495587843e59a83ad91cf5c8/assets/favicon.svg`"
+            width="50"
+            height="50"
+            class="mr-8 cursor-pointer"
+          />
+        </router-link>
       </div>
     </v-app-bar>
 

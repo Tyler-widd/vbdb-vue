@@ -1,0 +1,462 @@
+[
+  {
+    "new_org_id": "CCCAA_001",
+    "school_short": "Allan Hancock",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_002",
+    "school_short": "American River",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_003",
+    "school_short": "Antelope Valley",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_004",
+    "school_short": "Bakersfield",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_005",
+    "school_short": "Butte",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_006",
+    "school_short": "Cabrillo",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_007",
+    "school_short": "Canyons",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_008",
+    "school_short": "Cerritos",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_009",
+    "school_short": "Cerro Coso",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_010",
+    "school_short": "Chaffey",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_011",
+    "school_short": "Citrus",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_012",
+    "school_short": "Coalinga",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_013",
+    "school_short": "Columbia",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_014",
+    "school_short": "Compton",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_015",
+    "school_short": "Contra Costa",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_016",
+    "school_short": "Copper Mountain",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_017",
+    "school_short": "Cosumnes River",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_018",
+    "school_short": "Cuesta",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_019",
+    "school_short": "Cuyamaca",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_020",
+    "school_short": "Cypress",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_021",
+    "school_short": "De Anza",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_022",
+    "school_short": "Desert",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_023",
+    "school_short": "Diablo Valley",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_024",
+    "school_short": "East Los Angeles",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_025",
+    "school_short": "El Camino",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_026",
+    "school_short": "Feather River",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_027",
+    "school_short": "Folsom Lake",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_028",
+    "school_short": "Fresno City",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_029",
+    "school_short": "Fullerton",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_030",
+    "school_short": "Gavilan",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_031",
+    "school_short": "Glendale",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_032",
+    "school_short": "Golden West",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_033",
+    "school_short": "Grossmont",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_034",
+    "school_short": "Hartnell",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_035",
+    "school_short": "Imperial Valley",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_036",
+    "school_short": "Irvine Valley",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_037",
+    "school_short": "LA Harbor",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_038",
+    "school_short": "LA Mission",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_039",
+    "school_short": "LA Pierce",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_040",
+    "school_short": "Las Positas",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_041",
+    "school_short": "Lassen",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_042",
+    "school_short": "Lemoore",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_043",
+    "school_short": "Long Beach",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_044",
+    "school_short": "Los Angeles City",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_045",
+    "school_short": "Los Medanos",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_046",
+    "school_short": "Marin",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_047",
+    "school_short": "Mendocino",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_048",
+    "school_short": "Merced",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_049",
+    "school_short": "MiraCosta",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_050",
+    "school_short": "Modesto",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_051",
+    "school_short": "Monterey Peninsula",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_052",
+    "school_short": "Moorpark",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_053",
+    "school_short": "Mt. San Antonio",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_054",
+    "school_short": "Mt. San Jacinto",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_055",
+    "school_short": "Napa Valley",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_056",
+    "school_short": "Ohlone",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_057",
+    "school_short": "Orange Coast",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_058",
+    "school_short": "Palomar",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_059",
+    "school_short": "Pasadena City",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_060",
+    "school_short": "Porterville",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_061",
+    "school_short": "Redwoods",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_062",
+    "school_short": "Reedley",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_063",
+    "school_short": "Rio Hondo",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_064",
+    "school_short": "Riverside",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_065",
+    "school_short": "Sacramento City",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_066",
+    "school_short": "Saddleback",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_067",
+    "school_short": "San Bernardino Valley",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_068",
+    "school_short": "San Diego City",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_069",
+    "school_short": "San Diego Mesa",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_070",
+    "school_short": "San Diego Miramar",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_071",
+    "school_short": "San Francisco",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_072",
+    "school_short": "San Joaquin Delta",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_073",
+    "school_short": "San Jose",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_074",
+    "school_short": "San Mateo",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_075",
+    "school_short": "Santa Ana",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_076",
+    "school_short": "Santa Barbara",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_077",
+    "school_short": "Santa Monica",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_078",
+    "school_short": "Santa Rosa",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_079",
+    "school_short": "Santiago Canyon",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_080",
+    "school_short": "Sequoias",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_081",
+    "school_short": "Shasta",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_082",
+    "school_short": "Sierra",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_083",
+    "school_short": "Siskiyous",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_084",
+    "school_short": "Skyline",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_085",
+    "school_short": "Solano",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_086",
+    "school_short": "Southwestern",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_087",
+    "school_short": "Taft",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_088",
+    "school_short": "Ventura",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_089",
+    "school_short": "Victor Valley",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_090",
+    "school_short": "West LA",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_091",
+    "school_short": "West Valley",
+    "created_at": "2025-07-23 20:50:19"
+  },
+  {
+    "new_org_id": "CCCAA_092",
+    "school_short": "Yuba",
+    "created_at": "2025-07-23 20:50:19"
+  }
+]

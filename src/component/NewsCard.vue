@@ -25,10 +25,13 @@ const error = ref(null);
 const latestItem = ref(null);
 
 // Use the news cache composable
-const { getCachedNews, setCachedNews, refreshCache } = useNewsCache();
+const { getCachedNews, setCachedNews } = useNewsCache();
 
 // CORS proxy for bypassing CORS restrictions
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+
+// Emit to determine the title of the news feed (used to remove duplicate news stories between D2-3)
+const emit = defineEmits(["news-loaded"]);
 
 const fetchRSSFeed = async (forceRefresh = false) => {
   // Check cache first (unless forcing refresh)
@@ -36,6 +39,8 @@ const fetchRSSFeed = async (forceRefresh = false) => {
     const cachedData = getCachedNews(props.rssUrl);
     if (cachedData) {
       latestItem.value = cachedData;
+      // IMPORTANT: Emit the cached data too!
+      emit("news-loaded", cachedData);
       return;
     }
   }
@@ -89,6 +94,9 @@ const fetchRSSFeed = async (forceRefresh = false) => {
 
     // Cache the data
     setCachedNews(props.rssUrl, newsData);
+
+    // IMPORTANT: Emit the news data after successful fetch
+    emit("news-loaded", newsData);
   } catch (err) {
     console.error("Error fetching RSS feed:", err);
     error.value = `Failed to fetch RSS feed: ${err.message}`;

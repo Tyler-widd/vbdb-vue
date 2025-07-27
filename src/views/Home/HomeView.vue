@@ -1,6 +1,6 @@
 <!-- views/Home/HomeView.vue -->
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import RankingSection from "./SideContent/RankingSection.vue";
 import NewsCard from "../../component/NewsCard.vue";
 
@@ -12,6 +12,32 @@ const fetchTeamData = () => {
 onMounted(() => {
   fetchTeamData();
 });
+
+const d2LatestItem = ref(null);
+const d3LatestItem = ref(null);
+
+// Computed property to determine if cards should be merged
+const shouldMergeCards = computed(() => {
+  if (!d2LatestItem.value || !d3LatestItem.value) {
+    return false;
+  }
+
+  // Compare by GUID (most reliable) or title + pubDate
+  return (
+    d2LatestItem.value.guid === d3LatestItem.value.guid ||
+    (d2LatestItem.value.title === d3LatestItem.value.title &&
+      d2LatestItem.value.pubDate === d3LatestItem.value.pubDate)
+  );
+});
+
+// Event handlers to receive latest items from NewsCard components
+const onD2NewsLoaded = (newsData) => {
+  d2LatestItem.value = newsData;
+};
+
+const onD3NewsLoaded = (newsData) => {
+  d3LatestItem.value = newsData;
+};
 </script>
 
 <template>
@@ -42,21 +68,50 @@ onMounted(() => {
       />
     </v-col>
 
-    <v-col cols="12" md="6" lg="4">
+    <!-- Show merged card if stories are the same -->
+    <v-col v-if="shouldMergeCards" cols="12" md="6" lg="4">
       <NewsCard
-        division="NCAA Division II"
+        ref="d2Card"
+        division="NCAA Division II & III"
         :rss-url="'https://www.ncaa.com/news/volleyball-women/d2/rss.xml'"
-        category="NCAA Division II Women's Volleyball"
+        category="NCAA Division II & III Women's Volleyball"
+        @news-loaded="onD2NewsLoaded"
       />
     </v-col>
 
-    <v-col cols="12" md="6" lg="4">
+    <!-- Show separate cards if stories are different -->
+    <template v-else>
+      <v-col cols="12" md="6" lg="4">
+        <NewsCard
+          ref="d2Card"
+          division="NCAA Division II"
+          :rss-url="'https://www.ncaa.com/news/volleyball-women/d2/rss.xml'"
+          category="NCAA Division II Women's Volleyball"
+          @news-loaded="onD2NewsLoaded"
+        />
+      </v-col>
+
+      <v-col cols="12" md="6" lg="4">
+        <NewsCard
+          ref="d3Card"
+          division="NCAA Division III"
+          :rss-url="'https://www.ncaa.com/news/volleyball-women/d3/rss.xml'"
+          category="NCAA Division III Women's Volleyball"
+          @news-loaded="onD3NewsLoaded"
+        />
+      </v-col>
+    </template>
+
+    <!-- Hidden D3 card for comparison when merged -->
+    <div v-if="shouldMergeCards" style="display: none">
       <NewsCard
+        ref="d3Card"
         division="NCAA Division III"
         :rss-url="'https://www.ncaa.com/news/volleyball-women/d3/rss.xml'"
         category="NCAA Division III Women's Volleyball"
+        @news-loaded="onD3NewsLoaded"
       />
-    </v-col>
+    </div>
 
     <v-col cols="12" lg="4">
       <RankingSection />

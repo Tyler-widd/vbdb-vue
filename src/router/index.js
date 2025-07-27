@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 
 // Views - Mix of direct imports and lazy loading
 import Home from "../views/Home/HomeView.vue";
+import Teams from "../views/Teams/TeamsView.vue";
 
 const routes = [
   {
@@ -22,7 +23,7 @@ const routes = [
   },
   {
     path: "/teams/:id",
-    name: "TeamDetail",
+    name: "TeamDetailView",
     component: () =>
       import(
         /* webpackChunkName: "team-detail" */ "@/views/TeamDetail/TeamDetailView.vue"
