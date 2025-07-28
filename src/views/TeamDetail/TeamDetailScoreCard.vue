@@ -3,6 +3,7 @@
 import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
+import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 
 const { smAndDown } = useDisplay();
 const router = useRouter();
@@ -209,19 +210,6 @@ const totalPages = computed(() => {
   return Math.ceil(formattedRecords.value.length / itemsPerPage);
 });
 
-// Navigate to team
-const navigateToTeam = (teamId) => {
-  if (teamId) {
-    // Force a full page reload when navigating to a different team
-    if (teamId !== props.orgId) {
-      router.push(`/teams/${teamId}`).then(() => {
-        // Force component reload
-        window.location.reload();
-      });
-    }
-  }
-};
-
 // Watch for year changes
 watch(
   () => props.selectedYear,
@@ -377,27 +365,30 @@ fetchGames();
           <!-- Right team (opponent) -->
           <v-col
             cols="4"
-            class="d-flex align-center justify-end"
+            class="d-flex align-center"
             :class="smAndDown ? 'pa-1' : 'px-2'"
           >
-            <div
-              :class="smAndDown ? '' : 'mr-4'"
-              class="d-flex flex-column align-end flex-grow-1 text-truncate"
-              style="min-width: 0"
-            >
-              <v-btn
-                class="text-primary justify-end pa-0"
-                :class="[
-                  smAndDown ? 'text-body-2' : 'text-h6 mb-2',
-                  !record.isWinner ? 'text-success' : 'text-error',
-                ]"
-                style="direction: rtl"
-                @click="navigateToTeam(record.opponentId)"
-              >
-                {{ record.opponentName }}
-              </v-btn>
+            <div class="d-flex flex-column flex-grow-1 text-wrap text-right">
+              <div class="text-wrap">
+                <span
+                  class="text-primary button-like"
+                  :class="[
+                    smAndDown ? 'text-body-2' : 'text-h6 mb-2',
+                    record.isWinner ? 'text-error' : 'text-success',
+                  ]"
+                  :style="{
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-word',
+                    lineHeight: '1.2',
+                    display: 'inline-block',
+                  }"
+                  @click="navigateToTeam($router, record.opponentId, orgId)"
+                >
+                  {{ record.opponentName }}
+                </span>
+              </div>
               <div
-                class="text-caption font-italic text-medium-emphasis text-right"
+                class="text-caption font-italic text-medium-emphasis text-wrap"
                 :style="{
                   whiteSpace: 'normal',
                   wordBreak: 'break-word',
@@ -464,3 +455,25 @@ fetchGames();
     </v-col>
   </v-row>
 </template>
+
+<style>
+.button-like {
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+}
+
+.button-like:hover {
+  background-color: rgba(var(--v-theme-primary), 0.08);
+}
+
+.button-like:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--v-theme-primary), 0.2);
+}
+
+.button-like:active {
+  background-color: rgba(var(--v-theme-primary), 0.12);
+}
+</style>

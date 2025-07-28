@@ -97,11 +97,10 @@ const filteredSchools = computed(() => {
               {{ item.name_official }}
             </v-btn>
             <span class="text-caption text-grey">
-              {{ item.conference }}
+              {{ item.conference }} |
+              {{ item.division }}
             </span>
           </div>
-          <v-divider vertical class="mx-4" />
-          {{ item.division }}
         </div>
       </template>
     </v-data-table>

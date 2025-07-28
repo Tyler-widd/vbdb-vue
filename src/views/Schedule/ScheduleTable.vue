@@ -3,6 +3,7 @@
 import { computed, ref } from "vue";
 import { formatDate } from "@/helpers/formatDate";
 import { useDisplay } from "vuetify";
+import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 
 const { smAndDown, xs } = useDisplay();
 
@@ -107,6 +108,7 @@ const formatTime = (timeString) => {
               class="justify-start pa-0"
               variant="text"
               :size="smAndDown ? 'small' : 'default'"
+              @click="navigateToTeam($router, item.team_1_id, orgId)"
             >
               {{ item.team_1_name }}
             </v-btn>
@@ -128,6 +130,7 @@ const formatTime = (timeString) => {
               class="justify-start pa-0"
               variant="text"
               :size="smAndDown ? 'small' : 'default'"
+              @click="navigateToTeam($router, item.team_2_id, orgId)"
             >
               {{ item.team_2_name }}
             </v-btn>
