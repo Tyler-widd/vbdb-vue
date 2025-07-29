@@ -2,6 +2,7 @@
 <script setup>
 import { useRouter, useRoute } from "vue-router";
 import { ref } from "vue";
+import ScoreScrollCard from "@/component/ScoreScrollCard.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -36,8 +37,13 @@ const scores = [
 <template>
   <div>
     <!-- Top Scores Bar -->
-    <v-app-bar class="flat pl-4" color="primary" height="40">
-      Score Cards
+    <v-app-bar
+      class="flat pl-4"
+      color="primary"
+      height="40"
+      density="prominent"
+    >
+      <ScoreScrollCard />
     </v-app-bar>
 
     <!-- Main Navigation Bar -->

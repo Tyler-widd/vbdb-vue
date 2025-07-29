@@ -1,4 +1,4 @@
-<!-- src/views/Scores/ScoresTable.vue -->
+<!-- src/views/Players/PlayersTable.vue -->
 <script setup>
 import { computed } from "vue";
 import { useDisplay } from "vuetify";
@@ -30,9 +30,13 @@ const props = defineProps({
 
 // Define table headers
 const headers = [
-  { title: "Team 1", key: "team_1", sortable: true },
-  { title: "Team 2", key: "team_2", sortable: true },
-  { title: "Score", key: "score", sortable: true },
+  { title: "School", key: "school", sortable: true },
+  { title: "Player", key: "player", sortable: true },
+  { title: "Jersey", key: "jersey_number", sortable: true },
+  { title: "Class", key: "class", sortable: true },
+  { title: "Position", key: "position", sortable: true },
+  { title: "Height", key: "height", sortable: true },
+  { title: "Hometown", key: "hometown", sortable: true },
 ];
 </script>
 
@@ -45,8 +49,8 @@ const headers = [
       no-data-text="No teams found"
       loading-text="Loading teams..."
     >
-      <template v-slot:header.team_1>
-        <span class="ml-2">Team 1</span></template
+      <template v-slot:header.school>
+        <span class="ml-2">School</span></template
       >
     </v-data-table>
   </v-card>

@@ -1,4 +1,4 @@
-<!-- views/Scores/ScoresHeader.vue -->
+<!-- views/Rankings/RankingsHeader.vue -->
 <script setup>
 import { useDisplay } from "vuetify";
 
@@ -7,7 +7,7 @@ const { smAndDown } = useDisplay();
 
 <template>
   <v-card class="px-4 pb-4 pt-2">
-    <v-card-title class="pt-0">Scores</v-card-title>
+    <v-card-title class="pt-0">Rankings</v-card-title>
     <v-row dense no-gutters class="pa-0">
       <v-col :cols="smAndDown ? 12 : 6">
         <v-autocomplete
