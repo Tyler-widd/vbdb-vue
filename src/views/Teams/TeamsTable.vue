@@ -31,6 +31,14 @@ const props = defineProps({
 // Define table headers
 const headers = [{ title: "School", key: "name_official", sortable: true }];
 
+// Format conference name
+const formatConference = (conference) => {
+  if (conference && conference.includes(".0")) {
+    return `Region ${conference.replace(".0", "")}`;
+  }
+  return conference;
+};
+
 // Filter schools based on current filters
 const filteredSchools = computed(() => {
   let filtered = props.schools;
@@ -42,10 +50,10 @@ const filteredSchools = computed(() => {
     );
   }
 
-  // Filter by conference
+  // Filter by conference - need to compare formatted conference names
   if (props.conferenceFilter) {
     filtered = filtered.filter(
-      (school) => school.conference === props.conferenceFilter
+      (school) => formatConference(school.conference) === props.conferenceFilter
     );
   }
 
@@ -54,10 +62,18 @@ const filteredSchools = computed(() => {
     const searchLower = props.search.toLowerCase();
     filtered = filtered.filter(
       (school) =>
-        school.name_official.toLowerCase().includes(searchLower) ||
-        school.school_short.toLowerCase().includes(searchLower) ||
-        school.division.toLowerCase().includes(searchLower) ||
-        school.conference.toLowerCase().includes(searchLower)
+        (school.name_official &&
+          school.name_official.toLowerCase().includes(searchLower)) ||
+        (school.school_short &&
+          school.school_short.toLowerCase().includes(searchLower)) ||
+        (school.division &&
+          school.division.toLowerCase().includes(searchLower)) ||
+        (school.conference &&
+          school.conference.toLowerCase().includes(searchLower)) ||
+        (school.conference &&
+          formatConference(school.conference)
+            .toLowerCase()
+            .includes(searchLower))
     );
   }
 
@@ -97,7 +113,7 @@ const filteredSchools = computed(() => {
               {{ item.name_official }}
             </v-btn>
             <span class="text-caption text-grey">
-              {{ item.conference }} |
+              {{ formatConference(item.conference) }} |
               {{ item.division }}
             </span>
           </div>

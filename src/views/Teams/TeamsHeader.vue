@@ -43,6 +43,14 @@ const divisions = computed(() => {
   return uniqueDivisions.sort();
 });
 
+// Format conference name
+const formatConference = (conference) => {
+  if (conference && conference.includes(".0")) {
+    return `Region ${conference.replace(".0", "")}`;
+  }
+  return conference;
+};
+
 // Get conferences filtered by selected division
 const conferences = computed(() => {
   let schoolsToFilter = props.schools;
@@ -55,7 +63,9 @@ const conferences = computed(() => {
   }
 
   const uniqueConferences = [
-    ...new Set(schoolsToFilter.map((school) => school.conference)),
+    ...new Set(
+      schoolsToFilter.map((school) => formatConference(school.conference))
+    ),
   ];
   return uniqueConferences.sort();
 });
@@ -116,7 +126,7 @@ const handleSearchChange = (value) => {
       <v-col cols="12">
         <v-text-field
           label="Search teams"
-          :model-value="searchText"
+          v-model="searchText"
           prepend-inner-icon="mdi-magnify"
           :disabled="loading"
           clearable

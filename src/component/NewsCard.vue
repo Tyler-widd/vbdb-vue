@@ -225,27 +225,36 @@ defineExpose({
 
     <!-- Content -->
     <v-card-text v-else-if="latestItem">
-      <div v-if="latestItem.image">
+      <v-col v-if="latestItem.image" class="pa-0" cols="12">
         <v-img :src="latestItem.image" cover height="250" />
-        <v-card-title class="pa-0 text-body-1 text-wrap">
-          {{ latestItem.title }}
-          <v-btn
-            :href="latestItem.link"
-            target="_blank"
-            color="primary"
-            variant="text"
-            density="compact"
-            class="text-body-1 font-weight-regular"
-          >
-            Read More
-          </v-btn>
-        </v-card-title>
-        <v-card-subtitle>
-          <span class="text-caption">
-            Published: {{ formatDate(latestItem.pubDate) }}
-          </span>
-        </v-card-subtitle>
-      </div>
+        <v-row dense no-gutters>
+          <v-col cols="12" class="text-wrap">
+            <v-card-title
+              class="pa-0 text-body-1 text-wrap"
+              style="white-space: normal"
+            >
+              {{ latestItem.title }}
+            </v-card-title>
+          </v-col>
+          <div class="d-flex align-center">
+            <v-btn
+              :href="latestItem.link"
+              target="_blank"
+              color="primary"
+              variant="text"
+              density="compact"
+              class="text-body-2 font-weight-regular"
+            >
+              Read More
+            </v-btn>
+            <v-card-subtitle>
+              <span class="text-caption">
+                Published: {{ formatDate(latestItem.pubDate) }}
+              </span>
+            </v-card-subtitle>
+          </div>
+        </v-row>
+      </v-col>
 
       <!-- Fallback for items without images -->
       <div v-else>

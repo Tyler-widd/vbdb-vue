@@ -11,7 +11,7 @@ const emit = defineEmits(["update:year"]);
 
 const loading = ref(false);
 const school = ref(null);
-const selectedYear = ref("2024");
+const selectedYear = ref("2025");
 const gamesData = ref([]);
 
 // Get the org_id from the route
@@ -26,7 +26,7 @@ const props = defineProps({
 
 // Generate year options from games data
 const yearOptions = computed(() => {
-  if (!gamesData.value.length) return ["2024", "2023", "2022"];
+  if (!gamesData.value.length) return ["2025", "2024", "2023", "2022"];
 
   const years = [
     ...new Set(
@@ -34,9 +34,12 @@ const yearOptions = computed(() => {
         return game.date.split("/")[2];
       })
     ),
+    "2025",
   ];
 
-  return years.sort((a, b) => b - a); // Sort descending
+  const uniqueYears = [...new Set(years)];
+
+  return uniqueYears.sort((a, b) => b - a);
 });
 
 // Fetch school data
@@ -81,13 +84,20 @@ const handleYearChange = (value) => {
   emit("update:year", value);
 };
 
+const formatConference = (conference) => {
+  if (conference && conference.includes(".0")) {
+    return `Region ${conference.replace(".0", "")}`;
+  }
+  return conference;
+};
+
 // Watch for route changes to reload data when navigating between teams
 watch(orgId, (newOrgId) => {
   if (newOrgId) {
     // Reset state
     school.value = null;
     gamesData.value = [];
-    selectedYear.value = "2024";
+    selectedYear.value = "2025";
 
     // Fetch new data
     fetchSchoolData();
@@ -143,7 +153,7 @@ onMounted(() => {
           <v-col>
             <h1 class="text-h4 mb-2">{{ school.name_official }}</h1>
             <p class="text-body-1">
-              {{ school.division }} | {{ school.conference }}
+              {{ school.division }} | {{ formatConference(school.conference) }}
             </p>
           </v-col>
         </v-row>

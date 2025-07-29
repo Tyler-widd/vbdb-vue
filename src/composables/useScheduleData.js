@@ -9,7 +9,16 @@ export function useScheduleData() {
   // Get unique divisions for filters
   const divisions = computed(() => {
     const uniqueDivisions = [
-      ...new Set(scheduleData.value.map((game) => game.team_1_division)),
+      ...new Set([
+        "NAIA",
+        "D-I",
+        "D-II",
+        "D-III",
+        "CCCAA",
+        "NJCAA D-1",
+        "NJCAA D-2",
+        "NJCAA D-3",
+      ]),
     ];
     return uniqueDivisions.sort();
   });
@@ -186,99 +195,6 @@ export function useScheduleData() {
     return filtered;
   };
 
-  // Alternative version if you want to be more explicit about data structure
-  const filterScheduleExplicit = (
-    items,
-    search,
-    divisionFilter,
-    conferenceFilter
-  ) => {
-    function isValidTeamName(teamData) {
-      if (!teamData) return false;
-
-      // If it's a string
-      if (typeof teamData === "string") {
-        return teamData !== "TBA" && teamData !== "TBD";
-      }
-
-      // If it's an object with a name property
-      if (typeof teamData === "object" && teamData.name) {
-        return teamData.name !== "TBA" && teamData.name !== "TBD";
-      }
-
-      return false;
-    }
-
-    function getTeamName(teamData) {
-      if (typeof teamData === "string") return teamData;
-      if (typeof teamData === "object" && teamData.name) return teamData.name;
-      return null;
-    }
-
-    return items.filter((item) => {
-      // Both teams must be valid
-      if (
-        !isValidTeamName(item.team_1_name) ||
-        !isValidTeamName(item.team_2_name)
-      ) {
-        return false;
-      }
-
-      // Apply search filter
-      if (search && search.trim() !== "") {
-        const searchLower = search.toLowerCase().trim();
-        const team1Name = getTeamName(item.team_1_name)?.toLowerCase();
-        const team2Name = getTeamName(item.team_2_name)?.toLowerCase();
-
-        if (
-          !team1Name?.includes(searchLower) &&
-          !team2Name?.includes(searchLower)
-        ) {
-          return false;
-        }
-      }
-
-      // Apply division filter
-      if (divisionFilter && divisionFilter !== "all") {
-        const itemDivision =
-          item.division || item.team_1_division || item.team_2_division;
-        if (itemDivision !== divisionFilter) {
-          return false;
-        }
-      }
-
-      // Apply conference filter
-      if (conferenceFilter && conferenceFilter !== "all") {
-        const itemConference =
-          item.conference || item.team_1_conference || item.team_2_conference;
-        if (itemConference !== conferenceFilter) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  };
-
-  // Optional: Get statistics about the data
-  const getScheduleStats = computed(() => {
-    const totalGames = scheduleData.value.length;
-    const uniqueDates = new Set(scheduleData.value.map((game) => game.date))
-      .size;
-    const uniqueTeams = new Set([
-      ...scheduleData.value.map((game) => game.team_1_id),
-      ...scheduleData.value.map((game) => game.team_2_id),
-    ]).size;
-
-    return {
-      totalGames,
-      uniqueDates,
-      uniqueTeams,
-      divisions: divisions.value.length,
-      conferences: conferences.value.length,
-    };
-  });
-
   return {
     scheduleData,
     loading,
@@ -288,6 +204,5 @@ export function useScheduleData() {
     getConferencesForDivision,
     fetchSchedule,
     filterSchedule,
-    getScheduleStats, // Optional: for debugging/info
   };
 }

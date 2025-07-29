@@ -1,7 +1,7 @@
 <!-- views/Schedule/ScheduleTable.vue -->
 <script setup>
 import { computed, ref } from "vue";
-import { formatDate } from "@/helpers/formatDate";
+import { formatDateYear, formatDateMoblie } from "@/helpers/formatDate";
 import { useDisplay } from "vuetify";
 import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 
@@ -74,6 +74,13 @@ const formatTime = (timeString) => {
     minute: "2-digit",
   });
 };
+
+const formatConference = (conference) => {
+  if (conference && conference.includes(".0")) {
+    return `Region ${conference.replace(".0", "")}`;
+  }
+  return conference;
+};
 </script>
 
 <template>
@@ -92,7 +99,13 @@ const formatTime = (timeString) => {
       <!-- Custom date column -->
       <template v-slot:item.date="{ item }">
         <div class="text-body-2 d-flex flex-column ml-2">
-          <div>{{ formatDate(item.date) }}</div>
+          <div>
+            {{
+              smAndDown
+                ? formatDateMoblie(item.date)
+                : formatDateYear(item.date)
+            }}
+          </div>
           <div class="text-caption text-grey">{{ formatTime(item.time) }}</div>
         </div>
       </template>
@@ -113,7 +126,7 @@ const formatTime = (timeString) => {
               {{ item.team_1_name }}
             </v-btn>
             <div class="text-caption text-grey justify-start">
-              {{ item.team_1_conference }}
+              {{ formatConference(item.team_1_conference) }}
             </div>
           </div>
         </div>
@@ -135,7 +148,7 @@ const formatTime = (timeString) => {
               {{ item.team_2_name }}
             </v-btn>
             <div class="text-caption text-grey justify-start">
-              {{ item.team_2_conference }}
+              {{ formatConference(item.team_2_conference) }}
             </div>
           </div>
         </div>
