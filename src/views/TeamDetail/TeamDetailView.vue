@@ -34,18 +34,16 @@ const handleRecordUpdate = (recordValue) => {
 </script>
 
 <template>
-  <v-container>
-    <!-- Use :key to force re-render when orgId changes -->
-    <TeamDetailHeader
-      :key="`header-${orgId}`"
-      :record="record"
-      @update:year="handleYearUpdate"
-    />
-    <TeamDetailScoreCard
-      :key="`scorecard-${orgId}`"
-      :org-id="orgId"
-      :selected-year="selectedYear"
-      @update:record="handleRecordUpdate"
-    />
-  </v-container>
+  <!-- Use :key to force re-render when orgId changes -->
+  <TeamDetailHeader
+    :key="`header-${orgId}`"
+    :record="record"
+    @update:year="handleYearUpdate"
+  />
+  <TeamDetailScoreCard
+    :key="`scorecard-${orgId}`"
+    :org-id="orgId"
+    :selected-year="selectedYear"
+    @update:record="handleRecordUpdate"
+  />
 </template>

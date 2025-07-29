@@ -60,7 +60,19 @@ const filteredSchedule = computed(() => {
 
 // Format time for better display
 const formatTime = (timeString) => {
-  const [hours, minutes] = timeString.split(":");
+  // Check if timeString is valid
+  if (!timeString || typeof timeString !== "string") {
+    return "Time TBD";
+  }
+
+  const parts = timeString.split(":");
+
+  // Check if we have valid time parts
+  if (parts.length < 2) {
+    return "Invalid time";
+  }
+
+  const [hours, minutes] = parts;
 
   if (!hours || !minutes) {
     return "Invalid time";
