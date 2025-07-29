@@ -29,7 +29,16 @@ const searchText = ref("");
 // Get unique divisions
 const divisions = computed(() => {
   const uniqueDivisions = [
-    ...new Set(["NAIA", "D-I", "D-II", "D-III", "CCCAA"]),
+    ...new Set([
+      "NAIA",
+      "D-I",
+      "D-II",
+      "D-III",
+      "CCCAA",
+      "NJCAA D-1",
+      "NJCAA D-2",
+      "NJCAA D-3",
+    ]),
   ];
   return uniqueDivisions.sort();
 });

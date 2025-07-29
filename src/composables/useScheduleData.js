@@ -102,39 +102,162 @@ export function useScheduleData() {
 
   // Filter function for search and filters
   const filterSchedule = (items, search, divisionFilter, conferenceFilter) => {
-    let filtered = items;
+    const isValidValue = (value) => {
+      return (
+        value != null && value !== "" && value !== "TBA" && value !== "TBD"
+      );
+    };
+
+    const getTeamName = (teamData) => {
+      if (typeof teamData === "string") return teamData;
+      if (typeof teamData === "object" && teamData?.name) return teamData.name;
+      return teamData;
+    };
+
+    const getTeamDivision = (teamData) => {
+      if (typeof teamData === "object" && teamData?.division)
+        return teamData.division;
+      return null;
+    };
+
+    const getTeamConference = (teamData) => {
+      if (typeof teamData === "object" && teamData?.conference)
+        return teamData.conference;
+      return null;
+    };
+
+    let filtered = items.filter((item) => {
+      const team1Name = getTeamName(item.team_1_name);
+      const team2Name = getTeamName(item.team_2_name);
+
+      // Both teams must have valid names
+      return isValidValue(team1Name) && isValidValue(team2Name);
+    });
 
     // Apply division filter
-    if (divisionFilter) {
-      filtered = filtered.filter(
-        (game) =>
-          game.team_1_division === divisionFilter ||
-          game.team_2_division === divisionFilter
-      );
+    if (divisionFilter && divisionFilter !== "all") {
+      filtered = filtered.filter((game) => {
+        const team1Division =
+          getTeamDivision(game.team_1_name) || game.team_1_division;
+        const team2Division =
+          getTeamDivision(game.team_2_name) || game.team_2_division;
+
+        return (
+          team1Division === divisionFilter || team2Division === divisionFilter
+        );
+      });
     }
 
     // Apply conference filter
-    if (conferenceFilter) {
-      filtered = filtered.filter(
-        (game) =>
-          game.team_1_conference === conferenceFilter ||
-          game.team_2_conference === conferenceFilter
-      );
+    if (conferenceFilter && conferenceFilter !== "all") {
+      filtered = filtered.filter((game) => {
+        const team1Conference =
+          getTeamConference(game.team_1_name) || game.team_1_conference;
+        const team2Conference =
+          getTeamConference(game.team_2_name) || game.team_2_conference;
+
+        return (
+          team1Conference === conferenceFilter ||
+          team2Conference === conferenceFilter
+        );
+      });
     }
 
     // Apply search filter
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (game) =>
-          game.team_1_name.toLowerCase().includes(searchLower) ||
-          game.team_2_name.toLowerCase().includes(searchLower) ||
-          game.date.includes(search) ||
-          game.time.toLowerCase().includes(searchLower)
-      );
+    if (search && search.trim() !== "") {
+      const searchLower = search.toLowerCase().trim();
+      filtered = filtered.filter((game) => {
+        const team1Name = getTeamName(game.team_1_name);
+        const team2Name = getTeamName(game.team_2_name);
+
+        // Safe string operations with fallbacks
+        const team1Match =
+          team1Name?.toLowerCase?.()?.includes(searchLower) || false;
+        const team2Match =
+          team2Name?.toLowerCase?.()?.includes(searchLower) || false;
+        const dateMatch = game.date?.includes?.(search) || false;
+        const timeMatch =
+          game.time?.toLowerCase?.()?.includes(searchLower) || false;
+
+        return team1Match || team2Match || dateMatch || timeMatch;
+      });
     }
 
     return filtered;
+  };
+
+  // Alternative version if you want to be more explicit about data structure
+  const filterScheduleExplicit = (
+    items,
+    search,
+    divisionFilter,
+    conferenceFilter
+  ) => {
+    function isValidTeamName(teamData) {
+      if (!teamData) return false;
+
+      // If it's a string
+      if (typeof teamData === "string") {
+        return teamData !== "TBA" && teamData !== "TBD";
+      }
+
+      // If it's an object with a name property
+      if (typeof teamData === "object" && teamData.name) {
+        return teamData.name !== "TBA" && teamData.name !== "TBD";
+      }
+
+      return false;
+    }
+
+    function getTeamName(teamData) {
+      if (typeof teamData === "string") return teamData;
+      if (typeof teamData === "object" && teamData.name) return teamData.name;
+      return null;
+    }
+
+    return items.filter((item) => {
+      // Both teams must be valid
+      if (
+        !isValidTeamName(item.team_1_name) ||
+        !isValidTeamName(item.team_2_name)
+      ) {
+        return false;
+      }
+
+      // Apply search filter
+      if (search && search.trim() !== "") {
+        const searchLower = search.toLowerCase().trim();
+        const team1Name = getTeamName(item.team_1_name)?.toLowerCase();
+        const team2Name = getTeamName(item.team_2_name)?.toLowerCase();
+
+        if (
+          !team1Name?.includes(searchLower) &&
+          !team2Name?.includes(searchLower)
+        ) {
+          return false;
+        }
+      }
+
+      // Apply division filter
+      if (divisionFilter && divisionFilter !== "all") {
+        const itemDivision =
+          item.division || item.team_1_division || item.team_2_division;
+        if (itemDivision !== divisionFilter) {
+          return false;
+        }
+      }
+
+      // Apply conference filter
+      if (conferenceFilter && conferenceFilter !== "all") {
+        const itemConference =
+          item.conference || item.team_1_conference || item.team_2_conference;
+        if (itemConference !== conferenceFilter) {
+          return false;
+        }
+      }
+
+      return true;
+    });
   };
 
   // Optional: Get statistics about the data
