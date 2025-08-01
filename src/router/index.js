@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from "vue-router";
 
 // Views - Mix of direct imports and lazy loading
 import Home from "../views/Home/HomeView.vue";
-import Teams from "../views/Teams/TeamsView.vue";
 
 const routes = [
   {

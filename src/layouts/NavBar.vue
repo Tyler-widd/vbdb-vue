@@ -37,12 +37,7 @@ const scores = [
 <template>
   <div>
     <!-- Top Scores Bar -->
-    <v-app-bar
-      class="flat pl-4"
-      color="primary"
-      height="40"
-      density="prominent"
-    >
+    <v-app-bar color="background" height="40" density="prominent">
       <ScoreScrollCard />
     </v-app-bar>
 
@@ -66,7 +61,7 @@ const scores = [
             </router-link>
             <div v-for="t in tabs" :key="t.value">
               <v-btn
-                class="text-body-1 font-weight-regular ma-4"
+                class="text-body-1 font-weight-regular ga-4"
                 :variant="isActiveRoute(t.route) ? 'tonal' : 'text'"
                 @click="navigateTo(t.route)"
               >

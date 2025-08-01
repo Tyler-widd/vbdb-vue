@@ -1,3 +1,4 @@
+<!-- views/Players/PlayersHeader.vue -->
 <script setup>
 import { ref, computed, watch } from "vue";
 import { useDisplay } from "vuetify";
