@@ -35,7 +35,7 @@ export function useGamesData() {
     error.value = null;
 
     try {
-      let url = `http://localhost:4000/games`;
+      let url = `https://api.volleyballdatabased.com/games`;
       const params = new URLSearchParams();
 
       if (date) {
@@ -74,8 +74,8 @@ export function useGamesData() {
 
     try {
       const url = orgId
-        ? `http://localhost:4000/games/${orgId}`
-        : `http://localhost:4000/games`;
+        ? `https://api.volleyballdatabased.com/${orgId}`
+        : `https://api.volleyballdatabased.com/`;
 
       const response = await fetch(url);
 
