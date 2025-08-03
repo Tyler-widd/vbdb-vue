@@ -8,6 +8,8 @@ import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 const { smAndDown } = useDisplay();
 const { formatConference } = usePlayersData();
 
+const emit = defineEmits(["update:page"]);
+
 const props = defineProps({
   players: {
     type: Array,
@@ -17,21 +19,17 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  search: {
-    type: String,
-    default: "",
+  currentPage: {
+    type: Number,
+    default: 1,
   },
-  divisionFilter: {
-    type: String,
-    default: null,
+  totalPages: {
+    type: Number,
+    default: 0,
   },
-  conferenceFilter: {
-    type: String,
-    default: null,
-  },
-  schoolFilter: {
-    type: String,
-    default: null,
+  totalPlayers: {
+    type: Number,
+    default: 0,
   },
 });
 
@@ -41,37 +39,37 @@ const headers = computed(() => {
     {
       title: "Player",
       key: "player",
-      sortable: true,
+      sortable: false, // Sorting should be done server-side
       width: smAndDown.value ? "140" : "auto",
     },
     {
       title: "School",
       key: "school",
-      sortable: true,
+      sortable: false,
       width: smAndDown.value ? "120" : "auto",
     },
     {
       title: smAndDown.value ? "Cls" : "Class",
       key: "class",
-      sortable: true,
+      sortable: false,
       width: "10",
       align: "start",
     },
     {
       title: smAndDown.value ? "Pos" : "Position",
       key: "position",
-      sortable: true,
+      sortable: false,
       width: "10",
       align: "start",
     },
     {
       title: smAndDown.value ? "Hgt" : "Height",
       key: "height",
-      sortable: true,
+      sortable: false,
       width: "10",
       align: "start",
     },
-    { title: "Hometown", key: "hometown", sortable: true, width: "140" },
+    { title: "Hometown", key: "hometown", sortable: false, width: "140" },
   ];
 
   // Hide hometown column on small screens to save space
@@ -82,59 +80,20 @@ const headers = computed(() => {
   return baseHeaders;
 });
 
-// Filter players based on search and filters
-// Note: players are now expected to be pre-formatted from the composable
-const filteredPlayers = computed(() => {
-  let filtered = props.players;
-
-  // Apply division filter
-  if (props.divisionFilter) {
-    filtered = filtered.filter(
-      (player) => player.division === props.divisionFilter
-    );
-  }
-
-  // Apply conference filter
-  if (props.conferenceFilter) {
-    filtered = filtered.filter(
-      (player) => player.conference === props.conferenceFilter
-    );
-  }
-
-  // Apply school filter
-  if (props.schoolFilter) {
-    filtered = filtered.filter(
-      (player) => player.school === props.schoolFilter
-    );
-  }
-
-  // Apply search filter
-  if (props.search) {
-    const searchLower = props.search.toLowerCase();
-    filtered = filtered.filter((player) => {
-      return (
-        player.player.toLowerCase().includes(searchLower) ||
-        player.school.toLowerCase().includes(searchLower) ||
-        player.position.toLowerCase().includes(searchLower) ||
-        player.hometown.toLowerCase().includes(searchLower) ||
-        (player.jersey_number &&
-          player.jersey_number.toString().includes(searchLower)) ||
-        player.class.toLowerCase().includes(searchLower)
-      );
-    });
-  }
-
-  return filtered;
-});
+// Handle page changes
+const handlePageChange = (newPage) => {
+  emit("update:page", newPage);
+};
 </script>
 
 <template>
   <v-card class="mt-4">
     <v-data-table
       :headers="headers"
-      :items="filteredPlayers"
-      :loading="loading"
+      :items="props.players"
+      :loading="props.loading"
       :items-per-page="10"
+      hide-default-footer
       no-data-text="No players found"
       loading-text="Loading players..."
     >
@@ -149,22 +108,13 @@ const filteredPlayers = computed(() => {
           <div class="d-flex flex-column">
             <span
               class="text-body-2 button-like mt-1"
-              :class="[
-                'text-body-2',
-                item.isWinner !== undefined
-                  ? item.isWinner
-                    ? 'text-error'
-                    : 'text-success'
-                  : '',
-              ]"
               :style="{
                 whiteSpace: 'normal',
                 wordBreak: 'break-word',
                 lineHeight: '1.2',
                 display: 'inline-block',
               }"
-              :href="item.player_url"
-              target="_blank"
+              @click="item.player_url && window.open(item.player_url, '_blank')"
             >
               {{ item.player }}
             </span>
@@ -179,7 +129,7 @@ const filteredPlayers = computed(() => {
       <template v-slot:item.player="{ item }" v-else>
         <div class="d-flex align-center py-2 ml-2">
           <v-avatar size="32" class="mr-3">
-            <v-img :src="item.img" :alt="item.name_official" cover />
+            <v-img :src="item.img" :alt="item.school" cover />
           </v-avatar>
           <div class="d-flex flex-column text-truncate">
             <v-btn
@@ -189,9 +139,11 @@ const filteredPlayers = computed(() => {
               :href="item.player_url"
               target="_blank"
               rel="noopener noreferrer"
+              v-if="item.player_url"
             >
               {{ item.player }}
             </v-btn>
+            <span v-else class="text-body-1">{{ item.player }}</span>
             <span class="text-caption text-grey">
               #{{ item.jersey_number }}
             </span>
@@ -209,12 +161,27 @@ const filteredPlayers = computed(() => {
               lineHeight: '1.2',
               display: 'inline-block',
             }"
-            @click="navigateToTeam($router, item.org_id, orgId)"
+            @click="item.org_id && navigateToTeam($router, item.org_id)"
           >
             {{ item.school }}
           </span>
           <div class="text-caption text-grey">
-            {{ formatConference(item.conference) }} | {{ item.division }}
+            {{ item.conference }} | {{ item.division }}
+          </div>
+        </div>
+      </template>
+
+      <!-- Custom bottom slot for pagination -->
+      <template v-slot:bottom>
+        <div class="d-flex align-center justify-center pa-4">
+          <v-pagination
+            v-model="props.currentPage"
+            :length="props.totalPages"
+            :total-visible="smAndDown ? 5 : 7"
+            @update:model-value="handlePageChange"
+          />
+          <div class="ml-4 text-caption">
+            {{ props.totalPlayers }} total players
           </div>
         </div>
       </template>
