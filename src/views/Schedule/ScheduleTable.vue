@@ -106,11 +106,11 @@ const formatConference = (conference) => {
       loading-text="Loading schedule..."
     >
       <!-- Custom date column name -->
-      <template v-slot:header.date> <span class="ml-2">Date</span></template>
+      <template v-slot:header.date> <span class="ml-1">Date</span></template>
 
       <!-- Custom date column -->
       <template v-slot:item.date="{ item }">
-        <div class="text-body-2 d-flex flex-column ml-2">
+        <div class="text-body-2 d-flex flex-column ml-1">
           <div>
             {{
               smAndDown
@@ -125,7 +125,7 @@ const formatConference = (conference) => {
       <!-- Team 1 - Centered version -->
       <template v-slot:item.team_1="{ item }">
         <div class="d-flex align-center">
-          <v-avatar :size="smAndDown ? '24' : '32'" class="mr-3">
+          <v-avatar :size="smAndDown ? '24' : '32'" class="mr-1">
             <v-img :src="item.team_1_img" :alt="item.team_1_name" />
           </v-avatar>
           <div class="d-flex flex-column text-truncate">
