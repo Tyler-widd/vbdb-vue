@@ -8,7 +8,7 @@ const { smAndDown } = useDisplay();
 const { loading, error, getAllPlayers } = usePlayersData();
 
 const emit = defineEmits([
-  "update:division",
+  "update:divisions",
   "update:conference",
   "update:school",
   "update:search",
@@ -23,35 +23,57 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  divisions: {
+    type: Array,
+    default: () => ["D-I", "D-II", "D-III"], // Array of selected divisions
+  },
 });
 
-const selectedDivision = ref(null);
+const selectedDivisions = ref([...props.divisions]); // Array of selected divisions
 const selectedConference = ref(null);
 const selectedSchool = ref(null);
 const searchText = ref("");
 const allPlayers = ref([]);
 
-// Fetch all players on component mount
+// Fetch all players from all divisions on component mount
 onMounted(async () => {
   try {
-    allPlayers.value = await getAllPlayers();
+    // Fetch players from all divisions to populate dropdowns
+    const divisions = ["D-I", "D-II", "D-III"];
+    const promises = divisions.map(async (division) => {
+      try {
+        const response = await fetch(
+          `https://api.volleyballdatabased.com/players?division=${division}&per_page=1000`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data.players || [];
+      } catch (err) {
+        console.error(`Error loading ${division} players:`, err);
+        return [];
+      }
+    });
+
+    const results = await Promise.all(promises);
+    allPlayers.value = results.flat();
   } catch (err) {
     console.error("Error loading players:", err);
   }
 });
 
-// Get unique divisions from players data
-const divisions = computed(() => {
-  const playersToFilter =
-    props.players.length > 0 ? props.players : allPlayers.value;
-  const uniqueDivisions = [
-    ...new Set(
-      playersToFilter
-        .map((player) => player.division || player.school?.division)
-        .filter(Boolean)
-    ),
-  ];
-  return uniqueDivisions.sort();
+// Watch for divisions prop changes
+watch(
+  () => props.divisions,
+  (newVal) => {
+    selectedDivisions.value = [...newVal];
+  }
+);
+
+// Available divisions for selection
+const availableDivisions = computed(() => {
+  return ["D-I", "D-II", "D-III"];
 });
 
 // Format conference name
@@ -62,17 +84,19 @@ const formatConference = (conference) => {
   return conference;
 };
 
-// Get conferences filtered by selected division
+// Get conferences filtered by selected divisions
 const conferences = computed(() => {
-  let playersToFilter =
-    props.players.length > 0 ? props.players : allPlayers.value;
+  let playersToFilter = allPlayers.value;
 
-  // If a division is selected, filter players by that division
-  if (selectedDivision.value) {
+  // Filter by selected divisions
+  if (
+    selectedDivisions.value.length > 0 &&
+    selectedDivisions.value.length < 3
+  ) {
     playersToFilter = playersToFilter.filter(
       (player) =>
-        player.division === selectedDivision.value ||
-        player.school?.division === selectedDivision.value
+        selectedDivisions.value.includes(player.division) ||
+        selectedDivisions.value.includes(player.school?.division)
     );
   }
 
@@ -88,17 +112,19 @@ const conferences = computed(() => {
   return uniqueConferences.sort();
 });
 
-// Get schools filtered by selected division and conference
+// Get schools filtered by selected divisions and conference
 const schools = computed(() => {
-  let playersToFilter =
-    props.players.length > 0 ? props.players : allPlayers.value;
+  let playersToFilter = allPlayers.value;
 
-  // Filter by division if selected
-  if (selectedDivision.value) {
+  // Filter by selected divisions
+  if (
+    selectedDivisions.value.length > 0 &&
+    selectedDivisions.value.length < 3
+  ) {
     playersToFilter = playersToFilter.filter(
       (player) =>
-        player.division === selectedDivision.value ||
-        player.school?.division === selectedDivision.value
+        selectedDivisions.value.includes(player.division) ||
+        selectedDivisions.value.includes(player.school?.division)
     );
   }
 
@@ -122,21 +148,25 @@ const schools = computed(() => {
   return uniqueSchools.sort();
 });
 
-// Watch for division changes to reset conference and school if needed
-watch(selectedDivision, (newDivision) => {
-  // Reset conference if it's not available in the new division
-  if (
-    selectedConference.value &&
-    !conferences.value.includes(selectedConference.value)
-  ) {
-    selectedConference.value = null;
-  }
+// Watch for divisions changes to reset conference and school if needed
+watch(
+  selectedDivisions,
+  (newDivisions) => {
+    // Reset conference if it's not available in the new divisions
+    if (
+      selectedConference.value &&
+      !conferences.value.includes(selectedConference.value)
+    ) {
+      selectedConference.value = null;
+    }
 
-  // Reset school if it's not available in the new division
-  if (selectedSchool.value && !schools.value.includes(selectedSchool.value)) {
-    selectedSchool.value = null;
-  }
-});
+    // Reset school if it's not available in the new divisions
+    if (selectedSchool.value && !schools.value.includes(selectedSchool.value)) {
+      selectedSchool.value = null;
+    }
+  },
+  { deep: true }
+);
 
 // Watch for conference changes to reset school if needed
 watch(selectedConference, (newConference) => {
@@ -146,9 +176,12 @@ watch(selectedConference, (newConference) => {
   }
 });
 
-const handleDivisionChange = (value) => {
-  selectedDivision.value = value;
-  emit("update:division", value);
+// Remove the all divisions toggle watcher
+// (No longer needed)
+
+const handleDivisionsChange = (value) => {
+  selectedDivisions.value = value;
+  emit("update:divisions", value);
 };
 
 const handleConferenceChange = (value) => {
@@ -169,17 +202,20 @@ const handleSearchChange = (value) => {
 
 <template>
   <v-card class="px-4 pb-4 pt-2">
-    <v-card-title class="pt-0">Players</v-card-title>
+    <v-card-title class="d-flex justify-space-between align-center pt-0">
+      <span>Players</span>
+    </v-card-title>
     <v-row dense no-gutters class="pa-0">
       <v-col :cols="smAndDown ? 12 : 6">
         <v-autocomplete
-          label="Division"
-          v-model="selectedDivision"
+          label="Divisions"
+          v-model="selectedDivisions"
           :class="smAndDown ? 'mb-2' : 'mb-2 mr-2'"
-          :items="divisions"
+          :items="availableDivisions"
           :disabled="props.loading || loading"
+          multiple
           clearable
-          @update:model-value="handleDivisionChange"
+          @update:model-value="handleDivisionsChange"
         />
       </v-col>
       <v-col :cols="smAndDown ? 12 : 6">
@@ -206,7 +242,7 @@ const handleSearchChange = (value) => {
       </v-col>
       <v-col :cols="smAndDown ? 12 : 6">
         <v-text-field
-          label="Search players"
+          label="Search players by name..."
           v-model="searchText"
           :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
           prepend-inner-icon="mdi-magnify"

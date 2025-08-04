@@ -1,6 +1,6 @@
 <!-- src/views/Players/PlayersTable.vue -->
 <script setup>
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useDisplay } from "vuetify";
 import { usePlayersData } from "@/composables/usePlayersData";
 import { navigateToTeam } from "../../helpers/navigateToTeam.js";
@@ -49,25 +49,22 @@ const headers = computed(() => {
       width: smAndDown.value ? "120" : "auto",
     },
     {
-      title: smAndDown.value ? "Cls" : "Class",
       key: "class",
       sortable: false,
       width: "10",
-      align: "start",
+      align: smAndDown.value ? "center" : "start",
     },
     {
-      title: smAndDown.value ? "Pos" : "Position",
       key: "position",
       sortable: false,
       width: "10",
-      align: "start",
+      align: smAndDown.value ? "center" : "start",
     },
     {
-      title: smAndDown.value ? "Hgt" : "Height",
       key: "height",
       sortable: false,
       width: "10",
-      align: "start",
+      align: smAndDown.value ? "center" : "start",
     },
     { title: "Hometown", key: "hometown", sortable: false, width: "140" },
   ];
@@ -80,10 +77,11 @@ const headers = computed(() => {
   return baseHeaders;
 });
 
-// Handle page changes
-const handlePageChange = (newPage) => {
-  emit("update:page", newPage);
-};
+// Create a local page model that syncs with the prop
+const localPage = computed({
+  get: () => props.currentPage,
+  set: (value) => emit("update:page", value),
+});
 </script>
 
 <template>
@@ -92,13 +90,37 @@ const handlePageChange = (newPage) => {
       :headers="headers"
       :items="props.players"
       :loading="props.loading"
-      :items-per-page="10"
+      :items-per-page="-1"
       hide-default-footer
       no-data-text="No players found"
       loading-text="Loading players..."
     >
       <template v-slot:header.player>
         <span class="ml-2">Player</span>
+      </template>
+
+      <template v-slot:header.class>
+        <span :class="smAndDown ? 'mr-1' : 'ml-2'">
+          {{ smAndDown ? "Cls" : "Class" }}
+        </span>
+      </template>
+
+      <template v-slot:header.position>
+        <span :class="smAndDown ? 'mr-1' : 'ml-2'">
+          {{ smAndDown ? "Pos" : "Position" }}
+        </span>
+      </template>
+
+      <template v-slot:header.height>
+        <span :class="smAndDown ? 'mr-1' : 'ml-2'">
+          {{ smAndDown ? "Hgt" : "Height" }}
+        </span>
+      </template>
+
+      <template v-slot:header.hometown>
+        <span :class="smAndDown ? 'mr-1' : 'ml-2'">
+          {{ smAndDown ? "HTown" : "Hometown" }}
+        </span>
       </template>
 
       <!-- Custom rendering for player names -->
@@ -175,10 +197,9 @@ const handlePageChange = (newPage) => {
       <template v-slot:bottom>
         <div class="d-flex align-center justify-center pa-4">
           <v-pagination
-            v-model="props.currentPage"
+            v-model="localPage"
             :length="props.totalPages"
             :total-visible="smAndDown ? 5 : 7"
-            @update:model-value="handlePageChange"
           />
           <div class="ml-4 text-caption">
             {{ props.totalPlayers }} total players

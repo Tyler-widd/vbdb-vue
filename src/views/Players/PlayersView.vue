@@ -1,6 +1,7 @@
 <!-- Players/PlayersView.vue -->
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, nextTick } from "vue";
+import { debounce } from "lodash-es";
 import PlayersHeader from "./PlayersHeader.vue";
 import PlayersTable from "./PlayersTable.vue";
 import { usePlayersData } from "@/composables/usePlayersData";
@@ -25,19 +26,33 @@ const filterOptions = ref({
   positions: [],
 });
 
-// Filter state
+// Filter state - Set divisions to array with all divisions selected by default
 const filters = ref({
-  division: null,
+  divisions: ["D-I", "D-II", "D-III"], // Changed to array with all divisions
   conference: null,
   school: null,
   position: null,
   search: "",
-  allDivisions: false,
   page: 1,
-  perPage: 100,
+  perPage: 10,
 });
 
-// Load filter options on mount
+// Create a debounced version of loadPlayers for search
+const debouncedLoadPlayers = debounce(async (maintainFocus = false) => {
+  const searchInput = document.querySelector('input[type="text"]');
+  const cursorPosition = searchInput?.selectionStart;
+
+  await loadPlayers();
+
+  // Restore focus and cursor position if needed
+  if (maintainFocus && searchInput) {
+    await nextTick();
+    searchInput.focus();
+    searchInput.setSelectionRange(cursorPosition, cursorPosition);
+  }
+}, 500);
+
+// Load filter options and initial data on mount
 onMounted(async () => {
   filterOptions.value = await fetchFilterOptions();
   await loadPlayers();
@@ -48,30 +63,42 @@ const loadPlayers = async () => {
   const result = await fetchPlayers({
     page: filters.value.page,
     perPage: filters.value.perPage,
-    division: filters.value.division,
+    divisions: filters.value.divisions, // Pass array of divisions
     conference: filters.value.conference,
-    teamId: filters.value.school, // If you want to filter by school, you might need to map school to teamId
+    school: filters.value.school,
     position: filters.value.position,
     search: filters.value.search,
-    allDivisions: filters.value.allDivisions,
   });
 
   players.value = result.players;
 };
 
-// Watch for filter changes and reload data
+// Watch for non-search filter changes
 watch(
-  filters,
+  () => ({
+    divisions: filters.value.divisions,
+    conference: filters.value.conference,
+    school: filters.value.school,
+    position: filters.value.position,
+    page: filters.value.page,
+  }),
   async () => {
     await loadPlayers();
-  },
-  { deep: true }
+  }
+);
+
+// Watch search separately with debounce and focus preservation
+watch(
+  () => filters.value.search,
+  () => {
+    debouncedLoadPlayers(true); // Pass true to maintain focus
+  }
 );
 
 // Handle filter updates from PlayersHeader
-const handleDivisionUpdate = (value) => {
-  filters.value.division = value;
-  filters.value.page = 1; // Reset to first page
+const handleDivisionsUpdate = (value) => {
+  filters.value.divisions = value;
+  filters.value.page = 1;
 };
 
 const handleConferenceUpdate = (value) => {
@@ -94,8 +121,7 @@ const handlePageUpdate = (value) => {
 };
 
 const handleAllDivisionsUpdate = (value) => {
-  filters.value.allDivisions = value;
-  filters.value.page = 1;
+  // Remove this function as it's no longer needed
 };
 </script>
 
@@ -104,14 +130,13 @@ const handleAllDivisionsUpdate = (value) => {
     <PlayersHeader
       :filter-options="filterOptions"
       :loading="loading"
-      :all-divisions="filters.allDivisions"
+      :divisions="filters.divisions"
       :current-filters="filters"
       :players="players"
-      @update:division="handleDivisionUpdate"
+      @update:divisions="handleDivisionsUpdate"
       @update:conference="handleConferenceUpdate"
       @update:school="handleSchoolUpdate"
       @update:search="handleSearchUpdate"
-      @update:all-divisions="handleAllDivisionsUpdate"
     />
 
     <PlayersTable

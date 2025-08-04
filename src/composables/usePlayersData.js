@@ -7,7 +7,7 @@ export function usePlayersData() {
   const currentPage = ref(1);
   const totalPages = ref(0);
   const totalPlayers = ref(0);
-  const perPage = ref(100);
+  const perPage = ref(10);
 
   // Format conference name helper
   const formatConference = (conference) => {
@@ -39,68 +39,87 @@ export function usePlayersData() {
 
     const {
       page = 1,
-      perPage: itemsPerPage = 100,
-      division = null,
+      perPage: itemsPerPage = 10,
+      divisions = ["D-I", "D-II", "D-III"], // Changed from single division to array
       conference = null,
       teamId = null,
+      school = null,
       position = null,
       search = null,
-      allDivisions = false,
     } = options;
 
     try {
-      const params = new URLSearchParams();
+      let allPlayers = [];
+      let totalCount = 0;
 
-      params.append("page", page);
-      params.append("per_page", itemsPerPage);
+      // Always fetch from the specified divisions array
+      const promises = divisions.map(async (div) => {
+        const params = new URLSearchParams();
+        params.append("division", div);
+        params.append("per_page", "10000"); // Get all players for filtering
 
-      if (allDivisions) {
-        params.append("all_divisions", "true");
-      } else if (division) {
-        params.append("division", division);
+        if (conference) {
+          const apiConference = conference.startsWith("Region ")
+            ? conference.replace("Region ", "") + ".0"
+            : conference;
+          params.append("conference", apiConference);
+        }
+
+        if (teamId) {
+          params.append("team_id", teamId);
+        }
+
+        if (position) {
+          params.append("position", position);
+        }
+
+        if (search) {
+          params.append("search", search);
+        }
+
+        const url = `https://api.volleyballdatabased.com/players?${params.toString()}`;
+
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          return data.players.map(formatPlayer);
+        } catch (err) {
+          console.error(`Error fetching ${div} players:`, err);
+          return [];
+        }
+      });
+
+      const results = await Promise.all(promises);
+      allPlayers = results.flat();
+
+      // Apply client-side school filtering if needed
+      if (school) {
+        allPlayers = allPlayers.filter((player) => player.school === school);
       }
 
-      if (conference) {
-        params.append("conference", conference);
-      }
+      totalCount = allPlayers.length;
 
-      if (teamId) {
-        params.append("team_id", teamId);
-      }
-
-      if (position) {
-        params.append("position", position);
-      }
-
-      if (search) {
-        params.append("search", search);
-      }
-
-      const url = `https://api.volleyballdatabased.com/players?division=D-I&${params.toString()}`;
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      // Apply client-side pagination
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedPlayers = allPlayers.slice(startIndex, endIndex);
 
       // Update pagination info
-      currentPage.value = data.page;
-      totalPages.value = data.total_pages;
-      totalPlayers.value = data.total;
-      perPage.value = data.per_page;
-
-      // Format players
-      const formattedPlayers = data.players.map(formatPlayer);
+      currentPage.value = page;
+      totalPages.value = Math.ceil(totalCount / itemsPerPage);
+      totalPlayers.value = totalCount;
+      perPage.value = itemsPerPage;
 
       return {
-        players: formattedPlayers,
+        players: paginatedPlayers,
         pagination: {
-          page: data.page,
-          perPage: data.per_page,
-          total: data.total,
-          totalPages: data.total_pages,
+          page: page,
+          perPage: itemsPerPage,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / itemsPerPage),
         },
       };
     } catch (err) {
@@ -120,23 +139,35 @@ export function usePlayersData() {
     }
   };
 
-  // Get unique values for filters (divisions, conferences, schools)
-  // This is a temporary solution - ideally you'd have separate API endpoints for these
+  // Get all players for filter population (limited request)
+  const getAllPlayers = async () => {
+    try {
+      // Fetch a limited set of players to populate filters
+      const response = await fetch(
+        "https://api.volleyballdatabased.com/players?division=D-I&per_page=1000"
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.players.map(formatPlayer);
+    } catch (err) {
+      console.error("Error fetching all players:", err);
+      return [];
+    }
+  };
+
+  // Get unique values for filters
   const fetchFilterOptions = async () => {
     try {
-      // For now, we'll hardcode common divisions since fetching all players
-      // just for filter options is inefficient
       const divisions = ["D-I", "D-II", "D-III"];
-
-      // For conferences and schools, you might want to create dedicated endpoints
-      // that return distinct values from the database
-      // For now, we'll return empty arrays and let them be populated
-      // based on the current filtered data
 
       return {
         divisions,
-        conferences: [], // Will be populated from current data
-        schools: [], // Will be populated from current data
+        conferences: [],
+        schools: [],
         positions: ["OH", "MB", "S", "L", "DS", "RS", "OPP"],
       };
     } catch (err) {
@@ -170,6 +201,7 @@ export function usePlayersData() {
     fetchPlayers,
     fetchFilterOptions,
     getPlayersByTeam,
+    getAllPlayers,
     formatConference,
   };
 }
