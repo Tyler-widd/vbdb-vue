@@ -144,17 +144,25 @@ onMounted(() => {
     <v-col cols="12">
       <!-- Header Card with School Info -->
       <v-card class="mb-4 px-4 pt-4 pb-2">
-        <v-row align="center">
+        <v-row class="align-center">
           <v-col cols="auto">
-            <v-avatar size="120">
+            <v-avatar :size="smAndDown ? '80' : '120'">
               <v-img :src="school.img" :alt="school.name_official" cover />
             </v-avatar>
           </v-col>
           <v-col>
-            <h1 class="text-h4 mb-2">{{ school.name_official }}</h1>
-            <p class="text-body-1">
+            <v-card-title
+              :class="
+                smAndDown ? 'pa-0 text-h5 text-wrap pb-2' : 'pa-0 text-h4 pb-2'
+              "
+              >{{ school.name_official }}</v-card-title
+            >
+            <div class="text-body-1">
               {{ school.division }} | {{ formatConference(school.conference) }}
-            </p>
+            </div>
+            <div class="text-body-1">
+              {{ selectedYear }} Record: {{ record }}
+            </div>
           </v-col>
         </v-row>
         <v-col :cols="smAndDown ? 12 : 3">
@@ -167,7 +175,6 @@ onMounted(() => {
             @update:model-value="handleYearChange"
           />
         </v-col>
-        {{ selectedYear }} Record: {{ record }}
       </v-card>
     </v-col>
   </v-row>

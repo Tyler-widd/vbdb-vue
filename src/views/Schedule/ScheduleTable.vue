@@ -1,11 +1,11 @@
 <!-- views/Schedule/ScheduleTable.vue -->
 <script setup>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { formatDateYear, formatDateMoblie } from "@/helpers/formatDate";
 import { useDisplay } from "vuetify";
 import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 
-const { smAndDown, xs } = useDisplay();
+const { smAndDown } = useDisplay();
 
 const props = defineProps({
   scheduleData: {
@@ -35,12 +35,22 @@ const props = defineProps({
 });
 
 // Define table headers
-const headers = [
-  { title: "Date", key: "date", sortable: true },
-  { title: "Team 1", key: "team_1", sortable: false, maxWidth: "140px" },
-  { title: "Team 2", key: "team_2", sortable: false, maxWidth: "140px" },
-];
-
+const headers = computed(() => [
+  {
+    title: "Date",
+    key: "date",
+    sortable: true,
+    width: smAndDown.value ? "50px" : "100px",
+  },
+  { title: "Team 1", key: "team_1", sortable: false, maxWidth: "80px" },
+  { title: "Team 2", key: "team_2", sortable: false, maxWidth: "80px" },
+]);
+const formatConference = (conference) => {
+  if (conference && conference.includes(".0")) {
+    return `Region ${conference.replace(".0", "")}`;
+  }
+  return conference;
+};
 // Filter the schedule data based on current filters and sort by date
 const filteredSchedule = computed(() => {
   const filtered = props.filterSchedule(
@@ -86,13 +96,6 @@ const formatTime = (timeString) => {
     minute: "2-digit",
   });
 };
-
-const formatConference = (conference) => {
-  if (conference && conference.includes(".0")) {
-    return `Region ${conference.replace(".0", "")}`;
-  }
-  return conference;
-};
 </script>
 
 <template>
@@ -106,11 +109,12 @@ const formatConference = (conference) => {
       loading-text="Loading schedule..."
     >
       <!-- Custom date column name -->
-      <template v-slot:header.date> <span class="ml-1">Date</span></template>
-
+      <template v-slot:header.date>
+        <span class="ml-2 pa-0">Date</span></template
+      >
       <!-- Custom date column -->
       <template v-slot:item.date="{ item }">
-        <div class="text-body-2 d-flex flex-column ml-1">
+        <div class="text-body-2 d-flex flex-column mx-2 pa-0 font-weight-light">
           <div>
             {{
               smAndDown
@@ -118,25 +122,39 @@ const formatConference = (conference) => {
                 : formatDateYear(item.date)
             }}
           </div>
-          <div class="text-caption text-grey">{{ formatTime(item.time) }}</div>
+          <div class="text-caption text-grey">
+            {{ smAndDown ? "" : formatTime(item.time) }}
+          </div>
         </div>
       </template>
 
       <!-- Team 1 - Centered version -->
       <template v-slot:item.team_1="{ item }">
         <div class="d-flex align-center">
-          <v-avatar :size="smAndDown ? '24' : '32'" class="mr-1">
+          <v-avatar :size="smAndDown ? '24' : '32'" class="mr-3">
             <v-img :src="item.team_1_img" :alt="item.team_1_name" />
           </v-avatar>
-          <div class="d-flex flex-column text-truncate">
-            <v-btn
-              class="justify-start pa-0"
-              variant="text"
-              :size="smAndDown ? 'small' : 'default'"
+          <div class="d-flex flex-column">
+            <span
+              class="text-primary button-like my-1"
+              :class="[
+                smAndDown ? 'text-body-2' : 'text-h6',
+                item.isWinner !== undefined
+                  ? item.isWinner
+                    ? 'text-error'
+                    : 'text-success'
+                  : '',
+              ]"
+              :style="{
+                whiteSpace: 'normal',
+                wordBreak: 'break-word',
+                lineHeight: '1',
+                display: 'inline-block',
+              }"
               @click="navigateToTeam($router, item.team_1_id, orgId)"
             >
               {{ item.team_1_name }}
-            </v-btn>
+            </span>
             <div class="text-caption text-grey justify-start">
               {{ formatConference(item.team_1_conference) }}
             </div>
@@ -150,15 +168,27 @@ const formatConference = (conference) => {
           <v-avatar :size="smAndDown ? '24' : '32'" class="mr-3">
             <v-img :src="item.team_2_img" :alt="item.team_2_name" />
           </v-avatar>
-          <div class="d-flex flex-column text-truncate">
-            <v-btn
-              class="justify-start pa-0"
-              variant="text"
-              :size="smAndDown ? 'small' : 'default'"
+          <div class="d-flex flex-column">
+            <span
+              class="text-primary button-like my-1"
+              :class="[
+                smAndDown ? 'text-body-2' : 'text-h6',
+                item.isWinner !== undefined
+                  ? item.isWinner
+                    ? 'text-error'
+                    : 'text-success'
+                  : '',
+              ]"
+              :style="{
+                whiteSpace: 'normal',
+                wordBreak: 'break-word',
+                lineHeight: '1',
+                display: 'inline-block',
+              }"
               @click="navigateToTeam($router, item.team_2_id, orgId)"
             >
               {{ item.team_2_name }}
-            </v-btn>
+            </span>
             <div class="text-caption text-grey justify-start">
               {{ formatConference(item.team_2_conference) }}
             </div>

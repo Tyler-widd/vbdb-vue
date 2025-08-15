@@ -202,9 +202,7 @@ const handleSearchChange = (value) => {
 
 <template>
   <v-card class="px-4 pb-4 pt-2">
-    <v-card-title class="d-flex justify-space-between align-center pt-0">
-      <span>Players</span>
-    </v-card-title>
+    <v-card-title class="pt-0">Players</v-card-title>
     <v-row dense no-gutters class="pa-0">
       <v-col :cols="smAndDown ? 12 : 6">
         <v-autocomplete

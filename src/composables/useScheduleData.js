@@ -49,10 +49,37 @@ export function useScheduleData() {
     return uniqueConferences.sort();
   });
 
+  // Computed property for future games only
+  const futureGames = computed(() => {
+    const today = new Date().toISOString().split("T")[0];
+
+    return scheduleData.value.filter((game) => {
+      return !game.date || game.date >= today;
+    });
+  });
+
+  // Computed property for upcoming games (includes time checking for today's games)
+  const upcomingGames = computed(() => {
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+
+    return scheduleData.value.filter((game) => {
+      if (!game.date) return true;
+
+      if (game.date > today) {
+        return true;
+      } else if (game.date === today) {
+        if (!game.time) return true;
+        return game.time >= currentTime;
+      }
+
+      return false;
+    });
+  });
+
   // Helper function to create a unique key for each game
   const createGameKey = (game) => {
-    // Create a key that identifies unique games
-    // Include date, time, and both team IDs (sorted to handle home/away variations)
     const teamIds = [game.team_1_id, game.team_2_id].sort().join("-");
     return `${game.date}_${game.time}_${teamIds}`;
   };
@@ -87,10 +114,8 @@ export function useScheduleData() {
       }
       const data = await response.json();
 
-      // Remove duplicates before storing
       const uniqueData = removeDuplicateGames(data);
 
-      // Log the deduplication results for debugging
       if (data.length !== uniqueData.length) {
         console.log(
           `Removed ${data.length - uniqueData.length} duplicate games`
@@ -109,8 +134,14 @@ export function useScheduleData() {
     }
   };
 
-  // Filter function for search and filters
-  const filterSchedule = (items, search, divisionFilter, conferenceFilter) => {
+  // Filter function with optional date filtering
+  const filterSchedule = (
+    items,
+    search,
+    divisionFilter,
+    conferenceFilter,
+    showPastGames = false
+  ) => {
     const isValidValue = (value) => {
       return (
         value != null && value !== "" && value !== "TBA" && value !== "TBD"
@@ -135,12 +166,19 @@ export function useScheduleData() {
       return null;
     };
 
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split("T")[0];
+
     let filtered = items.filter((item) => {
       const team1Name = getTeamName(item.team_1_name);
       const team2Name = getTeamName(item.team_2_name);
 
-      // Both teams must have valid names
-      return isValidValue(team1Name) && isValidValue(team2Name);
+      const hasValidNames = isValidValue(team1Name) && isValidValue(team2Name);
+
+      // Filter by date (unless showPastGames is true)
+      const isNotPastGame = showPastGames || !item.date || item.date >= today;
+
+      return hasValidNames && isNotPastGame;
     });
 
     // Apply division filter
@@ -179,7 +217,6 @@ export function useScheduleData() {
         const team1Name = getTeamName(game.team_1_name);
         const team2Name = getTeamName(game.team_2_name);
 
-        // Safe string operations with fallbacks
         const team1Match =
           team1Name?.toLowerCase?.()?.includes(searchLower) || false;
         const team2Match =
@@ -203,6 +240,6 @@ export function useScheduleData() {
     conferences,
     getConferencesForDivision,
     fetchSchedule,
-    filterSchedule,
+    filterSchedule, // Updated with date filtering option
   };
 }

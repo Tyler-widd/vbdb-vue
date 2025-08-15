@@ -28,7 +28,8 @@ const latestItem = ref(null);
 const { getCachedNews, setCachedNews } = useNewsCache();
 
 // CORS proxy for bypassing CORS restrictions
-const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+const CORS_PROXY =
+  "https://ncaa-proxy.tylerperrywiddison.workers.dev/corsproxy/?apiurl=";
 
 // Emit to determine the title of the news feed (used to remove duplicate news stories between D2-3)
 const emit = defineEmits(["news-loaded"]);
@@ -145,6 +146,7 @@ const getImageUrl = (item) => {
   if (
     imageUrl &&
     (props.rssUrl.includes("naia.org") ||
+      props.rssUrl.includes("njcaa.org") ||
       props.rssUrl.includes("3c2asports.org"))
   ) {
     try {
@@ -188,7 +190,7 @@ defineExpose({
 </script>
 
 <template>
-  <v-card height="auto">
+  <v-card height="380">
     <v-card-title class="text-h6 d-flex align-center justify-space-between">
       <span>{{ division }}</span>
       <!-- Optional refresh button -->
@@ -229,30 +231,25 @@ defineExpose({
         <v-img :src="latestItem.image" cover height="250" />
         <v-row dense no-gutters>
           <v-col cols="12" class="text-wrap">
-            <v-card-title
-              class="pa-0 text-body-1 text-wrap"
-              style="white-space: normal"
-            >
+            <v-card-title class="pa-0 text-body-1 text-wrap">
               {{ latestItem.title }}
             </v-card-title>
-          </v-col>
-          <div class="d-flex align-center">
-            <v-btn
-              :href="latestItem.link"
-              target="_blank"
-              color="primary"
-              variant="text"
-              density="compact"
-              class="text-body-2 font-weight-regular"
-            >
-              Read More
-            </v-btn>
-            <v-card-subtitle>
-              <span class="text-caption">
+            <div class="d-flex align-center">
+              <v-btn
+                :href="latestItem.link"
+                target="_blank"
+                color="primary"
+                variant="text"
+                density="compact"
+                class="text-body-2 font-weight-regular"
+              >
+                Read More
+              </v-btn>
+              <v-card-subtitle class="pa-0 text-caption">
                 Published: {{ formatDate(latestItem.pubDate) }}
-              </span>
-            </v-card-subtitle>
-          </div>
+              </v-card-subtitle>
+            </div>
+          </v-col>
         </v-row>
       </v-col>
 

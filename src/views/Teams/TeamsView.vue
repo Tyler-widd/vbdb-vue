@@ -1,28 +1,16 @@
 <!-- views/Teams/TeamsView.vue -->
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import TeamsHeader from "./TeamsHeader.vue";
 import TeamsTable from "./TeamsTable.vue";
+import useSchoolData from "@/composables/useSchoolData";
 
-const schools = ref([]);
-const loading = ref(false);
+// Use the composable
+const { schools, loading, fetchSchools } = useSchoolData();
+
 const divisionFilter = ref(null);
 const conferenceFilter = ref(null);
 const searchFilter = ref("");
-
-// Fetch schools data
-const fetchSchools = async () => {
-  loading.value = true;
-  try {
-    const response = await fetch("https://api.volleyballdatabased.com/schools");
-    const data = await response.json();
-    schools.value = data;
-  } catch (error) {
-    console.error("Error fetching schools:", error);
-  } finally {
-    loading.value = false;
-  }
-};
 
 // Handle filter updates
 const handleDivisionUpdate = (value) => {
@@ -38,9 +26,7 @@ const handleSearchUpdate = (value) => {
 };
 
 // Fetch data on component mount
-onMounted(() => {
-  fetchSchools();
-});
+fetchSchools();
 </script>
 
 <template>

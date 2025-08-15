@@ -41,9 +41,10 @@ const onD3NewsLoaded = (newsData) => {
 </script>
 
 <template>
-  <div class="d-flex flex-column mb-2">VolleyballDatabased</div>
-  <v-row>
+  <v-card-title class="pa-0 mb-2 text-center">VolleyballDatabased</v-card-title>
+  <v-row dense>
     <!-- News Cards -->
+    <!-- NCAA D1 -->
     <v-col cols="12" md="6" lg="4">
       <NewsCard
         division="NCAA Division I"
@@ -52,6 +53,7 @@ const onD3NewsLoaded = (newsData) => {
       />
     </v-col>
 
+    <!-- NAIA -->
     <v-col cols="12" md="6" lg="4">
       <NewsCard
         division="NAIA"
@@ -59,7 +61,9 @@ const onD3NewsLoaded = (newsData) => {
         category="NAIA Women's Volleyball"
       />
     </v-col>
-
+  </v-row>
+  <v-row dense>
+    <!-- CCCAA -->
     <v-col cols="12" md="6" lg="4">
       <NewsCard
         division="CCCAA"
@@ -81,6 +85,7 @@ const onD3NewsLoaded = (newsData) => {
 
     <!-- Show separate cards if stories are different -->
     <template v-else>
+      <!-- NCAA D2 -->
       <v-col cols="12" md="6" lg="4">
         <NewsCard
           ref="d2Card"
@@ -91,6 +96,7 @@ const onD3NewsLoaded = (newsData) => {
         />
       </v-col>
 
+      <!-- NCAA D3 -->
       <v-col cols="12" md="6" lg="4">
         <NewsCard
           ref="d3Card"
@@ -112,6 +118,16 @@ const onD3NewsLoaded = (newsData) => {
         @news-loaded="onD3NewsLoaded"
       />
     </div>
+  </v-row>
+  <v-row dense>
+    <!-- NJCAA -->
+    <v-col cols="12" md="6" lg="4">
+      <NewsCard
+        division="NJCAA"
+        :rss-url="'https://www.njcaa.org/sports/wvball/headlines-featured?feed=rss_2.0'"
+        category="NJCAA Women's Volleyball"
+      />
+    </v-col>
 
     <v-col cols="12" lg="4">
       <RankingSection />

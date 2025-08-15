@@ -3,7 +3,7 @@ import { ref, reactive } from "vue";
 
 // Global cache that persists across component instances
 const newsCache = reactive(new Map());
-const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+const CACHE_DURATION = 15 * 60 * 1000;
 
 export function useNewsCache() {
   const getCacheKey = (rssUrl) => {

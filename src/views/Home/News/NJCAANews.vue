@@ -1,4 +1,4 @@
-<!-- Home/News/CCCAANews.vue -->
+<!-- Home/News/NJCAANews.vue -->
 <script setup>
 import { ref } from "vue";
 
@@ -7,7 +7,7 @@ const error = ref(null);
 const latestItem = ref(null);
 
 const RSS_URL =
-  "https://3c2asports.org/sports/wvball/headlines-featured?feed=rss_2.0";
+  "https://www.njcaa.org/sports/wvball/headlines-featured?feed=rss_2.0";
 
 // CORS proxy
 const CORS_PROXY =
@@ -132,7 +132,7 @@ fetchRSSFeed();
 
 <template>
   <v-card>
-    <v-card-title class="text-h6 d-flex align-center"> CCCAA </v-card-title>
+    <v-card-title class="text-h6 d-flex align-center"> NJCAA </v-card-title>
     <v-card-text v-if="latestItem">
       <div v-if="latestItem.image">
         <v-img :src="latestItem.image" cover height="250" />

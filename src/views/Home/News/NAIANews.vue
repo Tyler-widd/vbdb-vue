@@ -10,7 +10,8 @@ const RSS_URL =
   "https://www.naia.org/sports/wvball/headlines-featured?feed=rss_2.0";
 
 // CORS proxy
-const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+const CORS_PROXY =
+  "https://ncaa-proxy.tylerperrywiddison.workers.dev/corsproxy/?apiurl=";
 
 const fetchRSSFeed = async () => {
   loading.value = true;
@@ -128,6 +129,7 @@ const formatDate = (dateString) => {
 // Auto-fetch on component mount
 fetchRSSFeed();
 </script>
+
 <template>
   <v-card>
     <v-card-title class="text-h6 d-flex align-center"> NAIA </v-card-title>

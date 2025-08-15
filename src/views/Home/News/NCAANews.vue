@@ -28,7 +28,8 @@ const divisionNames = {
   d3: "Division III",
 };
 
-const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+const CORS_PROXY =
+  "https://ncaa-proxy.tylerperrywiddison.workers.dev/corsproxy/?apiurl=";
 
 const fetchRSSFeed = async () => {
   loading.value = true;
@@ -113,7 +114,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-card height="auto">
+  <v-card>
     <v-card-title class="text-h6 d-flex align-center">
       NCAA {{ divisionNames[division] }}
     </v-card-title>
