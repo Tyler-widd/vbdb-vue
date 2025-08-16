@@ -2,7 +2,7 @@
 <script setup>
 import { useRouter, useRoute } from "vue-router";
 import { ref } from "vue";
-import ScoreScrollCard from "@/component/ScoreScrollCard.vue";
+import ScoreScrollCard from "../component/ScoreScrollCard.vue";
 
 const router = useRouter();
 const route = useRoute();

@@ -1,8 +1,8 @@
 <!-- src/components/NewsCard.vue -->
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
-import { formatDate } from "@/helpers/formatDate";
-import { useNewsCache } from "@/composables/useNewsCache";
+import { ref, onMounted, watch } from "vue";
+import { formatDate } from "../helpers/formatDate.js";
+import { useNewsCache } from "../composables/useNewsCache.js";
 
 // Props
 const props = defineProps({

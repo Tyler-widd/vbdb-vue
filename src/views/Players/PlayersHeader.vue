@@ -2,7 +2,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { useDisplay } from "vuetify";
-import { usePlayersData } from "@/composables/usePlayersData";
+import { usePlayersData } from "../composables/usePlayersData";
 
 const { smAndDown } = useDisplay();
 const { loading, error, getAllPlayers } = usePlayersData();

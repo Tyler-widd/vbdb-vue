@@ -2,7 +2,7 @@
 <script setup>
 import { ref, onMounted, computed, nextTick } from "vue";
 import NavScoreCard from "./NavScoreCard.vue";
-import { useGamesData } from "@/composables/useGamesData";
+import { useGamesData } from "../composables/useGamesData";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
 

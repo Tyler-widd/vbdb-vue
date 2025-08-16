@@ -4,7 +4,7 @@ import { ref, onMounted, watch, nextTick } from "vue";
 import { debounce } from "lodash-es";
 import PlayersHeader from "./PlayersHeader.vue";
 import PlayersTable from "./PlayersTable.vue";
-import { usePlayersData } from "@/composables/usePlayersData";
+import { usePlayersData } from "../../composables/usePlayersData.js";
 
 // Use the players data composable
 const {
