@@ -11,13 +11,23 @@ const routes = [
     component: Home,
   },
   {
+    path: "/live",
+    name: "Live",
+    component: () =>
+      import(/* webpackChunkName: "live" */ "@/views/Live/LiveView.vue"),
+    meta: {
+      title: "Live",
+      requiresLiveData: true,
+    },
+  },
+  {
     path: "/teams",
     name: "Teams",
     component: () =>
       import(/* webpackChunkName: "teams" */ "@/views/Teams/TeamsView.vue"),
     meta: {
-      requiresSchoolsData: true,
       title: "Teams",
+      requiresSchoolsData: true,
     },
   },
   {
@@ -33,9 +43,9 @@ const routes = [
       season: route.query.season,
     }),
     meta: {
+      title: "Team Details",
       requiresSchoolsData: true,
       requiresGamesData: true, // Added since team details likely need games
-      title: "Team Details",
     },
   },
   {
@@ -44,8 +54,8 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "scores" */ "@/views/Scores/ScoresView.vue"),
     meta: {
-      requiresGamesData: true, // Scores likely need games data, not just schools
       title: "Scores",
+      requiresGamesData: true, // Scores likely need games data, not just schools
     },
   },
   {
@@ -56,9 +66,9 @@ const routes = [
         /* webpackChunkName: "rankings" */ "@/views/Rankings/RankingsView.vue"
       ),
     meta: {
-      requiresSchoolsData: true,
-      requiresGamesData: true, // Rankings likely need both
       title: "Rankings",
+      requiresSchoolsData: true,
+      requiresGamesData: true,
     },
   },
   {
@@ -66,11 +76,11 @@ const routes = [
     name: "Schedule",
     component: () =>
       import(
-        /* webpackChunkName: "schedule" */ "@/views/Schedule/ScheduleView.vue"
+        /* webpackChunkName: "schedule" */ "../views/Schedule/ScheduleView.vue"
       ),
     meta: {
-      requiresScheduleData: true, // Different data requirement
       title: "Schedule",
+      requiresScheduleData: true, // Added to match the error message
     },
   },
   {
@@ -81,8 +91,8 @@ const routes = [
         /* webpackChunkName: "players" */ "@/views/Players/PlayersView.vue"
       ),
     meta: {
-      requiresPlayersData: true, // Different data requirement
       title: "Players",
+      requiresPlayersData: true, // Different data requirement
     },
   },
 ];

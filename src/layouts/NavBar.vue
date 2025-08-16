@@ -10,6 +10,7 @@ const drawer = ref(false);
 
 const tabs = [
   { name: "Home", value: "Home", route: "/" },
+  { name: "Live", value: "Live", route: "/live" },
   { name: "Scores", value: "Scores", route: "/scores" },
   { name: "Rankings", value: "Rankings", route: "/rankings" },
   { name: "Schedule", value: "Schedule", route: "/schedule" },
@@ -25,13 +26,6 @@ const navigateTo = (routePath) => {
 const isActiveRoute = (routePath) => {
   return route.path === routePath;
 };
-
-// Placeholder scores data
-const scores = [
-  { team1: "", score1: 0, team2: "", score2: 0 },
-  { team1: "", score1: 0, team2: "", score2: 0 },
-  { team1: "", score1: 0, team2: "", score2: 0 },
-];
 </script>
 
 <template>

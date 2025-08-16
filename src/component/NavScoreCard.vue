@@ -93,7 +93,7 @@ function countTeam2SetWins(matchData) {
           <span
             class="ml-2"
             :class="
-              countTeam1SetWins(game) == 3 ? 'text-success' : 'text-error'
+              countTeam1SetWins(game) == 3 ? 'text-success' : 'text-secondary'
             "
           >
             {{ countTeam1SetWins(game) }}
@@ -140,7 +140,7 @@ function countTeam2SetWins(matchData) {
           <span
             class="mr-2"
             :class="
-              countTeam2SetWins(game) == 3 ? 'text-success' : 'text-error'
+              countTeam2SetWins(game) == 3 ? 'text-success' : 'text-secondary'
             "
           >
             {{ countTeam2SetWins(game) }}
