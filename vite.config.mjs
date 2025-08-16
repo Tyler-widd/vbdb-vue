@@ -38,7 +38,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("src", import.meta.url)),
-      "@": path.resolve(__dirname, "src"),
     },
     extensions: [".js", ".json", ".jsx", ".mjs", ".ts", ".tsx", ".vue"],
   },
