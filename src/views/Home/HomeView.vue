@@ -1,10 +1,9 @@
 <!-- views/Home/HomeView.vue -->
 <script setup>
-import { ref, onMounted, computed } from "vue";
-import RankingSection from "./SideContent/RankingSection.vue";
+import { ref, onMounted } from "vue";
 import NewsCard from "../../component/NewsCard.vue";
+import RankingSection from "./SideContent/RankingSection.vue";
 
-// You can add any additional logic here if needed
 const fetchTeamData = () => {
   // Your existing fetchTeamData logic
 };
@@ -13,141 +12,152 @@ onMounted(() => {
   fetchTeamData();
 });
 
-const d2LatestItem = ref(null);
-const d3LatestItem = ref(null);
+const activeTab = ref("ncaa");
 
-// Computed property to determine if cards should be merged
-const shouldMergeCards = computed(() => {
-  if (!d2LatestItem.value || !d3LatestItem.value) {
-    return false;
-  }
-
-  // Compare by GUID (most reliable) or title + pubDate
-  return (
-    d2LatestItem.value.guid === d3LatestItem.value.guid ||
-    (d2LatestItem.value.title === d3LatestItem.value.title &&
-      d2LatestItem.value.pubDate === d3LatestItem.value.pubDate)
-  );
-});
-
-// Event handlers to receive latest items from NewsCard components
-const onD2NewsLoaded = (newsData) => {
-  d2LatestItem.value = newsData;
-};
-
-const onD3NewsLoaded = (newsData) => {
-  d3LatestItem.value = newsData;
+const divisions = {
+  ncaa: [
+    {
+      division: "NCAA Division I",
+      rssUrl: "https://www.ncaa.com/news/volleyball-women/d1/rss.xml",
+      category: "NCAA Division I Women's Volleyball",
+    },
+    {
+      division: "NCAA Division II",
+      rssUrl: "https://www.ncaa.com/news/volleyball-women/d2/rss.xml",
+      category: "NCAA Division II Women's Volleyball",
+    },
+    {
+      division: "NCAA Division III",
+      rssUrl: "https://www.ncaa.com/news/volleyball-women/d3/rss.xml",
+      category: "NCAA Division III Women's Volleyball",
+    },
+  ],
+  naia: [
+    {
+      division: "NAIA",
+      rssUrl:
+        "https://www.naia.org/sports/wvball/headlines-featured?feed=rss_2.0",
+      category: "NAIA Women's Volleyball",
+    },
+  ],
+  njcaa: [
+    {
+      division: "NJCAA Division I",
+      rssUrl:
+        "https://www.njcaa.org/sports/wvball/headlines-featured?feed=rss_2.0",
+      category: "NJCAA Division I Women's Volleyball",
+    },
+  ],
+  cccaa: [
+    {
+      division: "CCCAA",
+      rssUrl:
+        "https://3c2asports.org/sports/wvball/headlines-featured?feed=rss_2.0",
+      category: "3C2A Women's Volleyball",
+    },
+  ],
 };
 </script>
 
 <template>
-  <v-card-title class="pa-0 mb-2 text-center">VolleyballDatabased</v-card-title>
-  <v-row dense>
-    <!-- News Cards -->
-    <!-- NCAA D1 -->
-    <v-col cols="12" md="6" lg="4">
-      <NewsCard
-        division="NCAA Division I"
-        :rss-url="'https://www.ncaa.com/news/volleyball-women/d1/rss.xml'"
-        category="NCAA Division I Women's Volleyball"
-      />
-    </v-col>
+  <v-container fluid>
+    <v-tabs
+      v-model="activeTab"
+      bg-color="primary"
+      center-active
+      grow
+      class="rounded-lg"
+    >
+      <v-tab value="ncaa">NCAA</v-tab>
+      <v-tab value="naia">NAIA</v-tab>
+      <v-tab value="njcaa">NJCAA</v-tab>
+      <v-tab value="cccaa">CCCAA</v-tab>
+    </v-tabs>
 
-    <!-- NAIA -->
-    <v-col cols="12" md="6" lg="4">
-      <NewsCard
-        division="NAIA"
-        :rss-url="'https://www.naia.org/sports/wvball/headlines-featured?feed=rss_2.0'"
-        category="NAIA Women's Volleyball"
-      />
-    </v-col>
-  </v-row>
-  <v-row dense>
-    <!-- CCCAA -->
-    <v-col cols="12" md="6" lg="4">
-      <NewsCard
-        division="CCCAA"
-        :rss-url="'https://3c2asports.org/sports/wvball/headlines-featured?feed=rss_2.0'"
-        category="3C2A Women's Volleyball"
-      />
-    </v-col>
+    <v-tabs-window v-model="activeTab">
+      <!-- NCAA Tab -->
+      <v-tabs-window-item value="ncaa">
+        <v-row dense class="mt-2">
+          <v-col
+            v-for="feed in divisions.ncaa"
+            :key="feed.division"
+            cols="12"
+            md="4"
+          >
+            <NewsCard
+              :division="feed.division"
+              :rss-url="feed.rssUrl"
+              :category="feed.category"
+            />
+          </v-col>
+        </v-row>
+      </v-tabs-window-item>
 
-    <!-- Show merged card if stories are the same -->
-    <v-col v-if="shouldMergeCards" cols="12" md="6" lg="4">
-      <NewsCard
-        ref="d2Card"
-        division="NCAA Division II & III"
-        :rss-url="'https://www.ncaa.com/news/volleyball-women/d2/rss.xml'"
-        category="NCAA Division II & III Women's Volleyball"
-        @news-loaded="onD2NewsLoaded"
-      />
-    </v-col>
+      <!-- NAIA Tab -->
+      <v-tabs-window-item value="naia">
+        <v-row dense class="mt-2">
+          <v-col cols="12" md="6">
+            <NewsCard
+              :division="divisions.naia[0].division"
+              :rss-url="divisions.naia[0].rssUrl"
+              :category="divisions.naia[0].category"
+            />
+          </v-col>
+          <v-col cols="12" md="6">
+            <RankingSection
+              :img="`https://naiastats.prestosports.com/assets/images/NAIA_Bridge_logo_whiteR.png`"
+            />
+          </v-col>
+        </v-row>
+      </v-tabs-window-item>
 
-    <!-- Show separate cards if stories are different -->
-    <template v-else>
-      <!-- NCAA D2 -->
-      <v-col cols="12" md="6" lg="4">
-        <NewsCard
-          ref="d2Card"
-          division="NCAA Division II"
-          :rss-url="'https://www.ncaa.com/news/volleyball-women/d2/rss.xml'"
-          category="NCAA Division II Women's Volleyball"
-          @news-loaded="onD2NewsLoaded"
-        />
-      </v-col>
+      <!-- NJCAA Tab -->
+      <v-tabs-window-item value="njcaa">
+        <v-row dense class="mt-2">
+          <v-col
+            v-for="feed in divisions.njcaa"
+            :key="feed.division"
+            cols="12"
+            md="4"
+          >
+            <NewsCard
+              :division="feed.division"
+              :rss-url="feed.rssUrl"
+              :category="feed.category"
+            />
+          </v-col>
+        </v-row>
+      </v-tabs-window-item>
 
-      <!-- NCAA D3 -->
-      <v-col cols="12" md="6" lg="4">
-        <NewsCard
-          ref="d3Card"
-          division="NCAA Division III"
-          :rss-url="'https://www.ncaa.com/news/volleyball-women/d3/rss.xml'"
-          category="NCAA Division III Women's Volleyball"
-          @news-loaded="onD3NewsLoaded"
-        />
-      </v-col>
-    </template>
+      <!-- CCCAA Tab -->
+      <v-tabs-window-item value="cccaa">
+        <v-row dense class="mt-2">
+          <v-col cols="12" md="6">
+            <NewsCard
+              :division="divisions.cccaa[0].division"
+              :rss-url="divisions.cccaa[0].rssUrl"
+              :category="divisions.cccaa[0].category"
+            />
+          </v-col>
+          <v-col cols="12" md="6">
+            <RankingSection
+              :img="`https://www.cccaasports.org/assets/Alternative_Logo.png`"
+            />
+          </v-col>
+        </v-row>
+      </v-tabs-window-item>
 
-    <!-- Hidden D3 card for comparison when merged -->
-    <div v-if="shouldMergeCards" style="display: none">
-      <NewsCard
-        ref="d3Card"
-        division="NCAA Division III"
-        :rss-url="'https://www.ncaa.com/news/volleyball-women/d3/rss.xml'"
-        category="NCAA Division III Women's Volleyball"
-        @news-loaded="onD3NewsLoaded"
-      />
-    </div>
-  </v-row>
-  <v-row dense>
-    <!-- NJCAA -->
-    <v-col cols="12" md="6" lg="4">
-      <NewsCard
-        division="NJCAA"
-        :rss-url="'https://www.njcaa.org/sports/wvball/headlines-featured?feed=rss_2.0'"
-        category="NJCAA Women's Volleyball"
-      />
-    </v-col>
-
-    <v-col cols="12" lg="4">
-      <RankingSection />
-    </v-col>
-  </v-row>
+      <!-- Rankings Tab -->
+      <v-tabs-window-item value="rankings">
+        <v-row dense class="mt-2">
+          <v-col cols="12" md="3">
+            <RankingSection
+              :img="`https://content.sportslogos.net/logos/85/5463/full/national_collegiate_athletic_association_logo_secondary_2021_sportslogosnet-4441.png`"
+            />
+          </v-col>
+          <!-- Add more ranking sections as needed -->
+        </v-row>
+      </v-tabs-window-item>
+    </v-tabs-window>
+  </v-container>
 </template>
-
-<style scoped>
-/* Custom styles for better mobile experience */
-@media (max-width: 600px) {
-  .v-container {
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-  }
-}
-
-/* Ensure cards have consistent height on larger screens */
-@media (min-width: 960px) {
-  .v-col .v-card {
-    height: 100%;
-  }
-}
-</style>

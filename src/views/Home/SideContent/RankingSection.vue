@@ -1,6 +1,17 @@
 <!-- RankingSection.vue -->
-<script></script>
+<script>
+export default {
+  props: {
+    img: {
+      type: String,
+    },
+  },
+};
+</script>
 
 <template>
-  <v-card class="h-100">Dope rankings</v-card>
+  <v-card>
+    <v-img :src="img" :width="180" />
+    <v-divider class="mt-2" />
+  </v-card>
 </template>
