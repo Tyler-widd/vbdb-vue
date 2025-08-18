@@ -60,19 +60,14 @@ const divisions = {
 </script>
 
 <template>
-  <v-container fluid>
-    <v-tabs
-      v-model="activeTab"
-      center-active
-      grow
-      class="rounded-lg"
-    >
+  <div>
+    <v-tabs v-model="activeTab" grow>
       <v-tab value="ncaa">NCAA</v-tab>
       <v-tab value="naia">NAIA</v-tab>
       <v-tab value="njcaa">NJCAA</v-tab>
       <v-tab value="cccaa">CCCAA</v-tab>
     </v-tabs>
-
+    <v-divider></v-divider>
     <v-tabs-window v-model="activeTab">
       <!-- NCAA Tab -->
       <v-tabs-window-item value="ncaa">
@@ -158,5 +153,5 @@ const divisions = {
         </v-row>
       </v-tabs-window-item>
     </v-tabs-window>
-  </v-container>
+  </div>
 </template>
