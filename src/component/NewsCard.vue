@@ -52,7 +52,7 @@ const fetchRSSFeed = async (forceRefresh = false) => {
   try {
     // Using CORS proxy to bypass CORS restrictions
     const response = await fetch(
-      `${CORS_PROXY}${encodeURIComponent(props.rssUrl)}`,
+      `${CORS_PROXY}${encodeURIComponent(props.rssUrl)}`
     );
 
     if (!response.ok) {
@@ -175,7 +175,7 @@ watch(
   () => props.rssUrl,
   () => {
     fetchRSSFeed();
-  },
+  }
 );
 
 // Auto-fetch on component mount
@@ -191,60 +191,6 @@ defineExpose({
 
 <template>
   <v-card>
-    <v-card-title>
-      <div class="d-flex align-center">
-        <div class="mr-4">
-          <v-img
-            v-if="division === 'NAIA'"
-            src="https://naiastats.prestosports.com/assets/images/NAIA_Bridge_logo_whiteR.png"
-            width="80"
-            height="40"
-          />
-          <v-img
-            v-else-if="division.includes('NCAA')"
-            src="https://content.sportslogos.net/logos/85/5463/full/national_collegiate_athletic_association_logo_secondary_2021_sportslogosnet-4441.png"
-            min-width="74"
-            min-height="32"
-            max-width="80"
-            max-height="40"
-          />
-          <v-img
-            v-else-if="division === 'CCCAA'"
-            src="https://www.cccaasports.org/assets/Alternative_Logo.png"
-            min-width="74"
-            min-height="32"
-            max-width="80"
-            max-height="40"
-          />
-          <v-img
-            v-else-if="division.includes('NJCAA')"
-            src="https://www.njcaa.org/images/setup/footer-logo-njcaa.png?max_width=auto&max_height=auto&crop=false"
-            min-width="74"
-            min-height="32"
-            max-width="80"
-            max-height="40"
-          />
-        </div>
-        <span
-          v-if="latestItem?.pubDate"
-          class="text-caption text-start font-weight-thin"
-        >
-          {{ formatDate(latestItem.pubDate) }}
-        </span>
-        <v-btn
-          v-if="latestItem?.link"
-          :href="latestItem.link"
-          target="_blank"
-          color="primary"
-          variant="text"
-          density="compact"
-          class="text-caption"
-        >
-          Read More
-        </v-btn>
-      </div>
-    </v-card-title>
-
     <!-- Loading state -->
     <v-card-text v-if="loading && !latestItem">
       <v-skeleton-loader type="card"></v-skeleton-loader>
@@ -267,17 +213,30 @@ defineExpose({
     </v-card-text>
 
     <!-- Content -->
-    <v-card-text v-else-if="latestItem">
-      <v-col v-if="latestItem.image" class="pa-0" cols="12">
-        <v-img :src="latestItem.image" cover />
-        <v-row dense no-gutters>
-          <v-col cols="12" class="text-wrap">
-            <v-card-title class="pa-0 text-body-1 text-wrap">
-              {{ latestItem.title }}
-            </v-card-title>
-          </v-col>
-        </v-row>
-      </v-col>
+    <div class="ma-3" v-else-if="latestItem">
+      <div v-if="latestItem.image">
+        <v-img :src="latestItem.image" />
+        <v-card-title class="pa-0 text-body-1 text-wrap">
+          {{ latestItem.title }}
+        </v-card-title>
+        <span
+          v-if="latestItem?.pubDate"
+          class="text-caption text-start font-weight-thin"
+        >
+          {{ formatDate(latestItem.pubDate) }}
+        </span>
+        <v-btn
+          v-if="latestItem?.link"
+          :href="latestItem.link"
+          target="_blank"
+          color="primary"
+          variant="text"
+          density="compact"
+          class="text-caption"
+        >
+          Read More
+        </v-btn>
+      </div>
 
       <!-- Fallback for items without images -->
       <div v-else>
@@ -304,7 +263,7 @@ defineExpose({
           {{ latestItem.description.substring(0, 150) }}...
         </v-card-text>
       </div>
-    </v-card-text>
+    </div>
 
     <!-- No content state -->
     <v-card-text v-else>

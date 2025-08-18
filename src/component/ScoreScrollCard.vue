@@ -77,15 +77,15 @@ const getMatchScoreData = (match) => {
   ];
 
   const completedSets = sets.filter(
-    (set) => set.team1 !== null && set.team2 !== null,
+    (set) => set.team1 !== null && set.team2 !== null
   );
 
   const team1SetWins = completedSets.filter(
-    (set) => set.team1 > set.team2,
+    (set) => set.team1 > set.team2
   ).length;
 
   const team2SetWins = completedSets.filter(
-    (set) => set.team2 > set.team1,
+    (set) => set.team2 > set.team1
   ).length;
 
   // Determine match status
@@ -184,16 +184,8 @@ const handleRefresh = () => {
       v-if="!loading && !error && games.length === 0"
       class="no-games-message"
     >
-      <v-card variant="tonal" class="pa-4 text-center">
-        <v-icon size="48" color="medium-emphasis" class="mb-2">
-          mdi-volleyball
-        </v-icon>
-        <div class="text-body-1 text-medium-emphasis">
-          No live matches at the moment
-        </div>
-        <div class="text-caption text-medium-emphasis">
-          Check back later for live updates
-        </div>
+      <v-card variant="tonal" class="text-center" height="50">
+        No Live matches found
       </v-card>
     </div>
 

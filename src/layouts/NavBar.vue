@@ -56,6 +56,7 @@ const isActiveRoute = (routePath) => {
             <div v-for="t in tabs" :key="t.value">
               <v-btn
                 class="text-body-1 font-weight-regular ga-4"
+                density="default"
                 :variant="isActiveRoute(t.route) ? 'tonal' : 'text'"
                 @click="navigateTo(t.route)"
               >

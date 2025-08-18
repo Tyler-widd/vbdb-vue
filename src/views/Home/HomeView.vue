@@ -62,27 +62,47 @@ const divisions = {
 <template>
   <div>
     <v-tabs v-model="activeTab" grow>
-      <v-tab value="ncaa">NCAA</v-tab>
-      <v-tab value="naia">NAIA</v-tab>
-      <v-tab value="njcaa">NJCAA</v-tab>
-      <v-tab value="cccaa">CCCAA</v-tab>
+      <v-tab value="ncaa"
+        ><v-img
+          :src="`https://content.sportslogos.net/logos/85/5463/full/national_collegiate_athletic_association_logo_secondary_2021_sportslogosnet-4441.png`"
+          width="75"
+      /></v-tab>
+      <v-tab value="naia">
+        <v-img
+          :src="`https://naiastats.prestosports.com/assets/images/NAIA_Bridge_logo_whiteR.png`"
+          width="75"
+      /></v-tab>
+      <v-tab value="njcaa"
+        ><v-img
+          :src="`https://www.njcaa.org/images/setup/footer-logo-njcaa.png?max_width=auto&max_height=auto&crop=false`"
+          width="75"
+      /></v-tab>
+      <v-tab value="cccaa"
+        ><v-img
+          :src="`https://www.cccaasports.org/assets/Alternative_Logo.png`"
+          width="75"
+      /></v-tab>
     </v-tabs>
     <v-divider></v-divider>
     <v-tabs-window v-model="activeTab">
       <!-- NCAA Tab -->
       <v-tabs-window-item value="ncaa">
-        <v-row dense class="mt-2">
-          <v-col
-            v-for="feed in divisions.ncaa"
-            :key="feed.division"
-            cols="12"
-            md="4"
-          >
+        <v-row
+          v-for="feed in divisions.ncaa"
+          :key="feed.division"
+          no-gutters
+          dense
+        >
+          <v-col cols="12" md="4" class="pa-0">
             <NewsCard
+              class="my-2"
               :division="feed.division"
               :rss-url="feed.rssUrl"
               :category="feed.category"
             />
+          </v-col>
+          <v-col>
+            <v-card class="mt-2 ml-4"> dope rankings </v-card>
           </v-col>
         </v-row>
       </v-tabs-window-item>
@@ -98,9 +118,7 @@ const divisions = {
             />
           </v-col>
           <v-col cols="12" md="6">
-            <RankingSection
-              :img="`https://naiastats.prestosports.com/assets/images/NAIA_Bridge_logo_whiteR.png`"
-            />
+            <RankingSection />
           </v-col>
         </v-row>
       </v-tabs-window-item>
