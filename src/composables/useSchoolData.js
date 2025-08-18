@@ -11,7 +11,7 @@ export default function useSchoolData() {
     error.value = null;
     try {
       const response = await fetch(
-        "https://api.volleyballdatabased.com/schools"
+        "https://api.volleyballdatabased.com/schools",
       );
       if (!response.ok) {
         throw new Error("Failed to fetch schools data");

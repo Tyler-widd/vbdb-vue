@@ -1,5 +1,5 @@
 // composables/useScheduleData.js
-import { ref, computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 export function useScheduleData() {
   const scheduleData = ref([]);
@@ -31,7 +31,7 @@ export function useScheduleData() {
       filteredGames = scheduleData.value.filter(
         (game) =>
           game.team_1_division === selectedDivision ||
-          game.team_2_division === selectedDivision
+          game.team_2_division === selectedDivision,
       );
     }
 
@@ -107,7 +107,7 @@ export function useScheduleData() {
 
     try {
       const response = await fetch(
-        "https://api.volleyballdatabased.com/schedule"
+        "https://api.volleyballdatabased.com/schedule",
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -118,10 +118,10 @@ export function useScheduleData() {
 
       if (data.length !== uniqueData.length) {
         console.log(
-          `Removed ${data.length - uniqueData.length} duplicate games`
+          `Removed ${data.length - uniqueData.length} duplicate games`,
         );
         console.log(
-          `Original count: ${data.length}, Unique count: ${uniqueData.length}`
+          `Original count: ${data.length}, Unique count: ${uniqueData.length}`,
         );
       }
 
@@ -140,7 +140,7 @@ export function useScheduleData() {
     search,
     divisionFilter,
     conferenceFilter,
-    showPastGames = false
+    showPastGames = false,
   ) => {
     const isValidValue = (value) => {
       return (

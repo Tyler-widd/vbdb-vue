@@ -1,8 +1,8 @@
 <!-- src/components/NewsCard.vue -->
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { formatDate } from "../helpers/formatDate.js";
+import { onMounted, ref, watch } from "vue";
 import { useNewsCache } from "../composables/useNewsCache.js";
+import { formatDate } from "../helpers/formatDate.js";
 
 // Props
 const props = defineProps({
@@ -52,7 +52,7 @@ const fetchRSSFeed = async (forceRefresh = false) => {
   try {
     // Using CORS proxy to bypass CORS restrictions
     const response = await fetch(
-      `${CORS_PROXY}${encodeURIComponent(props.rssUrl)}`
+      `${CORS_PROXY}${encodeURIComponent(props.rssUrl)}`,
     );
 
     if (!response.ok) {
@@ -175,7 +175,7 @@ watch(
   () => props.rssUrl,
   () => {
     fetchRSSFeed();
-  }
+  },
 );
 
 // Auto-fetch on component mount

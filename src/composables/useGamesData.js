@@ -89,12 +89,12 @@ export function useGamesData() {
       const dateParts = targetDate.split("/");
       const formattedTargetDate = `${dateParts[2]}-${dateParts[0].padStart(
         2,
-        "0"
+        "0",
       )}-${dateParts[1].padStart(2, "0")}`;
 
       // Filter games by date
       const filteredGames = allGames.filter(
-        (game) => game.date === formattedTargetDate
+        (game) => game.date === formattedTargetDate,
       );
 
       return filteredGames;
@@ -111,7 +111,7 @@ export function useGamesData() {
   const getRandomPreviousDayGames = async (
     count = 10,
     testDate = null,
-    orgId = null
+    orgId = null,
   ) => {
     const previousDate = getPreviousDate(testDate);
 

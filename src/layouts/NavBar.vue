@@ -1,7 +1,7 @@
 <!-- NavBar.vue -->
 <script setup>
-import { useRouter, useRoute } from "vue-router";
 import { ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import ScoreScrollCard from "../component/ScoreScrollCard.vue";
 
 const router = useRouter();

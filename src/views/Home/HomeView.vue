@@ -1,6 +1,6 @@
 <!-- views/Home/HomeView.vue -->
 <script setup>
-import { ref, onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import NewsCard from "../../component/NewsCard.vue";
 import RankingSection from "./SideContent/RankingSection.vue";
 

@@ -1,6 +1,6 @@
 <!-- Home/News/NCAANews.vue -->
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 // Props
 const props = defineProps({
@@ -37,7 +37,7 @@ const fetchRSSFeed = async () => {
 
   try {
     const response = await fetch(
-      `${CORS_PROXY}${encodeURIComponent(RSS_URL.value)}`
+      `${CORS_PROXY}${encodeURIComponent(RSS_URL.value)}`,
     );
 
     if (!response.ok) {
@@ -68,7 +68,7 @@ const fetchRSSFeed = async () => {
       pubDate: getTextContent(firstItem, "pubDate"),
       category: getTextContent(firstItem, "category"),
       image: extractImageFromDescription(
-        getTextContent(firstItem, "description")
+        getTextContent(firstItem, "description"),
       ),
       enclosure: getTextContent(firstItem, "enclosure"),
     };

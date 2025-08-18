@@ -1,9 +1,9 @@
 <!-- views/Live/LiveView.vue -->
 <script setup>
-import { ref, onMounted, computed, watch, onUnmounted } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import useLiveData from "@/composables/useLiveData.js";
 import LiveHeader from "./LiveHeader.vue";
 import LiveTable from "./LiveTable.vue";
-import useLiveData from "@/composables/useLiveData.js";
 
 // Use the live data composable
 const { liveMatches, loading, error, fetchLiveData } = useLiveData();
@@ -28,7 +28,7 @@ const availableConferences = computed(() => {
   // Filter by division if selected
   if (divisionFilter.value) {
     matches = matches.filter(
-      (match) => match.division === divisionFilter.value
+      (match) => match.division === divisionFilter.value,
     );
   }
 
@@ -64,7 +64,7 @@ const filterLive = (liveData, searchTerm, divisionFilter, conferenceFilter) => {
         match.team_1_name.toLowerCase().includes(searchLower) ||
         match.team_2_name.toLowerCase().includes(searchLower) ||
         match.date.includes(searchTerm) ||
-        (match.location && match.location.toLowerCase().includes(searchLower))
+        (match.location && match.location.toLowerCase().includes(searchLower)),
     );
   }
 

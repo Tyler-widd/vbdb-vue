@@ -1,10 +1,10 @@
 <!-- Players/PlayersView.vue -->
 <script setup>
-import { ref, onMounted, watch, nextTick } from "vue";
 import { debounce } from "lodash-es";
+import { nextTick, onMounted, ref, watch } from "vue";
+import { usePlayersData } from "../../composables/usePlayersData.js";
 import PlayersHeader from "./PlayersHeader.vue";
 import PlayersTable from "./PlayersTable.vue";
-import { usePlayersData } from "../../composables/usePlayersData.js";
 
 // Use the players data composable
 const {
@@ -84,7 +84,7 @@ watch(
   }),
   async () => {
     await loadPlayers();
-  }
+  },
 );
 
 // Watch search separately with debounce and focus preservation
@@ -92,7 +92,7 @@ watch(
   () => filters.value.search,
   () => {
     debouncedLoadPlayers(true); // Pass true to maintain focus
-  }
+  },
 );
 
 // Handle filter updates from PlayersHeader

@@ -1,6 +1,6 @@
 <!-- views/TeamDetail/TeamDetailView.vue -->
 <script setup>
-import { ref, computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import TeamDetailHeader from "./TeamDetailHeader.vue";
 import TeamDetailScoreCard from "./TeamDetailScoreCard.vue";
@@ -21,7 +21,7 @@ watch(
       selectedYear.value = "2024";
       record.value = "";
     }
-  }
+  },
 );
 
 const handleYearUpdate = (year) => {

@@ -1,6 +1,6 @@
 <!-- views/Teams/TeamsHeader.vue -->
 <script setup>
-import { ref, computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 
 const { smAndDown } = useDisplay();
@@ -58,13 +58,13 @@ const conferences = computed(() => {
   // If a division is selected, filter schools by that division
   if (selectedDivision.value) {
     schoolsToFilter = props.schools.filter(
-      (school) => school.division === selectedDivision.value
+      (school) => school.division === selectedDivision.value,
     );
   }
 
   const uniqueConferences = [
     ...new Set(
-      schoolsToFilter.map((school) => formatConference(school.conference))
+      schoolsToFilter.map((school) => formatConference(school.conference)),
     ),
   ];
   return uniqueConferences.sort();

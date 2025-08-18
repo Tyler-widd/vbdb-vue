@@ -1,8 +1,8 @@
 <!-- views/Live/LiveTable.vue -->
 <script setup>
 import { computed } from "vue";
-import { formatDateYear, formatDateMoblie } from "@/helpers/formatDate";
 import { useDisplay } from "vuetify";
+import { formatDateMoblie, formatDateYear } from "@/helpers/formatDate";
 import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 
 const { smAndDown } = useDisplay();
@@ -47,7 +47,7 @@ const filteredLive = computed(() => {
     props.liveData,
     props.search,
     props.divisionFilter,
-    props.conferenceFilter
+    props.conferenceFilter,
   );
 });
 
@@ -62,13 +62,13 @@ const getMatchStatus = (match) => {
   ];
 
   const completedSets = sets.filter(
-    (set) => set.team1 !== null && set.team2 !== null
+    (set) => set.team1 !== null && set.team2 !== null,
   );
   const team1SetWins = completedSets.filter(
-    (set) => set.team1 > set.team2
+    (set) => set.team1 > set.team2,
   ).length;
   const team2SetWins = completedSets.filter(
-    (set) => set.team2 > set.team1
+    (set) => set.team2 > set.team1,
   ).length;
 
   if (completedSets.length === 0) {
@@ -106,7 +106,7 @@ const getFormattedScore = (match) => {
 
   // Filter out null sets
   const completedSets = sets.filter(
-    (set) => set.team1 !== null && set.team2 !== null
+    (set) => set.team1 !== null && set.team2 !== null,
   );
 
   if (completedSets.length === 0) {
@@ -115,10 +115,10 @@ const getFormattedScore = (match) => {
 
   // Calculate set wins
   const team1SetWins = completedSets.filter(
-    (set) => set.team1 > set.team2
+    (set) => set.team1 > set.team2,
   ).length;
   const team2SetWins = completedSets.filter(
-    (set) => set.team2 > set.team1
+    (set) => set.team2 > set.team1,
   ).length;
 
   // Format individual set scores with bold for higher scores
@@ -157,8 +157,8 @@ const getFormattedScore = (match) => {
     team1SetWins > team2SetWins
       ? `(<strong>${team1SetWins}</strong>-${team2SetWins})`
       : team2SetWins > team1SetWins
-      ? `(${team1SetWins}-<strong>${team2SetWins}</strong>)`
-      : `(${team1SetWins}-${team2SetWins})`;
+        ? `(${team1SetWins}-<strong>${team2SetWins}</strong>)`
+        : `(${team1SetWins}-${team2SetWins})`;
 
   return `${setTotalDisplay} [${setScores.join(", ")}]`;
 };

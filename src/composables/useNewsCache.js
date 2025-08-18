@@ -1,5 +1,5 @@
 // composables/useNewsCache.js
-import { ref, reactive } from "vue";
+import { reactive, ref } from "vue";
 
 // Global cache that persists across component instances
 const newsCache = reactive(new Map());

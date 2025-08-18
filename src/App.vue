@@ -3,6 +3,7 @@
 import { useDisplay } from "vuetify";
 
 const { smAndDown } = useDisplay();
+
 import NavBar from "./layouts/NavBar.vue";
 </script>
 

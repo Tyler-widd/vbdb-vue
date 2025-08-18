@@ -1,6 +1,6 @@
 <!-- views/Players/PlayersHeader.vue -->
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 import { usePlayersData } from "../../composables/usePlayersData";
 
@@ -43,7 +43,7 @@ onMounted(async () => {
     const promises = divisions.map(async (division) => {
       try {
         const response = await fetch(
-          `https://api.volleyballdatabased.com/players?division=${division}&per_page=1000`
+          `https://api.volleyballdatabased.com/players?division=${division}&per_page=1000`,
         );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -68,7 +68,7 @@ watch(
   () => props.divisions,
   (newVal) => {
     selectedDivisions.value = [...newVal];
-  }
+  },
 );
 
 // Available divisions for selection
@@ -96,7 +96,7 @@ const conferences = computed(() => {
     playersToFilter = playersToFilter.filter(
       (player) =>
         selectedDivisions.value.includes(player.division) ||
-        selectedDivisions.value.includes(player.school?.division)
+        selectedDivisions.value.includes(player.school?.division),
     );
   }
 
@@ -104,9 +104,9 @@ const conferences = computed(() => {
     ...new Set(
       playersToFilter
         .map((player) =>
-          formatConference(player.conference || player.school?.conference)
+          formatConference(player.conference || player.school?.conference),
         )
-        .filter(Boolean)
+        .filter(Boolean),
     ),
   ];
   return uniqueConferences.sort();
@@ -124,7 +124,7 @@ const schools = computed(() => {
     playersToFilter = playersToFilter.filter(
       (player) =>
         selectedDivisions.value.includes(player.division) ||
-        selectedDivisions.value.includes(player.school?.division)
+        selectedDivisions.value.includes(player.school?.division),
     );
   }
 
@@ -132,7 +132,7 @@ const schools = computed(() => {
   if (selectedConference.value) {
     playersToFilter = playersToFilter.filter((player) => {
       const playerConference = formatConference(
-        player.conference || player.school?.conference
+        player.conference || player.school?.conference,
       );
       return playerConference === selectedConference.value;
     });
@@ -142,7 +142,7 @@ const schools = computed(() => {
     ...new Set(
       playersToFilter
         .map((player) => player.school?.name || player.school)
-        .filter(Boolean)
+        .filter(Boolean),
     ),
   ];
   return uniqueSchools.sort();
@@ -165,7 +165,7 @@ watch(
       selectedSchool.value = null;
     }
   },
-  { deep: true }
+  { deep: true },
 );
 
 // Watch for conference changes to reset school if needed

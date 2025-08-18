@@ -1,6 +1,6 @@
 <!-- views/TeamDetail/TeamDetailHeader.vue -->
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useDisplay } from "vuetify";
 
@@ -32,7 +32,7 @@ const yearOptions = computed(() => {
     ...new Set(
       gamesData.value.map((game) => {
         return game.date.split("/")[2];
-      })
+      }),
     ),
     "2025",
   ];
@@ -60,7 +60,7 @@ const fetchSchoolData = async () => {
 const fetchGamesForYears = async () => {
   try {
     const response = await fetch(
-      `https://api.volleyballdatabased.com/games/${orgId.value}`
+      `https://api.volleyballdatabased.com/games/${orgId.value}`,
     );
     if (response.ok) {
       const data = await response.json();

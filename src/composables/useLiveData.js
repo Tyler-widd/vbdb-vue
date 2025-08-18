@@ -35,7 +35,7 @@ export default function useLiveData() {
     ];
 
     const completedSets = sets.filter(
-      (set) => set.team1 !== null && set.team2 !== null
+      (set) => set.team1 !== null && set.team2 !== null,
     );
     const currentSet = completedSets.length + 1;
 
@@ -45,10 +45,10 @@ export default function useLiveData() {
 
     // Check if match is complete (best of 5, first to 3 sets wins)
     const team1Wins = completedSets.filter(
-      (set) => set.team1 > set.team2
+      (set) => set.team1 > set.team2,
     ).length;
     const team2Wins = completedSets.filter(
-      (set) => set.team2 > set.team1
+      (set) => set.team2 > set.team1,
     ).length;
 
     if (team1Wins >= 3 || team2Wins >= 3) {
@@ -74,13 +74,13 @@ export default function useLiveData() {
     ];
 
     const completedSets = sets.filter(
-      (set) => set.team1 !== null && set.team2 !== null
+      (set) => set.team1 !== null && set.team2 !== null,
     );
     const team1SetWins = completedSets.filter(
-      (set) => set.team1 > set.team2
+      (set) => set.team1 > set.team2,
     ).length;
     const team2SetWins = completedSets.filter(
-      (set) => set.team2 > set.team1
+      (set) => set.team2 > set.team1,
     ).length;
 
     return {

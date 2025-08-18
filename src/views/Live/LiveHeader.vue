@@ -1,6 +1,7 @@
 <!-- views/Live/LiveHeader.vue -->
 <script setup>
 import { useDisplay } from "vuetify";
+
 const { smAndDown } = useDisplay();
 
 // Define props and emits for communication with parent

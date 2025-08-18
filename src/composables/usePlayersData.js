@@ -144,7 +144,7 @@ export function usePlayersData() {
     try {
       // Fetch a limited set of players to populate filters
       const response = await fetch(
-        "https://api.volleyballdatabased.com/players?division=D-I&per_page=1000"
+        "https://api.volleyballdatabased.com/players?division=D-I&per_page=1000",
       );
 
       if (!response.ok) {

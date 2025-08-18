@@ -1,9 +1,9 @@
 <!-- views/Teams/TeamsView.vue -->
 <script setup>
 import { ref } from "vue";
+import useSchoolData from "@/composables/useSchoolData";
 import TeamsHeader from "./TeamsHeader.vue";
 import TeamsTable from "./TeamsTable.vue";
-import useSchoolData from "@/composables/useSchoolData";
 
 // Use the composable
 const { schools, loading, fetchSchools } = useSchoolData();

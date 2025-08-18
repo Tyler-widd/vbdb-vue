@@ -1,9 +1,9 @@
 <!-- views/Schedule/ScheduleView.vue -->
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useScheduleData } from "@/composables/useScheduleData";
 import ScheduleHeader from "./ScheduleHeader.vue";
 import ScheduleTable from "./ScheduleTable.vue";
-import { useScheduleData } from "@/composables/useScheduleData";
 
 // Use the schedule data composable
 const {

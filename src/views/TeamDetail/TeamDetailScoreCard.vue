@@ -1,10 +1,10 @@
 <!-- views/TeamDetail/TeamDetailScoreCard.vue -->
 <script setup>
-import { ref, computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
-import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 import { useScheduleData } from "../../composables/useScheduleData.js";
+import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 
 const { smAndDown } = useDisplay();
 const router = useRouter();
@@ -112,7 +112,7 @@ const fetchGames = async () => {
   error.value = null;
   try {
     const response = await fetch(
-      `https://api.volleyballdatabased.com/games/${props.orgId}`
+      `https://api.volleyballdatabased.com/games/${props.orgId}`,
     );
     if (!response.ok) throw new Error("Failed to fetch games");
     const data = await response.json();
@@ -255,7 +255,7 @@ watch(
   (newRecord) => {
     emit("update:record", newRecord);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Pagination
@@ -289,7 +289,7 @@ watch(
     if (newYear === "2025" && scheduleData.value.length === 0) {
       await fetchSchedule();
     }
-  }
+  },
 );
 
 // Initialize

@@ -1,8 +1,8 @@
 <!-- views/Schedule/ScheduleTable.vue -->
 <script setup>
 import { computed } from "vue";
-import { formatDateYear, formatDateMoblie } from "@/helpers/formatDate";
 import { useDisplay } from "vuetify";
+import { formatDateMoblie, formatDateYear } from "@/helpers/formatDate";
 import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 
 const { smAndDown } = useDisplay();
@@ -57,7 +57,7 @@ const filteredSchedule = computed(() => {
     props.scheduleData,
     props.search,
     props.divisionFilter,
-    props.conferenceFilter
+    props.conferenceFilter,
   );
 
   // Sort by date in ascending order

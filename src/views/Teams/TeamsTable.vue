@@ -46,14 +46,15 @@ const filteredSchools = computed(() => {
   // Filter by division
   if (props.divisionFilter) {
     filtered = filtered.filter(
-      (school) => school.division === props.divisionFilter
+      (school) => school.division === props.divisionFilter,
     );
   }
 
   // Filter by conference - need to compare formatted conference names
   if (props.conferenceFilter) {
     filtered = filtered.filter(
-      (school) => formatConference(school.conference) === props.conferenceFilter
+      (school) =>
+        formatConference(school.conference) === props.conferenceFilter,
     );
   }
 
@@ -73,13 +74,13 @@ const filteredSchools = computed(() => {
         (school.conference &&
           formatConference(school.conference)
             .toLowerCase()
-            .includes(searchLower))
+            .includes(searchLower)),
     );
   }
 
   // Sort by school name
   return filtered.sort((a, b) =>
-    a.name_official.localeCompare(b.name_official)
+    a.name_official.localeCompare(b.name_official),
   );
 });
 </script>

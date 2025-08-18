@@ -1,10 +1,10 @@
 <!-- ScoreScrollCard.vue -->
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from "vue";
-import NavScoreCard from "./NavScoreCard.vue";
-import useLiveData from "@/composables/useLiveData.js";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
+import useLiveData from "@/composables/useLiveData.js";
+import NavScoreCard from "./NavScoreCard.vue";
 
 // Initialize the live data composable
 const { liveMatches, loading, error, fetchLiveData } = useLiveData();
@@ -77,15 +77,15 @@ const getMatchScoreData = (match) => {
   ];
 
   const completedSets = sets.filter(
-    (set) => set.team1 !== null && set.team2 !== null
+    (set) => set.team1 !== null && set.team2 !== null,
   );
 
   const team1SetWins = completedSets.filter(
-    (set) => set.team1 > set.team2
+    (set) => set.team1 > set.team2,
   ).length;
 
   const team2SetWins = completedSets.filter(
-    (set) => set.team2 > set.team1
+    (set) => set.team2 > set.team1,
   ).length;
 
   // Determine match status
