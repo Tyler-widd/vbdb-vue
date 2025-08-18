@@ -63,7 +63,6 @@ const divisions = {
   <v-container fluid>
     <v-tabs
       v-model="activeTab"
-      bg-color="primary"
       center-active
       grow
       class="rounded-lg"
