@@ -6,7 +6,7 @@ import RankingsTable from "./RankingsTable.vue";
 
 <template>
   <div>
-    <RankingsHeader />
+    <RankingsHeader class="mt-3" />
     <RankingsTable />
   </div>
 </template>

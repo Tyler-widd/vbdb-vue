@@ -84,7 +84,7 @@ watch(
   }),
   async () => {
     await loadPlayers();
-  },
+  }
 );
 
 // Watch search separately with debounce and focus preservation
@@ -92,7 +92,7 @@ watch(
   () => filters.value.search,
   () => {
     debouncedLoadPlayers(true); // Pass true to maintain focus
-  },
+  }
 );
 
 // Handle filter updates from PlayersHeader
@@ -128,6 +128,7 @@ const handleAllDivisionsUpdate = (value) => {
 <template>
   <div>
     <PlayersHeader
+      class="mt-3"
       :filter-options="filterOptions"
       :loading="loading"
       :divisions="filters.divisions"

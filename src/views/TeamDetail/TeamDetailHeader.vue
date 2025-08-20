@@ -32,7 +32,7 @@ const yearOptions = computed(() => {
     ...new Set(
       gamesData.value.map((game) => {
         return game.date.split("/")[2];
-      }),
+      })
     ),
     "2025",
   ];
@@ -60,7 +60,7 @@ const fetchSchoolData = async () => {
 const fetchGamesForYears = async () => {
   try {
     const response = await fetch(
-      `https://api.volleyballdatabased.com/games/${orgId.value}`,
+      `https://api.volleyballdatabased.com/games/${orgId.value}`
     );
     if (response.ok) {
       const data = await response.json();
@@ -151,14 +151,16 @@ onMounted(() => {
             </v-avatar>
           </v-col>
           <v-col>
-            <v-card-title
+            <div
               :class="
-                smAndDown ? 'pa-0 text-h5 text-wrap pb-2' : 'pa-0 text-h4 pb-2'
+                smAndDown ? 'pa-0 text-h5 text-wrap pb-1' : 'pa-0 text-h4 pb-1'
               "
-              >{{ school.name_official }}</v-card-title
             >
+              {{ school.name_official }}
+            </div>
             <div class="text-body-1">
-              {{ school.division }} | {{ formatConference(school.conference) }}
+              {{ school.division }} |
+              {{ formatConference(school.conference) }}
             </div>
             <div class="text-body-1">
               {{ selectedYear }} Record: {{ record }}

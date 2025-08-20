@@ -81,6 +81,7 @@ const handleRetry = () => {
 
     <!-- Schedule Header with Filters -->
     <ScheduleHeader
+      class="mt-3"
       :divisions="divisions"
       :conferences="availableConferences"
       :selected-division="divisionFilter"

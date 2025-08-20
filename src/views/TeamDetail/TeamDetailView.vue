@@ -21,7 +21,7 @@ watch(
       selectedYear.value = "2024";
       record.value = "";
     }
-  },
+  }
 );
 
 const handleYearUpdate = (year) => {
@@ -36,6 +36,7 @@ const handleRecordUpdate = (recordValue) => {
 <template>
   <!-- Use :key to force re-render when orgId changes -->
   <TeamDetailHeader
+    class="mt-1"
     :key="`header-${orgId}`"
     :record="record"
     @update:year="handleYearUpdate"

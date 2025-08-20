@@ -6,6 +6,82 @@ export function useScheduleData() {
   const loading = ref(false);
   const error = ref(null);
 
+  // Helper function to transform division values
+  const transformDivision = (division) => {
+    const divisionMap = {
+      D1: "D-I",
+      D2: "D-II",
+      D3: "D-III",
+    };
+    return divisionMap[division] || division;
+  };
+
+  // Helper function to convert MM-DD-YYYY to YYYY-MM-DD
+  const convertDateFormat = (dateString) => {
+    if (!dateString) return null;
+
+    // Handle MM-DD-YYYY format
+    const parts = dateString.split("-");
+    if (parts.length === 3) {
+      const [month, day, year] = parts;
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    }
+
+    return dateString; // Return as-is if format is unexpected
+  };
+
+  // Helper function to convert "06:00PM ET" to "18:00" (24-hour format)
+  const convertTimeFormat = (timeString) => {
+    if (!timeString) return null;
+
+    try {
+      // Remove timezone info (ET, CT, etc.)
+      const timeOnly = timeString
+        .replace(/\s+(ET|CT|MT|PT|EST|CST|MST|PST)$/i, "")
+        .trim();
+
+      // Parse 12-hour format
+      const timeRegex = /^(\d{1,2}):(\d{2})(AM|PM)$/i;
+      const match = timeOnly.match(timeRegex);
+
+      if (match) {
+        let [, hours, minutes, ampm] = match;
+        hours = parseInt(hours);
+
+        // Convert to 24-hour format
+        if (ampm.toUpperCase() === "PM" && hours !== 12) {
+          hours += 12;
+        } else if (ampm.toUpperCase() === "AM" && hours === 12) {
+          hours = 0;
+        }
+
+        return `${hours.toString().padStart(2, "0")}:${minutes}`;
+      }
+
+      return timeString; // Return as-is if parsing fails
+    } catch (error) {
+      console.warn("Error parsing time:", timeString, error);
+      return timeString;
+    }
+  };
+
+  // Helper function to transform game data
+  const transformGameData = (game) => {
+    return {
+      ...game,
+      // Transform division values for both teams
+      team_1_division: transformDivision(game.team_1_division),
+      team_2_division: transformDivision(game.team_2_division),
+      // Convert date format from MM-DD-YYYY to YYYY-MM-DD
+      date: convertDateFormat(game.start_date),
+      // Convert time format from "06:00PM ET" to "18:00"
+      time: convertTimeFormat(game.start_time),
+      // Keep original values for reference
+      original_date: game.start_date,
+      original_time: game.start_time,
+    };
+  };
+
   // Get unique divisions for filters
   const divisions = computed(() => {
     const uniqueDivisions = [
@@ -31,7 +107,7 @@ export function useScheduleData() {
       filteredGames = scheduleData.value.filter(
         (game) =>
           game.team_1_division === selectedDivision ||
-          game.team_2_division === selectedDivision,
+          game.team_2_division === selectedDivision
       );
     }
 
@@ -107,21 +183,26 @@ export function useScheduleData() {
 
     try {
       const response = await fetch(
-        "https://api.volleyballdatabased.com/schedule",
+        "https://api.volleyballdatabased.com/schedule"
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
+      const rawData = await response.json();
 
-      const uniqueData = removeDuplicateGames(data);
+      // Transform the data to match expected format
+      const transformedData = rawData.map(transformGameData);
 
-      if (data.length !== uniqueData.length) {
+      const uniqueData = removeDuplicateGames(transformedData);
+
+      if (transformedData.length !== uniqueData.length) {
         console.log(
-          `Removed ${data.length - uniqueData.length} duplicate games`,
+          `Removed ${
+            transformedData.length - uniqueData.length
+          } duplicate games`
         );
         console.log(
-          `Original count: ${data.length}, Unique count: ${uniqueData.length}`,
+          `Original count: ${transformedData.length}, Unique count: ${uniqueData.length}`
         );
       }
 
@@ -140,7 +221,7 @@ export function useScheduleData() {
     search,
     divisionFilter,
     conferenceFilter,
-    showPastGames = false,
+    showPastGames = false
   ) => {
     const isValidValue = (value) => {
       return (
@@ -175,13 +256,28 @@ export function useScheduleData() {
 
       const hasValidNames = isValidValue(team1Name) && isValidValue(team2Name);
 
-      // Filter by date (unless showPastGames is true)
-      const isNotPastGame = showPastGames || !item.date || item.date >= today;
+      // FIXED: Better date filtering logic
+      let isNotPastGame = true;
+      if (!showPastGames && item.date) {
+        // Convert date to YYYY-MM-DD format for comparison if needed
+        let gameDate = item.date;
+        if (gameDate.includes("/")) {
+          // Convert MM/DD/YYYY to YYYY-MM-DD
+          const parts = gameDate.split("/");
+          if (parts.length === 3) {
+            gameDate = `${parts[2]}-${parts[0].padStart(
+              2,
+              "0"
+            )}-${parts[1].padStart(2, "0")}`;
+          }
+        }
+        isNotPastGame = gameDate >= today;
+      }
 
       return hasValidNames && isNotPastGame;
     });
 
-    // Apply division filter
+    // Apply division filter - FIXED: Better division matching
     if (divisionFilter && divisionFilter !== "all") {
       filtered = filtered.filter((game) => {
         const team1Division =
@@ -189,9 +285,25 @@ export function useScheduleData() {
         const team2Division =
           getTeamDivision(game.team_2_name) || game.team_2_division;
 
-        return (
-          team1Division === divisionFilter || team2Division === divisionFilter
-        );
+        // FIXED: More flexible division matching
+        const divisionMatches = (division) => {
+          if (!division) return false;
+
+          // Exact match
+          if (division === divisionFilter) return true;
+
+          // Handle variations (D-I matches D1, etc.)
+          const normalizedDivision = division
+            .replace(/[-\s]/g, "")
+            .toUpperCase();
+          const normalizedFilter = divisionFilter
+            .replace(/[-\s]/g, "")
+            .toUpperCase();
+
+          return normalizedDivision === normalizedFilter;
+        };
+
+        return divisionMatches(team1Division) || divisionMatches(team2Division);
       });
     }
 
@@ -240,6 +352,8 @@ export function useScheduleData() {
     conferences,
     getConferencesForDivision,
     fetchSchedule,
-    filterSchedule, // Updated with date filtering option
+    filterSchedule,
+    futureGames,
+    upcomingGames,
   };
 }

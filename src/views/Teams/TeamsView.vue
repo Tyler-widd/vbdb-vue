@@ -32,6 +32,7 @@ fetchSchools();
 <template>
   <div>
     <TeamsHeader
+      class="mt-3"
       :schools="schools"
       :loading="loading"
       @update:division="handleDivisionUpdate"

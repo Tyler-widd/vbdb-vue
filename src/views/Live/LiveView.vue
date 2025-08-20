@@ -28,7 +28,7 @@ const availableConferences = computed(() => {
   // Filter by division if selected
   if (divisionFilter.value) {
     matches = matches.filter(
-      (match) => match.division === divisionFilter.value,
+      (match) => match.division === divisionFilter.value
     );
   }
 
@@ -64,7 +64,7 @@ const filterLive = (liveData, searchTerm, divisionFilter, conferenceFilter) => {
         match.team_1_name.toLowerCase().includes(searchLower) ||
         match.team_2_name.toLowerCase().includes(searchLower) ||
         match.date.includes(searchTerm) ||
-        (match.location && match.location.toLowerCase().includes(searchLower)),
+        (match.location && match.location.toLowerCase().includes(searchLower))
     );
   }
 
@@ -113,7 +113,7 @@ watch(divisionFilter, () => {
 </script>
 
 <template>
-  <div>
+  <div class="mt-3">
     <!-- Error Alert -->
     <v-alert
       v-if="error"
