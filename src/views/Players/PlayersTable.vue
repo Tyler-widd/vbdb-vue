@@ -209,25 +209,3 @@ const localPage = computed({
     </v-data-table>
   </v-card>
 </template>
-
-<style>
-.button-like {
-  cursor: pointer;
-  border-radius: 12px;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-  user-select: none;
-}
-
-.button-like:hover {
-  background-color: rgba(var(--v-theme-primary), 0.08);
-}
-
-.button-like:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(var(--v-theme-primary), 0.2);
-}
-
-.button-like:active {
-  background-color: rgba(var(--v-theme-primary), 0.12);
-}
-</style>

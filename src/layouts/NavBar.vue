@@ -69,8 +69,8 @@ const isActiveRoute = (routePath) => {
       </div>
 
       <!-- Mobile Logo (centered) -->
-      <div class="d-md-none w-75 d-flex justify-center">
-        <router-link to="/" class="inline-block">
+      <div class="d-md-none w-100 justify-center d-flex">
+        <router-link to="/">
           <v-img
             :src="`https://raw.githubusercontent.com/widbuntu/vbdb-info/a40c20dac184df3f495587843e59a83ad91cf5c8/assets/favicon.svg`"
             width="50"

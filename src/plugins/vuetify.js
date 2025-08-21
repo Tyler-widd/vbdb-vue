@@ -64,5 +64,8 @@ export default createVuetify({
     VAvatar: {
       tile: true,
     },
+    VExpansionPanels: {
+      rounded: "lg",
+    },
   },
 });
