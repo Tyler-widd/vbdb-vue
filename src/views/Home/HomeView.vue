@@ -240,6 +240,7 @@ const getDivisionKey = (divisionName) => {
             >
               <div class="mt-4">
                 <v-row>
+                  <!-- News Card -->
                   <v-col cols="12" md="4">
                     <NewsCard
                       :division="feed.division"
@@ -247,62 +248,42 @@ const getDivisionKey = (divisionName) => {
                       :category="feed.category"
                     />
                   </v-col>
-                  <!-- AVCA Rankings -->
-                  <v-col cols="12" md="3" :class="smAndDown ? 'pt-0' : ''">
+                  <!-- NAIA Rankings -->
+                  <v-col cols="12" md="4" :class="smAndDown ? 'pt-0' : ''">
                     <v-expansion-panels v-model="panelRpi">
                       <v-expansion-panel>
                         <v-expansion-panel-title class="text-h6">
                           <v-btn
-                            :href="`https://www.avca.org/polls-awards/polls/?_divisions=division-${getDivisionKey(
-                              feed.division
-                            )}-women`"
+                            :href="`https://www.naia.org/sports/wvball/2025-26/Releases/25_Polls`"
                             variant="tonal"
                             target="_blank"
                             @click.stop
                           >
-                            AVCA Rankings
+                            NAIA Rankings
                           </v-btn>
                         </v-expansion-panel-title>
                         <v-expansion-panel-text>
-                          <div v-if="loading" class="text-center">
-                            <v-progress-circular
-                              indeterminate
-                              color="primary"
-                            ></v-progress-circular>
-                            <p class="mt-2">Loading rankings...</p>
-                          </div>
-
-                          <div v-else-if="error" class="text-center text-error">
-                            <v-icon>mdi-alert-circle</v-icon>
-                            <p>Error loading rankings: {{ error }}</p>
-                          </div>
-
-                          <div v-else>
-                            <div
-                              v-for="team in getRankingsByDivision(
-                                getDivisionKey(feed.division),
-                                10
-                              )"
-                              :key="team.id"
-                              class="d-flex align-center justify-space-between py-1 border-b"
-                            >
-                              <div class="d-flex align-center">
-                                <span class="text-h6 text-primary mr-3">{{
-                                  team.rank
-                                }}</span>
-                                <div>
-                                  {{ team.school }}
-                                  <div class="text-caption text-grey">
-                                    Points: {{ team.total_points }}
-                                    <span v-if="team.first_place_votes > 0">
-                                      • First Place Votes:
-                                      {{ team.first_place_votes }}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          <!-- NAIA Rankings Go Here -->
+                        </v-expansion-panel-text>
+                      </v-expansion-panel>
+                    </v-expansion-panels>
+                  </v-col>
+                  <!-- NAIA Player of the Week -->
+                  <v-col cols="12" md="4" :class="smAndDown ? 'pt-0' : ''">
+                    <v-expansion-panels v-model="panelRpi">
+                      <v-expansion-panel>
+                        <v-expansion-panel-title class="text-h6">
+                          <v-btn
+                            :href="`https://www.naia.org/sports/wvball/2025-26/Releases/POTW_Archive`"
+                            variant="tonal"
+                            target="_blank"
+                            @click.stop
+                          >
+                            Players of the week
+                          </v-btn>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                          <!-- NAIA Rankings Go Here -->
                         </v-expansion-panel-text>
                       </v-expansion-panel>
                     </v-expansion-panels>
