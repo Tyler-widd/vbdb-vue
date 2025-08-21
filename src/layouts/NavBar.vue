@@ -31,7 +31,7 @@ const isActiveRoute = (routePath) => {
 <template>
   <div>
     <!-- Top Scores Bar -->
-    <v-app-bar color="background" height="40" density="prominent">
+    <v-app-bar color="background" height="60" density="prominent">
       <ScoreScrollCard />
     </v-app-bar>
 

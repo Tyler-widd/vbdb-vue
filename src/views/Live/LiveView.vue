@@ -6,7 +6,8 @@ import LiveHeader from "./LiveHeader.vue";
 import LiveTable from "./LiveTable.vue";
 
 // Use the live data composable
-const { liveMatches, loading, error, fetchLiveData } = useLiveData();
+const { liveMatches, loading, error, fetchLiveData, availableConferences } =
+  useLiveData();
 
 // Filter states
 const search = ref("");
@@ -22,7 +23,7 @@ const divisions = computed(() => {
 });
 
 // Get available conferences based on selected division
-const availableConferences = computed(() => {
+const conferences = computed(() => {
   let matches = liveMatches.value;
 
   // Filter by division if selected
@@ -32,14 +33,14 @@ const availableConferences = computed(() => {
     );
   }
 
-  // Extract unique conferences from team data (you may need to adjust based on your data structure)
-  const conferences = new Set();
+  // Extract unique conferences from filtered matches
+  const confs = new Set();
   matches.forEach((match) => {
-    // Add logic here if you have conference data in your live matches
-    // For now, returning empty array since the live API data doesn't include conferences
+    if (match.team_1_conference) confs.add(match.team_1_conference);
+    if (match.team_2_conference) confs.add(match.team_2_conference);
   });
 
-  return Array.from(conferences).sort();
+  return Array.from(confs).sort();
 });
 
 // Filter function for live matches
@@ -51,9 +52,14 @@ const filterLive = (liveData, searchTerm, divisionFilter, conferenceFilter) => {
     filtered = filtered.filter((match) => match.division === divisionFilter);
   }
 
-  // Filter by conference (if you have conference data)
+  // Filter by conference
   if (conferenceFilter) {
-    // Add conference filtering logic here when available
+    filtered = filtered.filter(
+      (match) =>
+        match.team_1_conference === conferenceFilter ||
+        match.team_2_conference === conferenceFilter ||
+        match.conference === conferenceFilter
+    );
   }
 
   // Filter by search term
@@ -64,7 +70,12 @@ const filterLive = (liveData, searchTerm, divisionFilter, conferenceFilter) => {
         match.team_1_name.toLowerCase().includes(searchLower) ||
         match.team_2_name.toLowerCase().includes(searchLower) ||
         match.date.includes(searchTerm) ||
-        (match.location && match.location.toLowerCase().includes(searchLower))
+        (match.location &&
+          match.location.toLowerCase().includes(searchLower)) ||
+        (match.team_1_conference &&
+          match.team_1_conference.toLowerCase().includes(searchLower)) ||
+        (match.team_2_conference &&
+          match.team_2_conference.toLowerCase().includes(searchLower))
     );
   }
 
@@ -97,7 +108,7 @@ onMounted(() => {
 
   // Auto-refresh every 30 seconds for live data
   const refreshInterval = setInterval(() => {
-    fetchLiveData();
+    fetchLiveData(true); // Silent refresh
   }, 30000);
 
   // Cleanup interval on unmount
@@ -140,7 +151,7 @@ watch(divisionFilter, () => {
     <!-- Live Header with Filters -->
     <LiveHeader
       :divisions="divisions"
-      :conferences="availableConferences"
+      :conferences="conferences"
       :selected-division="divisionFilter"
       :loading="loading"
       @update:search="updateSearch"

@@ -209,7 +209,6 @@ const handleRefresh = () => {
       :show-arrows="!mobile"
       v-model="currentIndex"
       ref="slider"
-      class="scroll-group"
     >
       <v-slide-group-item
         v-for="(game, index) in games"
@@ -219,13 +218,8 @@ const handleRefresh = () => {
         <div class="slide-item">
           <NavScoreCard
             :game="game"
-            :box-score="game.box_score"
-            @click="!game.loading && gotoGame(game)"
-            :class="{
-              'loading-card': game.loading,
-              'live-card': game.isLive && !game.loading,
-              'score-updated': !game.loading,
-            }"
+            :box-score="game.live_stats_url || null"
+            @card-click="!game.loading && gotoGame(game)"
           />
         </div>
       </v-slide-group-item>
@@ -241,115 +235,20 @@ const handleRefresh = () => {
     </v-slide-group>
   </div>
 </template>
-
 <style scoped>
-.score-scroll-container {
-  width: 100%;
-  overflow: hidden;
-}
-
-.scroll-group {
-  width: 100%;
-}
-
-.slide-item {
-  flex: 0 0 auto;
-  margin-right: 12px;
-}
-
-.slide-item:last-child {
-  margin-right: 16px;
-}
-
-.nav-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.prev-arrow {
-  left: 8px;
-}
-
-.next-arrow {
-  right: 8px;
-}
-
-.loading-card {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.live-card {
-  position: relative;
-}
-
-.live-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #ff4444, #ff6666);
-  border-radius: 4px 4px 0 0;
-  animation: live-pulse 2s ease-in-out infinite alternate;
-}
-
-.score-updated {
-  transition: all 0.3s ease-in-out;
-}
-
-.live-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.live-chip {
-  animation: live-pulse 2s ease-in-out infinite alternate;
-}
-
-.no-games-message {
-  margin: 16px 0;
-}
-
-@keyframes live-pulse {
-  0% {
-    opacity: 0.7;
+@media (max-width: 600px) {
+  .score-scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
   }
-  100% {
-    opacity: 1;
-  }
-}
 
-/* Mobile-specific styles */
-@media (max-width: 959px) {
-  .scroll-group {
-    padding: 0 16px;
+  .v-slide-group__wrapper {
+    overflow-x: auto !important;
   }
 
   .slide-item {
-    margin-right: 8px;
-  }
-
-  .slide-item:first-child {
-    margin-left: 0;
-  }
-
-  .slide-item:last-child {
-    margin-right: 16px;
-  }
-
-  .live-indicator {
-    padding: 0 16px;
-  }
-
-  .no-games-message {
-    margin: 16px;
+    flex: 0 0 auto;
   }
 }
 </style>

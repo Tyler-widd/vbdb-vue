@@ -29,6 +29,75 @@ export function useScoresData() {
     return Array.from(conferenceSet).sort();
   });
 
+  // NAIA Standings calculation
+  const naiaStandings = computed(() => {
+    // Filter for NAIA division games only
+    const naiaGames = scores.value.filter(
+      (score) =>
+        score.team_1_division === "NAIA" || score.team_2_division === "NAIA"
+    );
+
+    // Create a map to track team statistics
+    const teamStats = new Map();
+
+    // Process each game
+    naiaGames.forEach((game) => {
+      const team1 = game.team_1;
+      const team2 = game.team_2;
+
+      // Initialize team stats if not exists
+      if (!teamStats.has(team1)) {
+        teamStats.set(team1, {
+          team: team1,
+          conference: game.team_1_conference || "Unknown",
+          location: game.team_1_location || "",
+          wins: 0,
+          losses: 0,
+          games: 0,
+        });
+      }
+
+      if (!teamStats.has(team2)) {
+        teamStats.set(team2, {
+          team: team2,
+          conference: game.team_2_conference || "Unknown",
+          location: game.team_2_location || "",
+          wins: 0,
+          losses: 0,
+          games: 0,
+        });
+      }
+
+      // Update game counts
+      teamStats.get(team1).games++;
+      teamStats.get(team2).games++;
+
+      // Update win/loss records based on winner
+      if (game.winner === team1) {
+        teamStats.get(team1).wins++;
+        teamStats.get(team2).losses++;
+      } else if (game.winner === team2) {
+        teamStats.get(team2).wins++;
+        teamStats.get(team1).losses++;
+      }
+    });
+
+    // Convert to array and calculate win percentages
+    const standings = Array.from(teamStats.values()).map((team) => ({
+      ...team,
+      winPercentage: team.games > 0 ? team.wins / team.games : 0,
+      overall_record: `${team.wins}-${team.losses}`,
+    }));
+
+    // Sort by win percentage (descending), then by wins (descending)
+    return standings.sort((a, b) => {
+      if (b.winPercentage !== a.winPercentage) {
+        return b.winPercentage - a.winPercentage;
+      }
+      return b.wins - a.wins;
+    });
+  });
+
   // Transform scores data for display
   const transformedScores = computed(() => {
     return scores.value.map((score) => {
@@ -150,6 +219,7 @@ export function useScoresData() {
     conferences,
     transformedScores,
     filteredScores,
+    naiaStandings,
 
     // Methods
     fetchScores,

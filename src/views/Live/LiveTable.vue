@@ -1,22 +1,20 @@
+<!-- LiveTable.vue -->
 <script setup>
-import { computed, onMounted, onUnmounted } from "vue";
+import { computed } from "vue";
 import { useDisplay } from "vuetify";
 import { navigateToTeam } from "../../helpers/navigateToTeam.js";
-import useLiveData from "@/composables/useLiveData.js"; // Import the composable
 
 const { smAndDown } = useDisplay();
 
-// Use the live data composable instead of props
-const {
-  liveMatches,
-  loading,
-  error,
-  fetchLiveData,
-  startPolling,
-  stopPolling,
-} = useLiveData();
-
 const props = defineProps({
+  liveData: {
+    type: Array,
+    default: () => [],
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
   search: {
     type: String,
     default: "",
@@ -35,20 +33,10 @@ const props = defineProps({
   },
 });
 
-// Load live data on component mount
-onMounted(async () => {
-  await fetchLiveData(false); // Initial load with loading indicator
-  startPolling(30000); // Start polling every 30 seconds
-});
-
-onUnmounted(() => {
-  stopPolling();
-});
-
 // Filter the live data based on current filters
 const filteredLive = computed(() => {
   return props.filterLive(
-    liveMatches.value, // Use liveMatches from composable
+    props.liveData,
     props.search,
     props.divisionFilter,
     props.conferenceFilter
@@ -79,10 +67,11 @@ const getFormattedScore = (match) => {
     const score1 = set.team1;
     const score2 = set.team2;
 
-    // Win by 2, minimum 25 points
+    // Win by 2, minimum 25 points (or 15 for 5th set)
+    const minPoints = sets.indexOf(set) === 4 ? 15 : 25;
     return (
-      (score1 >= 25 && score1 - score2 >= 2) ||
-      (score2 >= 25 && score2 - score1 >= 2)
+      (score1 >= minPoints && score1 - score2 >= 2) ||
+      (score2 >= minPoints && score2 - score1 >= 2)
     );
   };
 
@@ -108,8 +97,8 @@ const getFormattedScore = (match) => {
     (set) => set.team2 > set.team1
   ).length;
 
-  // Format scores for display (show all sets with data, but only bold winners of completed sets)
-  const setScores = setsWithData.map((set) => {
+  // Format scores for display
+  const setScores = setsWithData.map((set, index) => {
     const isComplete = isSetComplete(set);
 
     if (isComplete) {
@@ -153,7 +142,7 @@ const openBoxScore = (item) => {
       :items="filteredLive"
       :loading="loading"
       :items-per-page="10"
-      no-data-text="No live games"
+      no-data-text="No live games matching filters"
       loading-text="Loading live matches..."
     >
       <template v-slot:header.team_1>
@@ -217,3 +206,13 @@ const openBoxScore = (item) => {
     </v-data-table>
   </v-card>
 </template>
+
+<style scoped>
+.button-like {
+  cursor: pointer;
+}
+
+.button-like:hover {
+  text-decoration: underline;
+}
+</style>

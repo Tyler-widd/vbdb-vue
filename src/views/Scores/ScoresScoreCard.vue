@@ -37,6 +37,7 @@ const formatDate = (dateStr) => {
 };
 
 // Parse scores data to match the expected format
+
 const formattedScores = computed(() => {
   if (!props.scores.length) return [];
 
@@ -51,15 +52,26 @@ const formattedScores = computed(() => {
         const team1Score = game[`set_${i}_team_1`];
         const team2Score = game[`set_${i}_team_2`];
 
-        if (team1Score > 0 || team2Score > 0) {
-          if (team1Score > team2Score) team1SetsWon++;
-          else team2SetsWon++;
+        // Check if both scores exist and are not empty strings
+        if (
+          team1Score !== "" &&
+          team2Score !== "" &&
+          team1Score !== null &&
+          team2Score !== null &&
+          team1Score !== undefined &&
+          team2Score !== undefined
+        ) {
+          const team1ScoreNum = parseInt(team1Score);
+          const team2ScoreNum = parseInt(team2Score);
+
+          if (team1ScoreNum > team2ScoreNum) team1SetsWon++;
+          else if (team2ScoreNum > team1ScoreNum) team2SetsWon++;
 
           individualSets.push({
             setNumber: i,
-            team1Score,
-            team2Score,
-            team1Won: team1Score > team2Score,
+            team1Score: team1ScoreNum,
+            team2Score: team2ScoreNum,
+            team1Won: team1ScoreNum > team2ScoreNum,
           });
         }
       }
