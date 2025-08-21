@@ -1,21 +1,22 @@
-<!-- views/Live/LiveTable.vue -->
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted, onUnmounted } from "vue";
 import { useDisplay } from "vuetify";
-import { formatDateMoblie, formatDateYear } from "@/helpers/formatDate";
 import { navigateToTeam } from "../../helpers/navigateToTeam.js";
+import useLiveData from "@/composables/useLiveData.js"; // Import the composable
 
 const { smAndDown } = useDisplay();
 
+// Use the live data composable instead of props
+const {
+  liveMatches,
+  loading,
+  error,
+  fetchLiveData,
+  startPolling,
+  stopPolling,
+} = useLiveData();
+
 const props = defineProps({
-  liveData: {
-    type: Array,
-    default: () => [],
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
   search: {
     type: String,
     default: "",
@@ -34,22 +35,32 @@ const props = defineProps({
   },
 });
 
+// Load live data on component mount
+onMounted(async () => {
+  await fetchLiveData(false); // Initial load with loading indicator
+  startPolling(30000); // Start polling every 30 seconds
+});
+
+onUnmounted(() => {
+  stopPolling();
+});
+
+// Filter the live data based on current filters
+const filteredLive = computed(() => {
+  return props.filterLive(
+    liveMatches.value, // Use liveMatches from composable
+    props.search,
+    props.divisionFilter,
+    props.conferenceFilter
+  );
+});
+
 // Define table headers for live matches
 const headers = computed(() => [
   { title: "Team 1", key: "team_1", sortable: false, width: "25%" },
   { title: "Score", key: "score", sortable: false, width: "25%" },
   { title: "Team 2", key: "team_2", sortable: false, width: "25%" },
 ]);
-
-// Filter the live data based on current filters
-const filteredLive = computed(() => {
-  return props.filterLive(
-    props.liveData,
-    props.search,
-    props.divisionFilter,
-    props.conferenceFilter
-  );
-});
 
 // Get formatted score display
 const getFormattedScore = (match) => {
@@ -61,16 +72,35 @@ const getFormattedScore = (match) => {
     { team1: match.set_5_team_1, team2: match.set_5_team_2 },
   ];
 
-  // Filter out null sets
-  const completedSets = sets.filter(
-    (set) => set.team1 !== null && set.team2 !== null
-  );
+  // Helper function to check if a set is complete
+  const isSetComplete = (set) => {
+    if (set.team1 === null || set.team2 === null) return false;
 
-  if (completedSets.length === 0) {
+    const score1 = set.team1;
+    const score2 = set.team2;
+
+    // Win by 2, minimum 25 points
+    return (
+      (score1 >= 25 && score1 - score2 >= 2) ||
+      (score2 >= 25 && score2 - score1 >= 2)
+    );
+  };
+
+  // Helper function to check if a set has any data
+  const hasSetData = (set) => {
+    return set.team1 !== null && set.team2 !== null;
+  };
+
+  // Get completed sets and sets with data
+  const completedSets = sets.filter(isSetComplete);
+  const setsWithData = sets.filter(hasSetData);
+
+  // If no sets have any data, return default
+  if (setsWithData.length === 0) {
     return "(0-0) [0-0]";
   }
 
-  // Calculate set wins
+  // Calculate set wins (only from completed sets)
   const team1SetWins = completedSets.filter(
     (set) => set.team1 > set.team2
   ).length;
@@ -78,38 +108,26 @@ const getFormattedScore = (match) => {
     (set) => set.team2 > set.team1
   ).length;
 
-  // Format individual set scores with bold for higher scores
-  const setScores = completedSets.map((set) => {
-    if (set.team1 > set.team2) {
-      return `<strong>${set.team1}</strong>-${set.team2}`;
-    } else if (set.team2 > set.team1) {
-      return `${set.team1}-<strong>${set.team2}</strong>`;
+  // Format scores for display (show all sets with data, but only bold winners of completed sets)
+  const setScores = setsWithData.map((set) => {
+    const isComplete = isSetComplete(set);
+
+    if (isComplete) {
+      // Bold the winner of completed sets
+      if (set.team1 > set.team2) {
+        return `<strong>${set.team1}</strong>-${set.team2}`;
+      } else if (set.team2 > set.team1) {
+        return `${set.team1}-<strong>${set.team2}</strong>`;
+      } else {
+        return `${set.team1}-${set.team2}`;
+      }
     } else {
-      // Tie case (though rare in volleyball)
+      // Don't bold anything for incomplete sets
       return `${set.team1}-${set.team2}`;
     }
   });
 
-  // Check if there's a current set in progress (non-null but potentially incomplete)
-  const currentSetIndex = completedSets.length;
-  if (currentSetIndex < 5) {
-    const currentSet = sets[currentSetIndex];
-    if (currentSet.team1 !== null || currentSet.team2 !== null) {
-      // Add current set if it has any data
-      const score1 = currentSet.team1 !== null ? currentSet.team1 : 0;
-      const score2 = currentSet.team2 !== null ? currentSet.team2 : 0;
-
-      // Bold the higher score in current set too
-      if (score1 > score2) {
-        setScores.push(`<strong>${score1}</strong>-${score2}`);
-      } else if (score2 > score1) {
-        setScores.push(`${score1}-<strong>${score2}</strong>`);
-      } else {
-        setScores.push(`${score1}-${score2}`);
-      }
-    }
-  }
-
+  // Bold the leader in set wins only
   const setTotalDisplay =
     team1SetWins > team2SetWins
       ? `(<strong>${team1SetWins}</strong>-${team2SetWins})`
@@ -118,6 +136,13 @@ const getFormattedScore = (match) => {
       : `(${team1SetWins}-${team2SetWins})`;
 
   return `${setTotalDisplay} [${setScores.join(", ")}]`;
+};
+
+// Open the boxscore
+const openBoxScore = (item) => {
+  if (item.live_stats_url) {
+    window.open(item.live_stats_url, "_blank");
+  }
 };
 </script>
 
@@ -161,8 +186,9 @@ const getFormattedScore = (match) => {
       <template v-slot:item.score="{ item }">
         <div class="d-flex align-center justify-start">
           <div
-            class="text-body-1 font-weight-thin"
+            class="text-body-1 font-weight-thin button-like"
             v-html="getFormattedScore(item)"
+            @click="openBoxScore(item)"
           ></div>
         </div>
       </template>

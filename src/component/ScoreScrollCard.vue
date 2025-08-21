@@ -7,7 +7,14 @@ import useLiveData from "@/composables/useLiveData.js";
 import NavScoreCard from "./NavScoreCard.vue";
 
 // Initialize the live data composable
-const { liveMatches, loading, error, fetchLiveData } = useLiveData();
+const {
+  liveMatches,
+  loading,
+  error,
+  fetchLiveData,
+  startPolling,
+  stopPolling,
+} = useLiveData();
 const { mobile } = useDisplay();
 
 // Initialize router
@@ -17,53 +24,18 @@ const router = useRouter();
 const slider = ref(null);
 const currentIndex = ref(0);
 
-// Auto-refresh interval reference
-let refreshInterval = null;
-
 // Load live data on component mount
-onMounted(() => {
-  fetchLiveData();
+onMounted(async () => {
+  // Initial load with loading indicator
+  await fetchLiveData(false);
 
-  // Set up auto-refresh every 30 seconds for live updates
-  refreshInterval = setInterval(() => {
-    fetchLiveData();
-  }, 30000);
+  // Start polling for updates (silent updates every 30 seconds)
+  startPolling(30000);
 });
 
 // Cleanup interval on component unmount
 onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
-  }
-});
-
-// Computed property for games to display (with loading placeholders)
-const games = computed(() => {
-  if (loading.value) {
-    return Array.from({ length: 10 }, (_, index) => ({
-      loading: true,
-      id: `loading-${index}`,
-    }));
-  }
-
-  // Transform live match data to match the expected game format
-  return liveMatches.value.map((match) => ({
-    ...match,
-    // Map live data fields to expected game format
-    team_1_name: match.team_1_name,
-    team_2_name: match.team_2_name,
-    team_1_img: match.team_1_img,
-    team_2_img: match.team_2_img,
-    team_1_id: match.team_1_id,
-    team_2_id: match.team_2_id,
-    date: match.date,
-    location: match.location,
-    division: match.division,
-    // Add live-specific data
-    isLive: true,
-    // Calculate current score status
-    ...getMatchScoreData(match),
-  }));
+  stopPolling();
 });
 
 // Helper function to calculate match score data for display
@@ -76,9 +48,21 @@ const getMatchScoreData = (match) => {
     { team1: match.set_5_team_1, team2: match.set_5_team_2 },
   ];
 
-  const completedSets = sets.filter(
-    (set) => set.team1 !== null && set.team2 !== null
-  );
+  // Helper function to check if a set is complete
+  const isSetComplete = (set) => {
+    if (set.team1 === null || set.team2 === null) return false;
+
+    const score1 = set.team1;
+    const score2 = set.team2;
+
+    // Win by 2, minimum 25 points
+    return (
+      (score1 >= 25 && score1 - score2 >= 2) ||
+      (score2 >= 25 && score2 - score1 >= 2)
+    );
+  };
+
+  const completedSets = sets.filter(isSetComplete);
 
   const team1SetWins = completedSets.filter(
     (set) => set.team1 > set.team2
@@ -119,6 +103,36 @@ const getMatchScoreData = (match) => {
   };
 };
 
+// Computed property for games to display (with loading placeholders)
+const games = computed(() => {
+  if (loading.value && liveMatches.value.length === 0) {
+    // Only show loading placeholders if we have no data yet
+    return Array.from({ length: 10 }, (_, index) => ({
+      loading: true,
+      id: `loading-${index}`,
+    }));
+  }
+
+  // Transform live match data to match the expected game format
+  return liveMatches.value.map((match) => ({
+    ...match,
+    // Map live data fields to expected game format
+    team_1_name: match.team_1_name,
+    team_2_name: match.team_2_name,
+    team_1_img: match.team_1_img,
+    team_2_img: match.team_2_img,
+    team_1_id: match.team_1_id,
+    team_2_id: match.team_2_id,
+    date: match.date,
+    location: match.location,
+    division: match.division,
+    // Add live-specific data
+    isLive: true,
+    // Calculate current score status
+    ...getMatchScoreData(match),
+  }));
+});
+
 // Navigation methods
 const onPrevClick = () => {
   slider.value?.focus("prev");
@@ -155,7 +169,7 @@ const gotoGame = (game) => {
 
 // Manual refresh function
 const handleRefresh = () => {
-  fetchLiveData();
+  fetchLiveData(false); // Manual refresh shows loading indicator
 };
 </script>
 
@@ -210,6 +224,7 @@ const handleRefresh = () => {
             :class="{
               'loading-card': game.loading,
               'live-card': game.isLive && !game.loading,
+              'score-updated': !game.loading,
             }"
           />
         </div>
@@ -282,6 +297,10 @@ const handleRefresh = () => {
   background: linear-gradient(90deg, #ff4444, #ff6666);
   border-radius: 4px 4px 0 0;
   animation: live-pulse 2s ease-in-out infinite alternate;
+}
+
+.score-updated {
+  transition: all 0.3s ease-in-out;
 }
 
 .live-indicator {

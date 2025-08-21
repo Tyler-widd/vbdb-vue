@@ -76,8 +76,17 @@ const fetchRSSFeed = async (forceRefresh = false) => {
       throw new Error("No items found in RSS feed");
     }
 
-    // Get the first (most recent) item
-    const firstItem = items[0];
+    // For NCAA Division II and III, use the second item instead of the first
+    let selectedItem;
+    if (props.division.includes("NCAA Division II") || props.division.includes("NCAA Division III")) {
+      // Use second item if available, otherwise fall back to first item
+      selectedItem = items.length > 1 ? items[1] : items[0];
+    } else {
+      // Use first item for other divisions
+      selectedItem = items[0];
+    }
+
+    const firstItem = selectedItem;
 
     // Extract data from the first item
     const newsData = {

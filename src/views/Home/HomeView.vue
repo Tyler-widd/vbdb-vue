@@ -20,11 +20,13 @@ const activeNcaaTab = ref("ncaa-d1");
 const activeNaiaTab = ref("naia-d1");
 const activeNjcaaTab = ref("njcaa-d1");
 const activeCccaaTab = ref("cccaa-d1");
+const panelAvca = ref();
+const panelRpi = ref();
 
 const activeTab = ref("ncaa");
 
 // Use the AVCA data composable
-const { avcaData, loading, error, getRankingsByDivision } = useAvcaData();
+const { loading, error, getRankingsByDivision } = useAvcaData();
 
 const divisions = {
   ncaa: [
@@ -132,7 +134,7 @@ const getDivisionKey = (divisionName) => {
           <v-tabs
             v-model="activeNcaaTab"
             grow
-            class="bg-indigo-darken-2 rounded-lg"
+            class="bg-indigo-darken-2 rounded-lg mt-4"
           >
             <v-tab
               v-for="feed in divisions.ncaa"
@@ -160,65 +162,65 @@ const getDivisionKey = (divisionName) => {
                       :category="feed.category"
                     />
                   </v-col>
-                  <v-col cols="12" md="8">
-                    <v-card>
-                      <v-card-title class="text-h6">
-                        <v-btn
-                          :href="`https://www.avca.org/polls-awards/polls/?_divisions=division-${getDivisionKey(
-                            feed.division
-                          )}-women`"
-                          variant="tonal"
-                          target="_blank"
-                          @click.stop
-                          class="ml-2"
-                        >
-                          AVCA Rankings
-                        </v-btn></v-card-title
-                      >
-                      <v-card-text>
-                        <div v-if="loading" class="text-center">
-                          <v-progress-circular
-                            indeterminate
-                            color="primary"
-                          ></v-progress-circular>
-                          <p class="mt-2">Loading rankings...</p>
-                        </div>
-
-                        <div v-else-if="error" class="text-center text-error">
-                          <v-icon>mdi-alert-circle</v-icon>
-                          <p>Error loading rankings: {{ error }}</p>
-                        </div>
-
-                        <div v-else>
-                          <div
-                            v-for="team in getRankingsByDivision(
-                              getDivisionKey(feed.division),
-                              10
-                            )"
-                            :key="team.id"
-                            class="d-flex align-center justify-space-between py-1 px-2 border-b"
+                  <!-- AVCA Rankings -->
+                  <v-col cols="12" md="3" :class="smAndDown ? 'pt-0' : ''">
+                    <v-expansion-panels v-model="panelRpi">
+                      <v-expansion-panel>
+                        <v-expansion-panel-title class="text-h6">
+                          <v-btn
+                            :href="`https://www.avca.org/polls-awards/polls/?_divisions=division-${getDivisionKey(
+                              feed.division
+                            )}-women`"
+                            variant="tonal"
+                            target="_blank"
+                            @click.stop
                           >
-                            <div class="d-flex align-center">
-                              <span class="text-h6 text-primary mr-3">{{
-                                team.rank
-                              }}</span>
-                              <div>
-                                <div class="font-weight-medium">
+                            AVCA Rankings
+                          </v-btn>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                          <div v-if="loading" class="text-center">
+                            <v-progress-circular
+                              indeterminate
+                              color="primary"
+                            ></v-progress-circular>
+                            <p class="mt-2">Loading rankings...</p>
+                          </div>
+
+                          <div v-else-if="error" class="text-center text-error">
+                            <v-icon>mdi-alert-circle</v-icon>
+                            <p>Error loading rankings: {{ error }}</p>
+                          </div>
+
+                          <div v-else>
+                            <div
+                              v-for="team in getRankingsByDivision(
+                                getDivisionKey(feed.division),
+                                10
+                              )"
+                              :key="team.id"
+                              class="d-flex align-center justify-space-between py-1 border-b"
+                            >
+                              <div class="d-flex align-center">
+                                <span class="text-h6 text-primary mr-3">{{
+                                  team.rank
+                                }}</span>
+                                <div>
                                   {{ team.school }}
-                                </div>
-                                <div class="text-caption text-grey">
-                                  Points: {{ team.total_points }}
-                                  <span v-if="team.first_place_votes > 0">
-                                    • First Place Votes:
-                                    {{ team.first_place_votes }}
-                                  </span>
+                                  <div class="text-caption text-grey">
+                                    Points: {{ team.total_points }}
+                                    <span v-if="team.first_place_votes > 0">
+                                      • First Place Votes:
+                                      {{ team.first_place_votes }}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </v-card-text>
-                    </v-card>
+                        </v-expansion-panel-text>
+                      </v-expansion-panel>
+                    </v-expansion-panels>
                   </v-col>
                 </v-row>
               </div>
@@ -230,17 +232,6 @@ const getDivisionKey = (divisionName) => {
       <!-- NAIA Tab -->
       <v-tabs-window-item value="naia">
         <div class="mt-2">
-          <!-- NAIA Division Tabs -->
-          <v-tabs v-model="activeNaiaTab" grow>
-            <v-tab
-              v-for="feed in divisions.naia"
-              :key="feed.id"
-              :value="feed.id"
-            >
-              {{ feed.division }}
-            </v-tab>
-          </v-tabs>
-
           <v-tabs-window v-model="activeNaiaTab">
             <v-tabs-window-item
               v-for="feed in divisions.naia"
@@ -256,13 +247,65 @@ const getDivisionKey = (divisionName) => {
                       :category="feed.category"
                     />
                   </v-col>
-                  <v-col cols="12" md="8">
-                    <v-card>
-                      <v-card-title class="text-h6">Rankings</v-card-title>
-                      <v-card-text>
-                        <RankingSection />
-                      </v-card-text>
-                    </v-card>
+                  <!-- AVCA Rankings -->
+                  <v-col cols="12" md="3" :class="smAndDown ? 'pt-0' : ''">
+                    <v-expansion-panels v-model="panelRpi">
+                      <v-expansion-panel>
+                        <v-expansion-panel-title class="text-h6">
+                          <v-btn
+                            :href="`https://www.avca.org/polls-awards/polls/?_divisions=division-${getDivisionKey(
+                              feed.division
+                            )}-women`"
+                            variant="tonal"
+                            target="_blank"
+                            @click.stop
+                          >
+                            AVCA Rankings
+                          </v-btn>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                          <div v-if="loading" class="text-center">
+                            <v-progress-circular
+                              indeterminate
+                              color="primary"
+                            ></v-progress-circular>
+                            <p class="mt-2">Loading rankings...</p>
+                          </div>
+
+                          <div v-else-if="error" class="text-center text-error">
+                            <v-icon>mdi-alert-circle</v-icon>
+                            <p>Error loading rankings: {{ error }}</p>
+                          </div>
+
+                          <div v-else>
+                            <div
+                              v-for="team in getRankingsByDivision(
+                                getDivisionKey(feed.division),
+                                10
+                              )"
+                              :key="team.id"
+                              class="d-flex align-center justify-space-between py-1 border-b"
+                            >
+                              <div class="d-flex align-center">
+                                <span class="text-h6 text-primary mr-3">{{
+                                  team.rank
+                                }}</span>
+                                <div>
+                                  {{ team.school }}
+                                  <div class="text-caption text-grey">
+                                    Points: {{ team.total_points }}
+                                    <span v-if="team.first_place_votes > 0">
+                                      • First Place Votes:
+                                      {{ team.first_place_votes }}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </v-expansion-panel-text>
+                      </v-expansion-panel>
+                    </v-expansion-panels>
                   </v-col>
                 </v-row>
               </div>
@@ -274,17 +317,6 @@ const getDivisionKey = (divisionName) => {
       <!-- NJCAA Tab -->
       <v-tabs-window-item value="njcaa">
         <div class="mt-2">
-          <!-- NJCAA Division Tabs -->
-          <v-tabs v-model="activeNjcaaTab" grow>
-            <v-tab
-              v-for="feed in divisions.njcaa"
-              :key="feed.id"
-              :value="feed.id"
-            >
-              {{ feed.division }}
-            </v-tab>
-          </v-tabs>
-
           <v-tabs-window v-model="activeNjcaaTab">
             <v-tabs-window-item
               v-for="feed in divisions.njcaa"
@@ -318,17 +350,6 @@ const getDivisionKey = (divisionName) => {
       <!-- CCCAA Tab -->
       <v-tabs-window-item value="cccaa">
         <div class="mt-2">
-          <!-- CCCAA Division Tabs -->
-          <v-tabs v-model="activeCccaaTab" grow>
-            <v-tab
-              v-for="feed in divisions.cccaa"
-              :key="feed.id"
-              :value="feed.id"
-            >
-              {{ feed.division }}
-            </v-tab>
-          </v-tabs>
-
           <v-tabs-window v-model="activeCccaaTab">
             <v-tabs-window-item
               v-for="feed in divisions.cccaa"
