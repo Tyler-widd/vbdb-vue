@@ -47,52 +47,9 @@ const filteredLive = computed(() => {
     props.liveData,
     props.search,
     props.divisionFilter,
-    props.conferenceFilter,
+    props.conferenceFilter
   );
 });
-
-// Get match status and current score
-const getMatchStatus = (match) => {
-  const sets = [
-    { team1: match.set_1_team_1, team2: match.set_1_team_2 },
-    { team1: match.set_2_team_1, team2: match.set_2_team_2 },
-    { team1: match.set_3_team_1, team2: match.set_3_team_2 },
-    { team1: match.set_4_team_1, team2: match.set_4_team_2 },
-    { team1: match.set_5_team_1, team2: match.set_5_team_2 },
-  ];
-
-  const completedSets = sets.filter(
-    (set) => set.team1 !== null && set.team2 !== null,
-  );
-  const team1SetWins = completedSets.filter(
-    (set) => set.team1 > set.team2,
-  ).length;
-  const team2SetWins = completedSets.filter(
-    (set) => set.team2 > set.team1,
-  ).length;
-
-  if (completedSets.length === 0) {
-    return { status: "Not Started", currentSet: 1, team1SetWins, team2SetWins };
-  }
-
-  // Check if match is complete
-  if (team1SetWins >= 3 || team2SetWins >= 3) {
-    return {
-      status: "Final",
-      currentSet: completedSets.length,
-      team1SetWins,
-      team2SetWins,
-      winner: team1SetWins > team2SetWins ? 1 : 2,
-    };
-  }
-
-  return {
-    status: `Set ${completedSets.length + 1}`,
-    currentSet: completedSets.length + 1,
-    team1SetWins,
-    team2SetWins,
-  };
-};
 
 // Get formatted score display
 const getFormattedScore = (match) => {
@@ -106,7 +63,7 @@ const getFormattedScore = (match) => {
 
   // Filter out null sets
   const completedSets = sets.filter(
-    (set) => set.team1 !== null && set.team2 !== null,
+    (set) => set.team1 !== null && set.team2 !== null
   );
 
   if (completedSets.length === 0) {
@@ -115,10 +72,10 @@ const getFormattedScore = (match) => {
 
   // Calculate set wins
   const team1SetWins = completedSets.filter(
-    (set) => set.team1 > set.team2,
+    (set) => set.team1 > set.team2
   ).length;
   const team2SetWins = completedSets.filter(
-    (set) => set.team2 > set.team1,
+    (set) => set.team2 > set.team1
   ).length;
 
   // Format individual set scores with bold for higher scores
@@ -157,8 +114,8 @@ const getFormattedScore = (match) => {
     team1SetWins > team2SetWins
       ? `(<strong>${team1SetWins}</strong>-${team2SetWins})`
       : team2SetWins > team1SetWins
-        ? `(${team1SetWins}-<strong>${team2SetWins}</strong>)`
-        : `(${team1SetWins}-${team2SetWins})`;
+      ? `(${team1SetWins}-<strong>${team2SetWins}</strong>)`
+      : `(${team1SetWins}-${team2SetWins})`;
 
   return `${setTotalDisplay} [${setScores.join(", ")}]`;
 };
@@ -175,8 +132,8 @@ const getFormattedScore = (match) => {
       loading-text="Loading live matches..."
     >
       <template v-slot:header.team_1>
-        <span class="ml-2 pa-0">Team 1</span></template
-      >
+        <span class="ml-2 pa-0">Team 1</span>
+      </template>
       <!-- Team 1 -->
       <template v-slot:item.team_1="{ item }">
         <div class="ml-2 d-flex align-center">

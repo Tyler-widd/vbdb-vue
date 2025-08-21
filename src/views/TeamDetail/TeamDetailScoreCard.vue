@@ -1,13 +1,8 @@
 <!-- views/TeamDetail/TeamDetailScoreCard.vue -->
 <script setup>
 import { computed, ref, watch } from "vue";
-import { useRouter } from "vue-router";
-import { useDisplay } from "vuetify";
 import { useScheduleData } from "../../composables/useScheduleData.js";
-import { navigateToTeam } from "../../helpers/navigateToTeam.js";
-
-const { smAndDown } = useDisplay();
-const router = useRouter();
+import MatchCard from "../../component/MatchCard.vue";
 
 const props = defineProps({
   orgId: {
@@ -19,14 +14,7 @@ const props = defineProps({
     default: "2025",
   },
 });
-const formatConference = (conference) => {
-  if (conference && conference.includes(".0")) {
-    return `Region ${conference.replace(".0", "")}`;
-  }
-  return conference;
-};
 
-// ADD THIS LINE - Define emits
 const emit = defineEmits(["update:record"]);
 
 const loading = ref(false);
@@ -49,7 +37,6 @@ const loadCCCAAMapping = async () => {
   try {
     const response = await fetch("/cccaaMapping.json");
     const data = await response.json();
-    // Create a mapping object for quick lookups
     cccaaMapping.value = data.reduce((acc, item) => {
       acc[item.school_short] = item.new_org_id;
       return acc;
@@ -61,18 +48,14 @@ const loadCCCAAMapping = async () => {
 
 // Get mapped winner ID for CCCAA games
 const getMappedWinnerId = (game) => {
-  // Only map for CCCAA games
   if (game.team_1_division !== "CCCAA" && game.team_2_division !== "CCCAA") {
     return game.winner_id;
   }
 
-  // Check if winner_id matches team_1_id or team_2_id already
   if (game.winner_id === game.team_1_id || game.winner_id === game.team_2_id) {
     return game.winner_id;
   }
 
-  // Try to map the winner_id to the correct team
-  // First, check if we can determine winner by looking at set scores
   let team1SetsWon = 0;
   let team2SetsWon = 0;
 
@@ -86,7 +69,6 @@ const getMappedWinnerId = (game) => {
     }
   }
 
-  // If team1 won more sets, check if team1 is CCCAA and needs mapping
   if (team1SetsWon > team2SetsWon) {
     if (
       game.team_1_division === "CCCAA" &&
@@ -112,7 +94,7 @@ const fetchGames = async () => {
   error.value = null;
   try {
     const response = await fetch(
-      `https://api.volleyballdatabased.com/games/${props.orgId}`,
+      `https://api.volleyballdatabased.com/games/${props.orgId}`
     );
     if (!response.ok) throw new Error("Failed to fetch games");
     const data = await response.json();
@@ -135,23 +117,20 @@ const formatDate = (dateStr) => {
   });
 };
 
-// Parse game data to match the expected format
+// Parse game data for MatchCard component
 const formattedRecords = computed(() => {
   if (!games.value.length) return [];
 
   return games.value
     .filter((game) => {
-      // Filter by selected year
       const gameYear = game.date.split("/")[2];
       return gameYear === props.selectedYear;
     })
     .map((game) => {
-      // Determine which team is "my team" based on org_id
       const isTeam1 = game.team_1_id === props.orgId;
       const myTeam = isTeam1 ? "team_1" : "team_2";
       const opponentTeam = isTeam1 ? "team_2" : "team_1";
 
-      // Calculate sets won
       let mySetsWon = 0;
       let opponentSetsWon = 0;
       const individualSets = [];
@@ -180,34 +159,34 @@ const formattedRecords = computed(() => {
         id: game.match_id,
         formattedDate: formatDate(game.date),
         date: game.date,
-        myTeamName: game[`${myTeam}_school`],
-        myTeamImg: game[`${myTeam}_img`],
-        myConference: formatConference(game[`${myTeam}_conference`]),
-        opponentName: game[`${opponentTeam}_school`],
-        opponentImg: game[`${opponentTeam}_img`],
-        opponentId: game[`${opponentTeam}_id`],
-        opponentConference: game[`${opponentTeam}_conference`],
-        mySetsWon,
-        opponentSetsWon,
+        // Map to MatchCard props format
+        team1Name: game[`${myTeam}_school`],
+        team1Img: game[`${myTeam}_img`],
+        team1Conference: game[`${myTeam}_conference`],
+        team1Id: props.orgId, // My team ID
+        team2Name: game[`${opponentTeam}_school`],
+        team2Img: game[`${opponentTeam}_img`],
+        team2Conference: game[`${opponentTeam}_conference`],
+        team2Id: game[`${opponentTeam}_id`],
+        team1SetsWon: mySetsWon,
+        team2SetsWon: opponentSetsWon,
         individualSets,
-        isWinner,
-        box_score: game.box_score,
+        winnerId: isWinner ? props.orgId : game[`${opponentTeam}_id`],
+        boxScore: game.box_score,
       };
     })
-    .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date descending
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 });
 
 // Format schedule data for 2025
 const formattedSchedule = computed(() => {
   if (!scheduleData.value.length || props.selectedYear !== "2025") return [];
 
-  // Filter schedule data for the current team
   return scheduleData.value
     .filter((game) => {
       return game.team_1_id === props.orgId || game.team_2_id === props.orgId;
     })
     .map((game) => {
-      // Determine which team is "my team" based on org_id
       const isTeam1 = game.team_1_id === props.orgId;
       const myTeam = isTeam1 ? "team_1" : "team_2";
       const opponentTeam = isTeam1 ? "team_2" : "team_1";
@@ -217,16 +196,24 @@ const formattedSchedule = computed(() => {
         formattedDate: formatDate(game.date),
         date: game.date,
         time: game.time,
-        myTeamName: game[`${myTeam}_name`],
-        myTeamImg: game[`${myTeam}_img`],
-        myConference: game[`${myTeam}_conference`],
-        opponentName: game[`${opponentTeam}_name`],
-        opponentImg: game[`${opponentTeam}_img`],
-        opponentId: game[`${opponentTeam}_id`],
-        opponentConference: game[`${opponentTeam}_conference`],
+        // Map to MatchCard props format
+        team1Name: game[`${myTeam}_name`],
+        team1Img: game[`${myTeam}_img`],
+        team1Conference: game[`${myTeam}_conference`],
+        team1Id: props.orgId,
+        team2Name: game[`${opponentTeam}_name`],
+        team2Img: game[`${opponentTeam}_img`],
+        team2Conference: game[`${opponentTeam}_conference`],
+        team2Id: game[`${opponentTeam}_id`],
+        // No scores for future games
+        team1SetsWon: null,
+        team2SetsWon: null,
+        individualSets: [],
+        winnerId: null,
+        boxScore: null,
       };
     })
-    .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date ascending for future games
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 });
 
 // Decide which data to display based on year
@@ -239,12 +226,11 @@ const displayData = computed(() => {
 // Calculate record (W-L)
 const record = computed(() => {
   if (props.selectedYear === "2025") {
-    // No record for future games
     return "0-0";
   }
 
   const filtered = formattedRecords.value;
-  const wins = filtered.filter((game) => game.isWinner).length;
+  const wins = filtered.filter((game) => game.winnerId === props.orgId).length;
   const losses = filtered.length - wins;
   return `${wins}-${losses}`;
 });
@@ -255,7 +241,7 @@ watch(
   (newRecord) => {
     emit("update:record", newRecord);
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 // Pagination
@@ -269,12 +255,11 @@ const totalPages = computed(() => {
   return Math.ceil(displayData.value.length / itemsPerPage);
 });
 
-// Combined loading state
+// Combined loading and error states
 const isLoading = computed(() => {
   return props.selectedYear === "2025" ? scheduleLoading.value : loading.value;
 });
 
-// Combined error state
 const hasError = computed(() => {
   return props.selectedYear === "2025" ? scheduleError.value : error.value;
 });
@@ -284,19 +269,16 @@ watch(
   () => props.selectedYear,
   async (newYear) => {
     currentPage.value = 1;
-
-    // Fetch schedule data if 2025 is selected and we haven't already
     if (newYear === "2025" && scheduleData.value.length === 0) {
       await fetchSchedule();
     }
-  },
+  }
 );
 
 // Initialize
 loadCCCAAMapping();
 fetchGames();
 
-// Also fetch schedule data on mount if 2025 is selected
 if (props.selectedYear === "2025") {
   fetchSchedule();
 }
@@ -309,230 +291,28 @@ if (props.selectedYear === "2025") {
     class="pa-2 pt-4"
     rounded-lg
   >
-    <div v-for="item in paginatedData" :key="item.id" class="mb-6">
-      <!-- Date chip centered at top -->
-      <v-row
-        class="justify-center mb-n3"
-        style="z-index: 2; position: relative"
-      >
-        <v-chip
-          variant="elevated"
-          size="small"
-          class="bg-surface"
-          style="border: 2px solid rgb(var(--v-theme-surface-variant))"
-        >
-          {{ item.formattedDate }}
-          <span v-if="item.time" class="ml-1">• {{ item.time }}</span>
-        </v-chip>
-      </v-row>
-
-      <!-- Main card -->
-      <v-card variant="outlined" rounded="xl" class="pa-1">
-        <v-row class="ma-0 align-center" no-gutters>
-          <!-- Left team (current team being viewed) -->
-          <v-col
-            cols="4"
-            class="d-flex align-center"
-            :class="smAndDown ? 'pa-1' : 'px-2'"
-          >
-            <v-avatar
-              :size="smAndDown ? 28 : 40"
-              :class="smAndDown ? 'mr-2' : 'mr-4'"
-            >
-              <v-img
-                v-if="item.myTeamImg"
-                :src="item.myTeamImg"
-                :alt="item.myTeamName"
-              />
-              <v-icon v-else :size="smAndDown ? 20 : 24">mdi-school</v-icon>
-            </v-avatar>
-            <div class="d-flex flex-column flex-grow-1 text-wrap">
-              <div class="text-wrap">
-                <span
-                  class="text-primary d-block"
-                  :class="[
-                    smAndDown ? 'text-body-2' : 'text-h6 mb-2',
-                    item.isWinner !== undefined
-                      ? item.isWinner
-                        ? 'text-success'
-                        : 'text-error'
-                      : '',
-                  ]"
-                  :style="{
-                    whiteSpace: 'normal',
-                    wordBreak: 'break-word',
-                    lineHeight: '1.2',
-                  }"
-                >
-                  {{ item.myTeamName }}
-                </span>
-              </div>
-              <div
-                class="text-caption font-italic text-medium-emphasis text-wrap"
-                :style="{
-                  whiteSpace: 'normal',
-                  wordBreak: 'break-word',
-                  lineHeight: '1.2',
-                }"
-              >
-                {{ formatConference(item.myConference) }}
-              </div>
-            </div>
-          </v-col>
-
-          <!-- Score section or VS for schedule -->
-          <v-col cols="4" class="d-flex flex-column align-center py-3">
-            <!-- Show scores for past games -->
-            <template v-if="props.selectedYear !== '2025'">
-              <div class="d-flex align-center mb-1">
-                <span
-                  class="text-center"
-                  :class="[
-                    smAndDown ? 'text-h6' : 'text-h5',
-                    item.isWinner
-                      ? 'font-weight-bold text-success'
-                      : 'font-weight-light',
-                  ]"
-                  style="min-width: 24px"
-                >
-                  {{ item.mySetsWon }}
-                </span>
-                <span
-                  class="text-medium-emphasis"
-                  :class="smAndDown ? 'text-h6' : 'text-h5 mx-2'"
-                  >-</span
-                >
-                <span
-                  class="text-center"
-                  :class="[
-                    smAndDown ? 'text-h6' : 'text-h5',
-                    !item.isWinner
-                      ? 'font-weight-bold text-success'
-                      : 'font-weight-light',
-                  ]"
-                  style="min-width: 24px"
-                >
-                  {{ item.opponentSetsWon }}
-                </span>
-              </div>
-
-              <!-- Individual set scores -->
-              <div
-                class="d-flex flex-wrap justify-center"
-                :style="smAndDown ? `column-gap: 12px` : `column-gap: 12px`"
-              >
-                <span
-                  v-for="set in item.individualSets"
-                  :key="set.setNumber"
-                  class="gap-4"
-                  :class="smAndDown ? 'text-body-2' : 'text-body-1'"
-                >
-                  <span
-                    :class="{
-                      'text-success': set.myWon,
-                      'font-weight-thin': !set.myWon,
-                    }"
-                  >
-                    {{ set.myScore }} </span
-                  >-<span
-                    :class="{
-                      'text-success': !set.myWon,
-                      'font-weight-thin': set.myWon,
-                    }"
-                  >
-                    {{ set.opponentScore }} </span
-                  ><span v-if="set.setNumber < item.individualSets.length"
-                    >,</span
-                  >
-                </span>
-              </div>
-            </template>
-
-            <!-- Show VS for future games -->
-            <template v-else>
-              <span
-                class="text-medium-emphasis font-weight-medium"
-                :class="smAndDown ? 'text-h6' : 'text-h5'"
-              >
-                VS
-              </span>
-            </template>
-          </v-col>
-
-          <!-- Right team (opponent) -->
-          <v-col
-            cols="4"
-            class="d-flex align-center"
-            :class="smAndDown ? 'pa-1' : 'px-2'"
-          >
-            <div class="d-flex flex-column flex-grow-1 text-wrap text-right">
-              <div class="text-wrap">
-                <span
-                  class="text-primary button-like"
-                  :class="[
-                    smAndDown ? 'text-body-2' : 'text-h6 mb-2',
-                    item.isWinner !== undefined
-                      ? item.isWinner
-                        ? 'text-error'
-                        : 'text-success'
-                      : '',
-                  ]"
-                  :style="{
-                    whiteSpace: 'normal',
-                    wordBreak: 'break-word',
-                    lineHeight: '1.2',
-                    display: 'inline-block',
-                  }"
-                  @click="navigateToTeam($router, item.opponentId, orgId)"
-                >
-                  {{ item.opponentName }}
-                </span>
-              </div>
-              <div
-                class="text-caption font-italic text-medium-emphasis text-wrap"
-                :style="{
-                  whiteSpace: 'normal',
-                  wordBreak: 'break-word',
-                  lineHeight: '1.2',
-                }"
-              >
-                {{ formatConference(item.opponentConference) }}
-              </div>
-            </div>
-            <v-avatar
-              :size="smAndDown ? 28 : 40"
-              :class="smAndDown ? 'ml-2' : 'ml-4'"
-            >
-              <v-img
-                v-if="item.opponentImg"
-                :src="item.opponentImg"
-                :alt="item.opponentName"
-              />
-              <v-icon v-else :size="smAndDown ? 20 : 24">mdi-school</v-icon>
-            </v-avatar>
-          </v-col>
-        </v-row>
-
-        <!-- Box score button only for past games -->
-        <v-row
-          v-if="item.box_score"
-          class="text-center justify-center"
-          dense
-          no-gutters
-        >
-          <v-btn
-            variant="tonal"
-            :href="item.box_score"
-            target="_blank"
-            prepend-icon="mdi-open-in-new"
-            :class="smAndDown ? 'w-75' : 'w-25'"
-            class="mb-1"
-          >
-            Box Score
-          </v-btn>
-        </v-row>
-      </v-card>
-    </div>
+    <MatchCard
+      v-for="item in paginatedData"
+      :key="item.id"
+      :id="item.id"
+      :formatted-date="item.formattedDate"
+      :time="item.time"
+      :team1-name="item.team1Name"
+      :team1-img="item.team1Img"
+      :team1-conference="item.team1Conference"
+      :team1-id="item.team1Id"
+      :team2-name="item.team2Name"
+      :team2-img="item.team2Img"
+      :team2-conference="item.team2Conference"
+      :team2-id="item.team2Id"
+      :team1-sets-won="item.team1SetsWon"
+      :team2-sets-won="item.team2SetsWon"
+      :individual-sets="item.individualSets"
+      :winner-id="item.winnerId"
+      :box-score="item.boxScore"
+      :org-id="orgId"
+      :show-vs-for-no-score="selectedYear === '2025'"
+    />
   </v-card>
 
   <!-- Pagination Controls -->

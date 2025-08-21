@@ -110,4 +110,17 @@ const router = createRouter({
   },
 });
 
+router.beforeEach(async (to, from, next) => {
+  // Add a small delay when navigating away from dynamic routes
+  if (from.name === "TeamDetailView" && to.name !== "TeamDetailView") {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  next();
+});
+
+// Handle navigation errors
+router.onError((error) => {
+  console.error("Router error:", error);
+});
+
 export default router;

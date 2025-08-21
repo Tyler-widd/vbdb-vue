@@ -12,7 +12,7 @@ const tabs = [
   { name: "Home", value: "Home", route: "/" },
   { name: "Live", value: "Live", route: "/live" },
   { name: "Scores", value: "Scores", route: "/scores" },
-  { name: "Rankings", value: "Rankings", route: "/rankings" },
+  { name: "Rankings", value: "Standings", route: "/rankings" },
   { name: "Schedule", value: "Schedule", route: "/schedule" },
   { name: "Players", value: "Players", route: "/players" },
   { name: "Teams", value: "Teams", route: "/teams" },

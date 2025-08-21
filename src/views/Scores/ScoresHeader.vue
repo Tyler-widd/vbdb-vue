@@ -25,11 +25,16 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  searchText: {
+    type: String,
+    default: "",
+  },
 });
 
 const emit = defineEmits([
   "update:division-filter",
   "update:conference-filter",
+  "update:search",
 ]);
 
 const handleDivisionChange = (value) => {
@@ -38,6 +43,10 @@ const handleDivisionChange = (value) => {
 
 const handleConferenceChange = (value) => {
   emit("update:conference-filter", value);
+};
+
+const handleSearchChange = (value) => {
+  emit("update:search", value);
 };
 </script>
 
@@ -63,6 +72,16 @@ const handleConferenceChange = (value) => {
           label="Conference"
           :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
           :items="conferences"
+          :disabled="loading"
+          clearable
+        />
+      </v-col>
+      <v-col cols="12">
+        <v-text-field
+          label="Search teams"
+          :model-value="searchText"
+          @update:model-value="handleSearchChange"
+          prepend-inner-icon="mdi-magnify"
           :disabled="loading"
           clearable
         />
