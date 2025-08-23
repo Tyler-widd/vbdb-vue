@@ -17,6 +17,8 @@ const searchText = ref("");
 
 const handleSearchUpdate = (value) => {
   searchText.value = value;
+  // Also update the search in the composable
+  scoresData.setSearch(value);
 };
 
 const scoresData = useScoresData();
@@ -37,7 +39,7 @@ const scoresData = useScoresData();
       @update:search="handleSearchUpdate"
     />
     <ScoresScoreCard
-      :scores="scoresData.scores.value"
+      :scores="scoresData.filteredScores.value"
       :loading="scoresData.loading.value"
       :org-id="orgId"
       :search-text="searchText"

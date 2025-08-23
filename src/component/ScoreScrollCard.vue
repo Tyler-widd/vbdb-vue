@@ -194,14 +194,14 @@ const handleRefresh = () => {
     </v-alert>
 
     <!-- No live games message -->
-    <div
+    <v-container
       v-if="!loading && !error && games.length === 0"
-      class="no-games-message"
+      class="d-flex justify-center"
     >
-      <v-card variant="tonal" class="text-center" height="50">
-        No Live matches found
+      <v-card variant="tonal" class="pa-4">
+        <v-card-text class="text-center"> No Live matches found </v-card-text>
       </v-card>
-    </div>
+    </v-container>
 
     <!-- Slide group for live games -->
     <v-slide-group

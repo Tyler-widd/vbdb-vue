@@ -10,6 +10,19 @@ export function useScoresData() {
   const conferenceFilter = ref(null);
   const search = ref("");
 
+  // Helper function to format conference names
+  const formatConference = (conference) => {
+    if (!conference) return conference;
+
+    // Check if it's a numeric region (like "5.0", "5", etc.)
+    const numericMatch = conference.toString().match(/^(\d+)(?:\.0)?$/);
+    if (numericMatch) {
+      return `Region ${numericMatch[1]}`;
+    }
+
+    return conference;
+  };
+
   // Computed properties
   const divisions = computed(() => {
     const divisionSet = new Set();
@@ -23,10 +36,60 @@ export function useScoresData() {
   const conferences = computed(() => {
     const conferenceSet = new Set();
     scores.value.forEach((score) => {
-      if (score.team_1_conference) conferenceSet.add(score.team_1_conference);
-      if (score.team_2_conference) conferenceSet.add(score.team_2_conference);
+      // If division filter is set, only include conferences from teams in that division
+      if (divisionFilter.value) {
+        // Check team 1
+        if (
+          score.team_1_division === divisionFilter.value &&
+          score.team_1_conference
+        ) {
+          const formatted = formatConference(score.team_1_conference);
+          conferenceSet.add(formatted);
+        }
+        // Check team 2
+        if (
+          score.team_2_division === divisionFilter.value &&
+          score.team_2_conference
+        ) {
+          const formatted = formatConference(score.team_2_conference);
+          conferenceSet.add(formatted);
+        }
+      } else {
+        // No division filter, show all conferences
+        if (score.team_1_conference) {
+          const formatted = formatConference(score.team_1_conference);
+          conferenceSet.add(formatted);
+        }
+        if (score.team_2_conference) {
+          const formatted = formatConference(score.team_2_conference);
+          conferenceSet.add(formatted);
+        }
+      }
     });
-    return Array.from(conferenceSet).sort();
+
+    // Convert to array and sort
+    const conferenceArray = Array.from(conferenceSet);
+
+    // Custom sort to handle "Region X" format properly
+    return conferenceArray.sort((a, b) => {
+      // Check if both are region format
+      const regionA = a.match(/^Region (\d+)$/);
+      const regionB = b.match(/^Region (\d+)$/);
+
+      if (regionA && regionB) {
+        // Both are regions, sort numerically
+        return parseInt(regionA[1]) - parseInt(regionB[1]);
+      } else if (regionA) {
+        // A is region, B is not - regions first
+        return -1;
+      } else if (regionB) {
+        // B is region, A is not - regions first
+        return 1;
+      } else {
+        // Neither are regions, sort alphabetically
+        return a.localeCompare(b);
+      }
+    });
   });
 
   // NAIA Standings calculation
@@ -49,7 +112,7 @@ export function useScoresData() {
       if (!teamStats.has(team1)) {
         teamStats.set(team1, {
           team: team1,
-          conference: game.team_1_conference || "Unknown",
+          conference: formatConference(game.team_1_conference) || "Unknown",
           location: game.team_1_location || "",
           wins: 0,
           losses: 0,
@@ -60,7 +123,7 @@ export function useScoresData() {
       if (!teamStats.has(team2)) {
         teamStats.set(team2, {
           team: team2,
-          conference: game.team_2_conference || "Unknown",
+          conference: formatConference(game.team_2_conference) || "Unknown",
           location: game.team_2_location || "",
           wins: 0,
           losses: 0,
@@ -121,6 +184,9 @@ export function useScoresData() {
 
       return {
         ...score,
+        // Format conferences in the transformed data
+        team_1_conference: formatConference(score.team_1_conference),
+        team_2_conference: formatConference(score.team_2_conference),
         score: sets.join(", "),
         formattedDate: new Date(score.date).toLocaleDateString(),
         formattedTime: score.time,
@@ -159,7 +225,7 @@ export function useScoresData() {
         (score) =>
           score.team_1.toLowerCase().includes(searchTerm) ||
           score.team_2.toLowerCase().includes(searchTerm) ||
-          score.location.toLowerCase().includes(searchTerm)
+          (score.location && score.location.toLowerCase().includes(searchTerm))
       );
     }
 
@@ -186,6 +252,8 @@ export function useScoresData() {
 
   const setDivisionFilter = (division) => {
     divisionFilter.value = division;
+    // Clear conference filter when division changes since available conferences will change
+    conferenceFilter.value = null;
   };
 
   const setConferenceFilter = (conference) => {
