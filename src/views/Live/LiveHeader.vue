@@ -45,7 +45,7 @@ const handleConferenceChange = (value) => {
 </script>
 
 <template>
-  <v-card class="px-4 pb-4 pt-2">
+  <v-card class="mb-4 px-4 pt-4 pb-2">
     <v-card-title class="pt-0">Live</v-card-title>
     <v-row dense no-gutters class="pa-0">
       <v-col :cols="smAndDown ? 12 : 6">

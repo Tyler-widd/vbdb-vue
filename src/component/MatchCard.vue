@@ -103,6 +103,10 @@ const props = defineProps({
     type: Boolean,
     default: false, // Set to true for schedule view
   },
+  matchStatus: {
+    type: String,
+    default: null, // 'in_progress', 'not_started', 'completed'
+  },
 });
 
 // Determine if this is a completed game with scores
@@ -116,6 +120,29 @@ const getFormattedConference = (conference, division) => {
     return division;
   }
   return formatConference(conference);
+};
+
+// Determine team name color based on match status
+const getTeamNameColor = (teamId) => {
+  // If match is not over (in_progress or not_started), use primary color
+  if (
+    props.matchStatus === "in_progress" ||
+    props.matchStatus === "not_started"
+  ) {
+    return "text-primary";
+  }
+
+  // For completed matches, show winner in success and loser in error
+  if (hasScore.value && props.winnerId) {
+    if (props.winnerId === teamId) {
+      return "text-success";
+    } else {
+      return "text-error";
+    }
+  }
+
+  // Default fallback
+  return "text-primary";
 };
 </script>
 
@@ -153,15 +180,11 @@ const getFormattedConference = (conference, division) => {
           <div class="d-flex flex-column flex-grow-1 text-wrap">
             <div class="text-wrap">
               <span
-                class="text-primary d-block"
+                class="d-block"
                 :class="[
                   smAndDown ? 'text-body-2' : 'text-h6',
                   team1Id ? 'button-like' : '',
-                  hasScore && winnerId === team1Id
-                    ? 'text-success'
-                    : hasScore && winnerId !== team1Id
-                    ? 'text-error'
-                    : '',
+                  getTeamNameColor(team1Id),
                 ]"
                 @click="team1Id ? navigateToTeam(router, team1Id, orgId) : null"
               >
@@ -271,15 +294,10 @@ const getFormattedConference = (conference, division) => {
           <div class="d-flex flex-column flex-grow-1 text-wrap text-right">
             <div class="text-wrap">
               <span
-                class="text-primary"
                 :class="[
                   smAndDown ? 'text-body-2' : 'text-h6 mb-2',
                   team2Id ? 'button-like' : '',
-                  hasScore && winnerId === team2Id
-                    ? 'text-success'
-                    : hasScore && winnerId !== team2Id
-                    ? 'text-error'
-                    : '',
+                  getTeamNameColor(team2Id),
                 ]"
                 :style="{
                   whiteSpace: 'normal',
@@ -301,6 +319,12 @@ const getFormattedConference = (conference, division) => {
               }"
             >
               {{ getFormattedConference(team2Conference, team2Division) }}
+            </div>
+            <div
+              class="text-caption text-medium-emphasis text-wrap"
+              v-if="!smAndDown"
+            >
+              {{ team2Division }}
             </div>
           </div>
           <v-avatar
@@ -328,7 +352,7 @@ const getFormattedConference = (conference, division) => {
           :class="smAndDown ? 'w-75' : 'w-25'"
           class="mb-1"
         >
-          Box Score
+          Live Stats
         </v-btn>
       </v-row>
     </v-card>

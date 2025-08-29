@@ -3,11 +3,10 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import useLiveData from "@/composables/useLiveData.js";
 import LiveHeader from "./LiveHeader.vue";
-import LiveTable from "./LiveTable.vue";
+import LiveScoreCard from "./LiveScoreCard.vue";
 
 // Use the live data composable
-const { liveMatches, loading, error, fetchLiveData, availableConferences } =
-  useLiveData();
+const { liveMatches, loading, error, fetchLiveData } = useLiveData();
 
 // Filter states
 const search = ref("");
@@ -43,45 +42,6 @@ const conferences = computed(() => {
   return Array.from(confs).sort();
 });
 
-// Filter function for live matches
-const filterLive = (liveData, searchTerm, divisionFilter, conferenceFilter) => {
-  let filtered = [...liveData];
-
-  // Filter by division
-  if (divisionFilter) {
-    filtered = filtered.filter((match) => match.division === divisionFilter);
-  }
-
-  // Filter by conference
-  if (conferenceFilter) {
-    filtered = filtered.filter(
-      (match) =>
-        match.team_1_conference === conferenceFilter ||
-        match.team_2_conference === conferenceFilter ||
-        match.conference === conferenceFilter
-    );
-  }
-
-  // Filter by search term
-  if (searchTerm) {
-    const searchLower = searchTerm.toLowerCase();
-    filtered = filtered.filter(
-      (match) =>
-        match.team_1_name.toLowerCase().includes(searchLower) ||
-        match.team_2_name.toLowerCase().includes(searchLower) ||
-        match.date.includes(searchTerm) ||
-        (match.location &&
-          match.location.toLowerCase().includes(searchLower)) ||
-        (match.team_1_conference &&
-          match.team_1_conference.toLowerCase().includes(searchLower)) ||
-        (match.team_2_conference &&
-          match.team_2_conference.toLowerCase().includes(searchLower))
-    );
-  }
-
-  return filtered;
-};
-
 // Event handlers
 const updateSearch = (value) => {
   search.value = value;
@@ -102,19 +62,9 @@ const handleRetry = () => {
   fetchLiveData();
 };
 
-// Fetch data on mount and set up auto-refresh
+// Fetch data on mount
 onMounted(() => {
   fetchLiveData();
-
-  // Auto-refresh every 30 seconds for live data
-  const refreshInterval = setInterval(() => {
-    fetchLiveData(true); // Silent refresh
-  }, 30000);
-
-  // Cleanup interval on unmount
-  onUnmounted(() => {
-    clearInterval(refreshInterval);
-  });
 });
 
 // Watch for division changes to update conferences
@@ -124,49 +74,40 @@ watch(divisionFilter, () => {
 </script>
 
 <template>
-  <div class="mt-3">
-    <!-- Error Alert -->
-    <v-alert
-      v-if="error"
-      type="error"
-      variant="tonal"
-      closable
-      class="mb-4"
-      @click:close="error = null"
-    >
-      <template v-slot:title>Failed to load live matches</template>
-      {{ error }}
-      <template v-slot:append>
-        <v-btn
-          color="error"
-          variant="outlined"
-          size="small"
-          @click="handleRetry"
-        >
-          Retry
-        </v-btn>
-      </template>
-    </v-alert>
+  <!-- Error Alert -->
+  <v-alert
+    v-if="error"
+    type="error"
+    variant="tonal"
+    closable
+    class="mb-4"
+    @click:close="error = null"
+  >
+    <template v-slot:title>Failed to load live matches</template>
+    {{ error }}
+    <template v-slot:append>
+      <v-btn color="error" variant="outlined" size="small" @click="handleRetry">
+        Retry
+      </v-btn>
+    </template>
+  </v-alert>
 
-    <!-- Live Header with Filters -->
-    <LiveHeader
-      :divisions="divisions"
-      :conferences="conferences"
-      :selected-division="divisionFilter"
-      :loading="loading"
-      @update:search="updateSearch"
-      @update:division="updateDivision"
-      @update:conference="updateConference"
-    />
+  <!-- Live Header with Filters -->
+  <LiveHeader
+    class="mt-3"
+    :divisions="divisions"
+    :conferences="conferences"
+    :selected-division="divisionFilter"
+    :loading="loading"
+    @update:search="updateSearch"
+    @update:division="updateDivision"
+    @update:conference="updateConference"
+  />
 
-    <!-- Live Table -->
-    <LiveTable
-      :live-data="liveMatches"
-      :loading="loading"
-      :search="search"
-      :division-filter="divisionFilter"
-      :conference-filter="conferenceFilter"
-      :filter-live="filterLive"
-    />
-  </div>
+  <!-- Live Score Cards -->
+  <LiveScoreCard
+    :search="search"
+    :division-filter="divisionFilter"
+    :conference-filter="conferenceFilter"
+  />
 </template>
