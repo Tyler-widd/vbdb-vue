@@ -134,7 +134,7 @@ const getTeamNameColor = (teamId) => {
     props.matchStatus === "in_progress" ||
     props.matchStatus === "not_started"
   ) {
-    return "text-primary";
+    return "text-success";
   }
 
   // For completed matches, show winner in success and loser in error
@@ -156,7 +156,7 @@ const getSetScoreColor = (teamScore, opponentScore, teamId) => {
 
   if (teamScore > opponentScore) {
     return props.winnerId === teamId
-      ? "text-success font-weight-bold"
+      ? "text-primary font-weight-bold"
       : "text-primary font-weight-bold";
   } else {
     return "text-medium-emphasis";
