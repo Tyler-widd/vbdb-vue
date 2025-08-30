@@ -1,4 +1,3 @@
-<!-- views/Live/LiveView.vue -->
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import useLiveData from "@/composables/useLiveData.js";
@@ -12,13 +11,19 @@ const { liveMatches, loading, error, fetchLiveData } = useLiveData();
 const search = ref("");
 const divisionFilter = ref(null);
 const conferenceFilter = ref(null);
+const showOnlyLive = ref(false); // New state for live-only filter
+const showCompleted = ref(true); // New state for showing completed matches
 
 // Get unique divisions from live data
 const divisions = computed(() => {
-  const uniqueDivisions = [
-    ...new Set(liveMatches.value.map((match) => match.division)),
-  ];
-  return uniqueDivisions.filter((division) => division).sort();
+  const divisionSet = new Set();
+
+  liveMatches.value.forEach((match) => {
+    if (match.team_1_division) divisionSet.add(match.team_1_division);
+    if (match.team_2_division) divisionSet.add(match.team_2_division);
+  });
+
+  return Array.from(divisionSet).sort();
 });
 
 // Get available conferences based on selected division
@@ -28,7 +33,9 @@ const conferences = computed(() => {
   // Filter by division if selected
   if (divisionFilter.value) {
     matches = matches.filter(
-      (match) => match.division === divisionFilter.value
+      (match) =>
+        match.team_1_division === divisionFilter.value ||
+        match.team_2_division === divisionFilter.value
     );
   }
 
@@ -55,6 +62,22 @@ const updateDivision = (value) => {
 
 const updateConference = (value) => {
   conferenceFilter.value = value;
+};
+
+const updateShowOnlyLive = (value) => {
+  showOnlyLive.value = value;
+  // If turning on "show only live", turn off "show completed"
+  if (value) {
+    showCompleted.value = false;
+  }
+};
+
+const updateShowCompleted = (value) => {
+  showCompleted.value = value;
+  // If turning on "show completed", turn off "show only live"
+  if (value) {
+    showOnlyLive.value = false;
+  }
 };
 
 const handleRetry = () => {
@@ -98,10 +121,15 @@ watch(divisionFilter, () => {
     :divisions="divisions"
     :conferences="conferences"
     :selected-division="divisionFilter"
+    :selected-conference="conferenceFilter"
+    :show-only-live="showOnlyLive"
+    :show-completed="showCompleted"
     :loading="loading"
     @update:search="updateSearch"
     @update:division="updateDivision"
     @update:conference="updateConference"
+    @update:show-only-live="updateShowOnlyLive"
+    @update:show-completed="updateShowCompleted"
   />
 
   <!-- Live Score Cards -->
@@ -109,5 +137,7 @@ watch(divisionFilter, () => {
     :search="search"
     :division-filter="divisionFilter"
     :conference-filter="conferenceFilter"
+    :show-only-live="showOnlyLive"
+    :show-completed="showCompleted"
   />
 </template>

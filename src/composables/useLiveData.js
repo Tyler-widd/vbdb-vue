@@ -121,7 +121,6 @@ export default function useLiveData() {
 
     isPolling.value = true;
     pollingInterval = setInterval(() => {
-      // Use silent = true to avoid showing loading indicators
       fetchLiveData(true);
     }, intervalMs);
   };

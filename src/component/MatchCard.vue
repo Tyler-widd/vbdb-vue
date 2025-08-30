@@ -1,4 +1,4 @@
-<!-- components/MatchCard.vue -->
+<!-- components/MatchCard.vue (Updated) -->
 <script setup>
 import { computed } from "vue";
 import { useRouter } from "vue-router";
@@ -114,6 +114,11 @@ const hasScore = computed(() => {
   return props.team1SetsWon !== null && props.team2SetsWon !== null;
 });
 
+// Determine if we have individual set scores to display
+const hasIndividualSets = computed(() => {
+  return props.individualSets && props.individualSets.length > 0;
+});
+
 // Format conference/division helper
 const getFormattedConference = (conference, division) => {
   if (smAndDown.value && division) {
@@ -144,217 +149,227 @@ const getTeamNameColor = (teamId) => {
   // Default fallback
   return "text-primary";
 };
+
+// Get set score color based on winner
+const getSetScoreColor = (teamScore, opponentScore, teamId) => {
+  if (teamScore === null || opponentScore === null) return "";
+
+  if (teamScore > opponentScore) {
+    return props.winnerId === teamId
+      ? "text-success font-weight-bold"
+      : "text-primary font-weight-bold";
+  } else {
+    return "text-medium-emphasis";
+  }
+};
+
+// Get the maximum number of sets to display (up to 5)
+const maxSetsToShow = computed(() => {
+  if (!hasIndividualSets.value) return 0;
+  return Math.min(props.individualSets.length, 5);
+});
 </script>
 
 <template>
   <div class="mb-6">
-    <!-- Date chip centered at top -->
-    <v-row class="justify-center mb-n3" style="z-index: 2; position: relative">
-      <v-chip
-        variant="elevated"
-        size="small"
-        class="bg-surface"
-        style="border: 2px solid rgb(var(--v-theme-surface-variant))"
-      >
-        {{ formattedDate }}
-        <span v-if="time" class="ml-1">• {{ time }}</span>
-      </v-chip>
-    </v-row>
-
     <!-- Main card -->
     <v-card variant="outlined" rounded="xl" class="pa-1">
-      <v-row class="align-center" no-gutters>
-        <!-- Left team (team 1) -->
-        <v-col
-          cols="4"
+      <!-- Team 1 Row -->
+      <div class="d-flex align-center">
+        <!-- Team 1 Avatar and Info -->
+        <div
           class="d-flex align-center"
-          :class="smAndDown ? 'pa-1' : 'px-2'"
+          :class="smAndDown ? 'flex-grow-0' : 'flex-grow-1'"
         >
           <v-avatar
-            :size="smAndDown ? 28 : 50"
-            :class="smAndDown ? 'mr-2' : 'mr-4'"
+            :size="smAndDown ? 32 : 42"
+            :class="smAndDown ? 'mr-2' : 'mr-3'"
           >
             <v-img v-if="team1Img" :src="team1Img" :alt="team1Name" />
-            <v-icon v-else :size="smAndDown ? 20 : 24">mdi-school</v-icon>
+            <v-icon v-else :size="smAndDown ? 16 : 20">mdi-school</v-icon>
           </v-avatar>
-          <div class="d-flex flex-column flex-grow-1 text-wrap">
-            <div class="text-wrap">
-              <span
-                class="d-block"
-                :class="[
-                  smAndDown ? 'text-body-2' : 'text-h6',
-                  team1Id ? 'button-like' : '',
-                  getTeamNameColor(team1Id),
-                ]"
-                @click="team1Id ? navigateToTeam(router, team1Id, orgId) : null"
-              >
-                {{ team1Name }}
-              </span>
-            </div>
+
+          <div
+            class="d-flex flex-column"
+            :style="smAndDown ? 'min-width: 120px;' : 'min-width: 180px;'"
+          >
+            <span
+              :class="[
+                smAndDown ? 'text-body-2' : 'text-subtitle-1',
+                team1Id ? 'button-like' : '',
+                getTeamNameColor(team1Id),
+              ]"
+              @click="team1Id ? navigateToTeam(router, team1Id, orgId) : null"
+            >
+              {{ team1Name }}
+            </span>
             <div
               class="text-caption font-italic text-medium-emphasis text-wrap"
             >
               {{ getFormattedConference(team1Conference, team1Division) }}
             </div>
+          </div>
+        </div>
+
+        <!-- Set Scores for Team 1 -->
+        <div v-if="hasIndividualSets" class="d-flex align-center">
+          <div
+            v-for="(set, index) in individualSets"
+            :key="`team1-set-${index}`"
+            class="text-center mx-1"
+            :style="smAndDown ? 'min-width: 28px;' : 'min-width: 35px;'"
+          >
             <div
-              class="text-caption text-medium-emphasis text-wrap"
-              v-if="!smAndDown"
+              :class="[
+                smAndDown ? 'text-body-2' : 'text-subtitle-1',
+                getSetScoreColor(set.team1Score, set.team2Score, team1Id),
+              ]"
             >
-              {{ team1Division }}
+              {{ set.team1Score }}
             </div>
           </div>
-        </v-col>
 
-        <!-- Score section or VS -->
-        <v-col cols="4" class="d-flex flex-column align-center py-3">
-          <!-- Show scores for completed games -->
-          <template v-if="hasScore">
-            <div class="d-flex align-center mb-1">
-              <span
-                class="text-center"
-                :class="[
-                  smAndDown ? 'text-h6' : 'text-h5',
-                  winnerId === team1Id
-                    ? 'font-weight-bold text-success'
-                    : 'font-weight-light',
-                ]"
-                style="min-width: 24px"
-              >
-                {{ team1SetsWon }}
-              </span>
-              <span
-                class="text-medium-emphasis"
-                :class="smAndDown ? 'text-h6' : 'text-h5 mx-2'"
-                >-</span
-              >
-              <span
-                class="text-center"
-                :class="[
-                  smAndDown ? 'text-h6' : 'text-h5',
-                  winnerId === team2Id
-                    ? 'font-weight-bold text-success'
-                    : 'font-weight-light',
-                ]"
-                style="min-width: 24px"
-              >
-                {{ team2SetsWon }}
-              </span>
-            </div>
-
-            <!-- Individual set scores -->
+          <!-- Sets Won Display -->
+          <div
+            class="ml-3 text-center"
+            :style="smAndDown ? 'min-width: 24px;' : 'min-width: 32px;'"
+          >
             <div
-              class="d-flex flex-wrap justify-center"
-              :style="smAndDown ? `column-gap: 12px` : `column-gap: 12px`"
+              :class="[
+                smAndDown ? 'text-body-1' : 'text-h6',
+                'font-weight-bold',
+                getTeamNameColor(team1Id),
+              ]"
             >
-              <span
-                v-for="(set, index) in individualSets"
-                :key="set.setNumber || index"
-                class="gap-4"
-                :class="smAndDown ? 'text-body-2' : 'text-body-1'"
-              >
-                <span
-                  :class="{
-                    'text-success': set.team1Won || set.myWon,
-                    'font-weight-thin': !(set.team1Won || set.myWon),
-                  }"
-                >
-                  {{ set.team1Score || set.myScore }}
-                </span>
-                -
-                <span
-                  :class="{
-                    'text-success': !(set.team1Won || set.myWon),
-                    'font-weight-thin': set.team1Won || set.myWon,
-                  }"
-                >
-                  {{ set.team2Score || set.opponentScore }}
-                </span>
-                <span v-if="index < individualSets.length - 1">,</span>
-              </span>
+              {{ team1SetsWon || 0 }}
             </div>
-          </template>
+          </div>
+        </div>
 
-          <!-- Show VS for future games -->
-          <template v-else-if="showVsForNoScore">
-            <span
-              class="text-medium-emphasis font-weight-medium"
-              :class="smAndDown ? 'text-h6' : 'text-h5'"
-            >
-              VS
-            </span>
-          </template>
-        </v-col>
-
-        <!-- Right team (team 2) -->
-        <v-col
-          cols="4"
-          class="d-flex align-center"
-          :class="smAndDown ? 'pa-1' : 'px-2'"
+        <!-- VS or Time display when no scores -->
+        <div
+          v-else-if="showVsForNoScore || matchStatus === 'not_started'"
+          class="ml-auto mr-4"
         >
-          <div class="d-flex flex-column flex-grow-1 text-wrap text-right">
-            <div class="text-wrap">
-              <span
-                :class="[
-                  smAndDown ? 'text-body-2' : 'text-h6 mb-2',
-                  team2Id ? 'button-like' : '',
-                  getTeamNameColor(team2Id),
-                ]"
-                :style="{
-                  whiteSpace: 'normal',
-                  wordBreak: 'break-word',
-                  lineHeight: '1.2',
-                  display: 'inline-block',
-                }"
-                @click="team2Id ? navigateToTeam(router, team2Id, orgId) : null"
-              >
-                {{ team2Name }}
-              </span>
+          <div class="text-center">
+            <div v-if="time" class="text-caption text-medium-emphasis">
+              {{ time }}
             </div>
+            <div class="text-body-1 text-medium-emphasis font-weight-bold">
+              VS
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <v-divider class="my-1" />
+
+      <!-- Team 2 Row -->
+      <div class="d-flex align-center">
+        <!-- Team 2 Avatar and Info -->
+        <div
+          class="d-flex align-center"
+          :class="smAndDown ? 'flex-grow-0' : 'flex-grow-1'"
+        >
+          <v-avatar
+            :size="smAndDown ? 32 : 42"
+            :class="smAndDown ? 'mr-2' : 'mr-3'"
+          >
+            <v-img v-if="team2Img" :src="team2Img" :alt="team2Name" />
+            <v-icon v-else :size="smAndDown ? 16 : 20">mdi-school</v-icon>
+          </v-avatar>
+
+          <div
+            class="d-flex flex-column"
+            :style="smAndDown ? 'min-width: 120px;' : 'min-width: 180px;'"
+          >
+            <span
+              :class="[
+                smAndDown ? 'text-body-2' : 'text-subtitle-1',
+                team2Id ? 'button-like' : '',
+                getTeamNameColor(team2Id),
+              ]"
+              @click="team2Id ? navigateToTeam(router, team2Id, orgId) : null"
+            >
+              {{ team2Name }}
+            </span>
             <div
               class="text-caption font-italic text-medium-emphasis text-wrap"
-              :style="{
-                whiteSpace: 'normal',
-                wordBreak: 'break-word',
-                lineHeight: '1.2',
-              }"
             >
               {{ getFormattedConference(team2Conference, team2Division) }}
             </div>
+          </div>
+        </div>
+
+        <!-- Set Scores for Team 2 -->
+        <div v-if="hasIndividualSets" class="d-flex align-center">
+          <div
+            v-for="(set, index) in individualSets"
+            :key="`team2-set-${index}`"
+            class="text-center mx-1"
+            :style="smAndDown ? 'min-width: 28px;' : 'min-width: 35px;'"
+          >
             <div
-              class="text-caption text-medium-emphasis text-wrap"
-              v-if="!smAndDown"
+              :class="[
+                smAndDown ? 'text-body-2' : 'text-subtitle-1',
+                getSetScoreColor(set.team2Score, set.team1Score, team2Id),
+              ]"
             >
-              {{ team2Division }}
+              {{ set.team2Score }}
             </div>
           </div>
-          <v-avatar
-            :size="smAndDown ? 28 : 50"
-            :class="smAndDown ? 'ml-2' : 'ml-4'"
-          >
-            <v-img v-if="team2Img" :src="team2Img" :alt="team2Name" />
-            <v-icon v-else :size="smAndDown ? 20 : 24">mdi-school</v-icon>
-          </v-avatar>
-        </v-col>
-      </v-row>
 
-      <!-- Box score button -->
-      <v-row
-        v-if="boxScore"
-        class="text-center justify-center"
-        dense
-        no-gutters
-      >
+          <!-- Sets Won Display -->
+          <div
+            class="ml-3 text-center"
+            :style="smAndDown ? 'min-width: 24px;' : 'min-width: 32px;'"
+          >
+            <div
+              :class="[
+                smAndDown ? 'text-body-1' : 'text-h6',
+                'font-weight-bold',
+                getTeamNameColor(team2Id),
+              ]"
+            >
+              {{ team2SetsWon || 0 }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Box Score Link with Time (if available) -->
+      <div v-if="boxScore || time" class="d-flex justify-center align-center">
         <v-btn
-          variant="tonal"
+          v-if="boxScore"
           :href="boxScore"
           target="_blank"
-          prepend-icon="mdi-open-in-new"
-          :class="smAndDown ? 'w-75' : 'w-25'"
-          class="mb-1"
+          variant="text"
+          size="small"
+          color="primary"
+          prepend-icon="mdi-chart-box-outline"
         >
-          Live Stats
+          {{ matchStatus === "completed" ? "Box Score" : "Live Stats" }}
         </v-btn>
-      </v-row>
+        <span
+          v-if="time && boxScore"
+          class="mx-2 text-caption text-medium-emphasis"
+          >•</span
+        >
+        <span v-if="time" class="text-caption text-medium-emphasis">{{
+          time
+        }}</span>
+      </div>
     </v-card>
   </div>
 </template>
+
+<style scoped>
+.button-like {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.button-like:hover {
+  opacity: 0.8;
+}
+</style>
