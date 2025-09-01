@@ -27,7 +27,7 @@ export function useScheduleData() {
       return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
     }
 
-    return dateString; // Return as-is if format is unexpected
+    return dateString;
   };
 
   // Helper function to convert "06:00PM ET" to "18:00" (24-hour format)
@@ -73,9 +73,9 @@ export function useScheduleData() {
       team_1_division: transformDivision(game.team_1_division),
       team_2_division: transformDivision(game.team_2_division),
       // Convert date format from MM-DD-YYYY to YYYY-MM-DD
-      date: convertDateFormat(game.start_date),
+      date: game.date,
       // Convert time format from "06:00PM ET" to "18:00"
-      time: convertTimeFormat(game.start_time),
+      time: game.time,
       // Keep original values for reference
       original_date: game.start_date,
       original_time: game.start_time,

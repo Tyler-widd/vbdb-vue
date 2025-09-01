@@ -14,19 +14,35 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  teams: {
+    type: Array,
+    default: () => [],
+  },
   selectedDivision: {
     type: String,
     default: null,
   },
   selectedConference: {
-    type: String,
-    default: null,
+    type: Array, // Changed to Array for multi-select
+    default: () => [],
+  },
+  selectedTeams: {
+    type: Array,
+    default: () => [],
   },
   showOnlyLive: {
     type: Boolean,
     default: false,
   },
   showCompleted: {
+    type: Boolean,
+    default: false,
+  },
+  showUpcoming: {
+    type: Boolean,
+    default: false,
+  },
+  showTableView: {
     type: Boolean,
     default: false,
   },
@@ -40,8 +56,11 @@ const emit = defineEmits([
   "update:search",
   "update:division",
   "update:conference",
+  "update:teams",
   "update:show-only-live",
   "update:show-completed",
+  "update:show-upcoming",
+  "update:show-table-view",
 ]);
 
 // Handle filter changes
@@ -64,13 +83,25 @@ const handleShowOnlyLiveChange = (value) => {
 const handleShowCompletedChange = (value) => {
   emit("update:show-completed", value);
 };
+
+const handleShowUpcomingChange = (value) => {
+  emit("update:show-upcoming", value);
+};
+
+const handleShowTableViewChange = (value) => {
+  emit("update:show-table-view", value);
+};
+
+const handleTeamChange = (value) => {
+  emit("update:teams", value);
+};
 </script>
 
 <template>
   <v-card class="mb-4 px-4 pt-4 pb-2">
     <div class="d-flex align-center justify-space-between">
       <v-card-title class="pt-0">Live</v-card-title>
-      <div class="d-flex align-center gap-3">
+      <div class="d-flex align-center gap-3 flex-wrap">
         <v-checkbox
           :model-value="showOnlyLive"
           label="Show only live"
@@ -84,6 +115,20 @@ const handleShowCompletedChange = (value) => {
           density="compact"
           hide-details
           @update:model-value="handleShowCompletedChange"
+        />
+        <v-checkbox
+          :model-value="showUpcoming"
+          label="Show upcoming"
+          density="compact"
+          hide-details
+          @update:model-value="handleShowUpcomingChange"
+        />
+        <v-checkbox
+          :model-value="showTableView"
+          label="Table view"
+          density="compact"
+          hide-details
+          @update:model-value="handleShowTableViewChange"
         />
       </div>
     </div>
@@ -107,16 +152,34 @@ const handleShowCompletedChange = (value) => {
           :items="conferences"
           :disabled="loading || !conferences.length"
           clearable
+          multiple
+          chips
+          closable-chips
           @update:model-value="handleConferenceChange"
         />
       </v-col>
-      <v-col cols="12">
+      <v-col :cols="smAndDown ? 12 : 6">
         <v-text-field
           label="Search"
           prepend-inner-icon="mdi-magnify"
+          :class="smAndDown ? 'mb-2' : 'mb-2 mr-2'"
           :disabled="loading"
           clearable
           @update:model-value="handleSearchChange"
+        />
+      </v-col>
+      <v-col :cols="smAndDown ? 12 : 6">
+        <v-autocomplete
+          label="Teams"
+          :model-value="selectedTeams"
+          :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
+          :items="teams"
+          :disabled="loading || !teams.length"
+          clearable
+          multiple
+          chips
+          closable-chips
+          @update:model-value="handleTeamChange"
         />
       </v-col>
     </v-row>

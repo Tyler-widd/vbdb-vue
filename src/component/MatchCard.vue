@@ -173,7 +173,7 @@ const maxSetsToShow = computed(() => {
 <template>
   <div class="mb-6">
     <!-- Main card -->
-    <v-card variant="outlined" rounded="xl" class="pa-1">
+    <v-card variant="outlined" rounded="lg" class="pa-1">
       <!-- Team 1 Row -->
       <div class="d-flex align-center">
         <!-- Team 1 Avatar and Info -->

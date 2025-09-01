@@ -2,7 +2,6 @@
 <script setup>
 import { computed } from "vue";
 import { useDisplay } from "vuetify";
-import { formatDateMoblie, formatDateYear } from "../../helpers/formatDate";
 import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 
 const { smAndDown } = useDisplay();
@@ -167,14 +166,10 @@ const formatConvertedTime = (timeString) => {
       <template v-slot:item.date="{ item }">
         <div class="text-body-2 d-flex flex-column mx-2 pa-0 font-weight-light">
           <div>
-            {{
-              smAndDown
-                ? formatDateMoblie(item.date)
-                : formatDateYear(item.date)
-            }}
+            {{ item.date.split(" ")[0] }}
           </div>
           <div class="text-caption text-grey">
-            {{ smAndDown ? "" : formatTime(item) }}
+            <!-- {{ smAndDown ? "" : formatTime(item) }} -->
           </div>
         </div>
       </template>
@@ -183,7 +178,7 @@ const formatConvertedTime = (timeString) => {
       <template v-slot:item.team_1="{ item }">
         <div class="d-flex align-center">
           <v-avatar :size="smAndDown ? '24' : '32'" class="mr-3">
-            <v-img :src="item.team_1_img" :alt="item.team_1_name" />
+            <v-img :src="item.team_1_logo" :alt="item.team_1_name" />
           </v-avatar>
           <div class="d-flex flex-column">
             <span
@@ -225,7 +220,7 @@ const formatConvertedTime = (timeString) => {
       <template v-slot:item.team_2="{ item }">
         <div class="d-flex align-center">
           <v-avatar :size="smAndDown ? '24' : '32'" class="mr-3">
-            <v-img :src="item.team_2_img" :alt="item.team_2_name" />
+            <v-img :src="item.team_2_logo" :alt="item.team_2_name" />
           </v-avatar>
           <div class="d-flex flex-column">
             <span
