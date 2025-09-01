@@ -72,20 +72,27 @@ const teams = computed(() => {
     );
   }
 
-  // Filter by conference if selected
-  if (conferenceFilter.value && conferenceFilter.value.length > 0) {
-    matches = matches.filter(
-      (match) =>
-        conferenceFilter.value.includes(match.team_1_conference) ||
-        conferenceFilter.value.includes(match.team_2_conference)
-    );
-  }
-
-  // Extract unique teams from filtered matches
+  // Extract unique teams from filtered matches, but only include teams that belong to selected conferences
   const teamSet = new Set();
+
   matches.forEach((match) => {
-    if (match.team_1_name) teamSet.add(match.team_1_name);
-    if (match.team_2_name) teamSet.add(match.team_2_name);
+    // Add team 1 if no conference filter is selected, or if it belongs to selected conferences
+    if (match.team_1_name) {
+      if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
+        teamSet.add(match.team_1_name);
+      } else if (conferenceFilter.value.includes(match.team_1_conference)) {
+        teamSet.add(match.team_1_name);
+      }
+    }
+
+    // Add team 2 if no conference filter is selected, or if it belongs to selected conferences
+    if (match.team_2_name) {
+      if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
+        teamSet.add(match.team_2_name);
+      } else if (conferenceFilter.value.includes(match.team_2_conference)) {
+        teamSet.add(match.team_2_name);
+      }
+    }
   });
 
   return Array.from(teamSet).sort();

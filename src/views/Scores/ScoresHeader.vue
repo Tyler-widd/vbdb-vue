@@ -13,6 +13,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  teams: {
+    type: Array,
+    default: () => [],
+  },
   loading: {
     type: Boolean,
     default: false,
@@ -22,8 +26,12 @@ const props = defineProps({
     default: null,
   },
   conferenceFilter: {
-    type: String,
-    default: null,
+    type: Array, // Changed to Array for multi-select
+    default: () => [],
+  },
+  selectedTeams: {
+    type: Array,
+    default: () => [],
   },
   searchText: {
     type: String,
@@ -34,6 +42,7 @@ const props = defineProps({
 const emit = defineEmits([
   "update:division-filter",
   "update:conference-filter",
+  "update:teams",
   "update:search",
 ]);
 
@@ -43,6 +52,10 @@ const handleDivisionChange = (value) => {
 
 const handleConferenceChange = (value) => {
   emit("update:conference-filter", value);
+};
+
+const handleTeamChange = (value) => {
+  emit("update:teams", value);
 };
 
 const handleSearchChange = (value) => {
@@ -65,27 +78,45 @@ const handleSearchChange = (value) => {
           clearable
         />
       </v-col>
-      <v-col :cols="smAndDown ? 12 : 6">
-        <v-autocomplete
-          :model-value="conferenceFilter"
-          @update:model-value="handleConferenceChange"
-          label="Conference"
-          :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
-          :items="conferences"
-          :disabled="loading"
-          clearable
-        />
-      </v-col>
-      <v-col cols="12">
-        <v-text-field
-          label="Search teams"
-          :model-value="searchText"
-          @update:model-value="handleSearchChange"
-          prepend-inner-icon="mdi-magnify"
-          :disabled="loading"
-          clearable
-        />
-      </v-col>
+       <v-col :cols="smAndDown ? 12 : 6">
+         <v-autocomplete
+           :model-value="conferenceFilter"
+           @update:model-value="handleConferenceChange"
+           label="Conference"
+           :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
+           :items="conferences"
+           :disabled="loading || !conferences.length"
+           clearable
+           multiple
+           chips
+           closable-chips
+         />
+       </v-col>
+       <v-col :cols="smAndDown ? 12 : 6">
+         <v-autocomplete
+           :model-value="selectedTeams"
+           @update:model-value="handleTeamChange"
+           label="Teams"
+           :class="smAndDown ? 'mb-2' : 'mb-2 mr-2'"
+           :items="teams"
+           :disabled="loading || !teams.length"
+           clearable
+           multiple
+           chips
+           closable-chips
+         />
+       </v-col>
+       <v-col :cols="smAndDown ? 12 : 6">
+         <v-text-field
+           label="Search"
+           :model-value="searchText"
+           @update:model-value="handleSearchChange"
+           prepend-inner-icon="mdi-magnify"
+           :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
+           :disabled="loading"
+           clearable
+         />
+       </v-col>
     </v-row>
   </v-card>
 </template>

@@ -12,14 +12,7 @@ const props = defineProps({
   },
 });
 
-// Create reactive reference for search text
-const searchText = ref("");
-
-const handleSearchUpdate = (value) => {
-  searchText.value = value;
-  // Also update the search in the composable
-  scoresData.setSearch(value);
-};
+// Search is now handled directly in the composable
 
 const scoresData = useScoresData();
 </script>
@@ -30,19 +23,20 @@ const scoresData = useScoresData();
       class="mt-3"
       :divisions="scoresData.divisions.value"
       :conferences="scoresData.conferences.value"
+      :teams="scoresData.teams.value"
       :loading="scoresData.loading.value"
       :division-filter="scoresData.divisionFilter.value"
       :conference-filter="scoresData.conferenceFilter.value"
-      :search-text="searchText"
+      :selected-teams="scoresData.teamFilter.value"
       @update:division-filter="scoresData.setDivisionFilter"
       @update:conference-filter="scoresData.setConferenceFilter"
-      @update:search="handleSearchUpdate"
+      @update:teams="scoresData.setTeamFilter"
+      @update:search="scoresData.setSearch"
     />
     <ScoresScoreCard
       :scores="scoresData.filteredScores.value"
       :loading="scoresData.loading.value"
       :org-id="orgId"
-      :search-text="searchText"
     />
   </div>
 </template>

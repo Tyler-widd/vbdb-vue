@@ -7,7 +7,8 @@ export function useScoresData() {
   const loading = ref(false);
   const error = ref(null);
   const divisionFilter = ref(null);
-  const conferenceFilter = ref(null);
+  const conferenceFilter = ref([]); // Changed to array for multi-select
+  const teamFilter = ref([]); // New team filter
   const search = ref("");
 
   // Helper function to format conference names
@@ -34,36 +35,27 @@ export function useScoresData() {
   });
 
   const conferences = computed(() => {
+    let filteredScores = scores.value;
+
+    // Filter by division if selected
+    if (divisionFilter.value) {
+      filteredScores = filteredScores.filter(
+        (score) =>
+          score.team_1_division === divisionFilter.value ||
+          score.team_2_division === divisionFilter.value
+      );
+    }
+
+    // Extract unique conferences from filtered scores
     const conferenceSet = new Set();
-    scores.value.forEach((score) => {
-      // If division filter is set, only include conferences from teams in that division
-      if (divisionFilter.value) {
-        // Check team 1
-        if (
-          score.team_1_division === divisionFilter.value &&
-          score.team_1_conference
-        ) {
-          const formatted = formatConference(score.team_1_conference);
-          conferenceSet.add(formatted);
-        }
-        // Check team 2
-        if (
-          score.team_2_division === divisionFilter.value &&
-          score.team_2_conference
-        ) {
-          const formatted = formatConference(score.team_2_conference);
-          conferenceSet.add(formatted);
-        }
-      } else {
-        // No division filter, show all conferences
-        if (score.team_1_conference) {
-          const formatted = formatConference(score.team_1_conference);
-          conferenceSet.add(formatted);
-        }
-        if (score.team_2_conference) {
-          const formatted = formatConference(score.team_2_conference);
-          conferenceSet.add(formatted);
-        }
+    filteredScores.forEach((score) => {
+      if (score.team_1_conference) {
+        const formatted = formatConference(score.team_1_conference);
+        conferenceSet.add(formatted);
+      }
+      if (score.team_2_conference) {
+        const formatted = formatConference(score.team_2_conference);
+        conferenceSet.add(formatted);
       }
     });
 
@@ -90,6 +82,45 @@ export function useScoresData() {
         return a.localeCompare(b);
       }
     });
+  });
+
+  // Get available teams based on selected division and conference
+  const teams = computed(() => {
+    let filteredScores = scores.value;
+
+    // Filter by division if selected
+    if (divisionFilter.value) {
+      filteredScores = filteredScores.filter(
+        (score) =>
+          score.team_1_division === divisionFilter.value ||
+          score.team_2_division === divisionFilter.value
+      );
+    }
+
+    // Extract unique teams from filtered scores, but only include teams that belong to selected conferences
+    const teamSet = new Set();
+
+    filteredScores.forEach((score) => {
+      // Add team 1 if no conference filter is selected, or if it belongs to selected conferences
+      if (score.team_1_name) {
+        if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
+          teamSet.add(score.team_1_name);
+        } else if (conferenceFilter.value.includes(formatConference(score.team_1_conference))) {
+          teamSet.add(score.team_1_name);
+        }
+      }
+
+      // Add team 2 if no conference filter is selected, or if it belongs to selected conferences
+      if (score.team_2_name) {
+        if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
+          teamSet.add(score.team_2_name);
+        } else if (conferenceFilter.value.includes(formatConference(score.team_2_conference))) {
+          teamSet.add(score.team_2_name);
+        }
+      }
+    });
+
+    return Array.from(teamSet).sort();
   });
 
   // NAIA Standings calculation
@@ -209,12 +240,21 @@ export function useScoresData() {
       );
     }
 
-    // Apply conference filter
-    if (conferenceFilter.value) {
+    // Apply conference filter (array)
+    if (conferenceFilter.value && conferenceFilter.value.length > 0) {
       filtered = filtered.filter(
         (score) =>
-          score.team_1_conference === conferenceFilter.value ||
-          score.team_2_conference === conferenceFilter.value
+          conferenceFilter.value.includes(score.team_1_conference) ||
+          conferenceFilter.value.includes(score.team_2_conference)
+      );
+    }
+
+    // Apply team filter
+    if (teamFilter.value && teamFilter.value.length > 0) {
+      filtered = filtered.filter(
+        (score) =>
+          teamFilter.value.includes(score.team_1_name) ||
+          teamFilter.value.includes(score.team_2_name)
       );
     }
 
@@ -239,8 +279,11 @@ export function useScoresData() {
 
     try {
       const response = await fetch(
-        "https://api.volleyballdatabased.com/current_games"
-      ); // Your API endpoint
+        "https://api.volleyballdatabased.com/results"
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch scores data");
+      }
       const data = await response.json();
       scores.value = data;
     } catch (err) {
@@ -260,13 +303,18 @@ export function useScoresData() {
     conferenceFilter.value = conference;
   };
 
+  const setTeamFilter = (teams) => {
+    teamFilter.value = teams;
+  };
+
   const setSearch = (searchTerm) => {
     search.value = searchTerm;
   };
 
   const clearFilters = () => {
     divisionFilter.value = null;
-    conferenceFilter.value = null;
+    conferenceFilter.value = [];
+    teamFilter.value = [];
     search.value = "";
   };
 
@@ -280,11 +328,13 @@ export function useScoresData() {
     error,
     divisionFilter,
     conferenceFilter,
+    teamFilter,
     search,
 
     // Computed
     divisions,
     conferences,
+    teams,
     transformedScores,
     filteredScores,
     naiaStandings,
@@ -293,6 +343,7 @@ export function useScoresData() {
     fetchScores,
     setDivisionFilter,
     setConferenceFilter,
+    setTeamFilter,
     setSearch,
     clearFilters,
   };

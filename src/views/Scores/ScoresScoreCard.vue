@@ -16,11 +16,6 @@ const props = defineProps({
     type: String,
     default: null,
   },
-  // Add search text prop
-  searchText: {
-    type: String,
-    default: "",
-  },
 });
 
 const currentPage = ref(1);
@@ -79,14 +74,15 @@ const formattedScores = computed(() => {
       return {
         id: game.match_id,
         formattedDate: formatDate(game.date),
+        time: game.time,
         date: game.date,
-        team1Name: game.team_1,
-        team1Img: game.team_1_img,
+        team1Name: game.team_1_name,
+        team1Img: game.team_1_logo,
         team1Conference: game.team_1_conference,
         team1Id: game.team_1_id,
         team1Division: game.team_1_division,
-        team2Name: game.team_2,
-        team2Img: game.team_2_img,
+        team2Name: game.team_2_name,
+        team2Img: game.team_2_logo,
         team2Conference: game.team_2_conference,
         team2Id: game.team_2_id,
         team2Division: game.team_2_division,
@@ -98,17 +94,6 @@ const formattedScores = computed(() => {
       };
     })
     .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date descending
-
-  // Apply search filter
-  if (props.searchText && props.searchText.trim() !== "") {
-    const searchTerm = props.searchText.toLowerCase().trim();
-    filteredScores = filteredScores.filter((game) => {
-      return (
-        game.team1Name.toLowerCase().includes(searchTerm) ||
-        game.team2Name.toLowerCase().includes(searchTerm)
-      );
-    });
-  }
 
   return filteredScores;
 });
@@ -129,14 +114,7 @@ const totalPages = computed(() => {
   return Math.ceil(formattedScores.value.length / itemsPerPage);
 });
 
-// Watch for search text changes and reset pagination
-import { watch } from "vue";
-watch(
-  () => props.searchText,
-  () => {
-    currentPage.value = 1;
-  }
-);
+
 </script>
 
 <template>
@@ -151,6 +129,7 @@ watch(
       :key="item.id"
       :id="item.id"
       :formatted-date="item.formattedDate"
+      :time="item.time"
       :team1-name="item.team1Name"
       :team1-img="item.team1Img"
       :team1-conference="item.team1Conference"
@@ -195,18 +174,10 @@ watch(
     <v-col cols="12" class="text-center pa-4">
       <v-icon size="48" color="medium-emphasis">mdi-volleyball</v-icon>
       <p class="text-h6 mt-2 text-medium-emphasis">
-        {{
-          props.searchText
-            ? "No teams found matching your search"
-            : "No scores found"
-        }}
+        No scores found
       </p>
       <p class="text-body-2 text-medium-emphasis">
-        {{
-          props.searchText
-            ? "Try a different search term"
-            : "Try adjusting your filters"
-        }}
+        Try adjusting your filters
       </p>
     </v-col>
   </v-row>
