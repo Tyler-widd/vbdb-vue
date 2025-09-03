@@ -10,6 +10,7 @@ export function useScoresData() {
   const conferenceFilter = ref([]); // Changed to array for multi-select
   const teamFilter = ref([]); // New team filter
   const search = ref("");
+  const rankedOnlyFilter = ref(false); // New filter for ranked teams only
 
   // Helper function to format conference names
   const formatConference = (conference) => {
@@ -22,6 +23,12 @@ export function useScoresData() {
     }
 
     return conference;
+  };
+
+  // Helper function to format rank display
+  const formatRank = (rank) => {
+    if (!rank || rank === null) return null;
+    return `#${rank}`;
   };
 
   // Computed properties
@@ -105,7 +112,11 @@ export function useScoresData() {
       if (score.team_1_name) {
         if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
           teamSet.add(score.team_1_name);
-        } else if (conferenceFilter.value.includes(formatConference(score.team_1_conference))) {
+        } else if (
+          conferenceFilter.value.includes(
+            formatConference(score.team_1_conference)
+          )
+        ) {
           teamSet.add(score.team_1_name);
         }
       }
@@ -114,13 +125,27 @@ export function useScoresData() {
       if (score.team_2_name) {
         if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
           teamSet.add(score.team_2_name);
-        } else if (conferenceFilter.value.includes(formatConference(score.team_2_conference))) {
+        } else if (
+          conferenceFilter.value.includes(
+            formatConference(score.team_2_conference)
+          )
+        ) {
           teamSet.add(score.team_2_name);
         }
       }
     });
 
     return Array.from(teamSet).sort();
+  });
+
+  // Get ranked teams for easy filtering
+  const rankedTeams = computed(() => {
+    const rankedSet = new Set();
+    scores.value.forEach((score) => {
+      if (score.team_1_rank) rankedSet.add(score.team_1_name);
+      if (score.team_2_rank) rankedSet.add(score.team_2_name);
+    });
+    return Array.from(rankedSet).sort();
   });
 
   // NAIA Standings calculation
@@ -218,6 +243,17 @@ export function useScoresData() {
         // Format conferences in the transformed data
         team_1_conference: formatConference(score.team_1_conference),
         team_2_conference: formatConference(score.team_2_conference),
+        // Format rankings for display
+        team_1_rank_display: formatRank(score.team_1_rank),
+        team_2_rank_display: formatRank(score.team_2_rank),
+        // Helper flags for ranked status
+        team_1_is_ranked:
+          score.team_1_rank !== null && score.team_1_rank !== undefined,
+        team_2_is_ranked:
+          score.team_2_rank !== null && score.team_2_rank !== undefined,
+        has_ranked_team:
+          (score.team_1_rank !== null && score.team_1_rank !== undefined) ||
+          (score.team_2_rank !== null && score.team_2_rank !== undefined),
         score: sets.join(", "),
         formattedDate: new Date(score.date).toLocaleDateString(),
         formattedTime: score.time,
@@ -258,6 +294,11 @@ export function useScoresData() {
       );
     }
 
+    // Apply ranked teams only filter
+    if (rankedOnlyFilter.value) {
+      filtered = filtered.filter((score) => score.has_ranked_team);
+    }
+
     // Apply search filter
     if (search.value) {
       const searchTerm = search.value.toLowerCase();
@@ -270,6 +311,18 @@ export function useScoresData() {
     }
 
     return filtered;
+  });
+
+  // Get top ranked matchups (games between ranked teams)
+  const rankedMatchups = computed(() => {
+    return filteredScores.value
+      .filter((score) => score.team_1_is_ranked && score.team_2_is_ranked)
+      .sort((a, b) => {
+        // Sort by combined ranking (lower numbers = higher ranking)
+        const aTotal = (a.team_1_rank || 999) + (a.team_2_rank || 999);
+        const bTotal = (b.team_1_rank || 999) + (b.team_2_rank || 999);
+        return aTotal - bTotal;
+      });
   });
 
   // Methods
@@ -307,6 +360,10 @@ export function useScoresData() {
     teamFilter.value = teams;
   };
 
+  const setRankedOnlyFilter = (rankedOnly) => {
+    rankedOnlyFilter.value = rankedOnly;
+  };
+
   const setSearch = (searchTerm) => {
     search.value = searchTerm;
   };
@@ -315,6 +372,7 @@ export function useScoresData() {
     divisionFilter.value = null;
     conferenceFilter.value = [];
     teamFilter.value = [];
+    rankedOnlyFilter.value = false;
     search.value = "";
   };
 
@@ -329,14 +387,17 @@ export function useScoresData() {
     divisionFilter,
     conferenceFilter,
     teamFilter,
+    rankedOnlyFilter,
     search,
 
     // Computed
     divisions,
     conferences,
     teams,
+    rankedTeams,
     transformedScores,
     filteredScores,
+    rankedMatchups,
     naiaStandings,
 
     // Methods
@@ -344,6 +405,7 @@ export function useScoresData() {
     setDivisionFilter,
     setConferenceFilter,
     setTeamFilter,
+    setRankedOnlyFilter,
     setSearch,
     clearFilters,
   };

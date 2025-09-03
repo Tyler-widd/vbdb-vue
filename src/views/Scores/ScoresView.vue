@@ -3,6 +3,7 @@
 import { ref } from "vue";
 import ScoresHeader from "./ScoresHeader.vue";
 import ScoresScoreCard from "./ScoresScoreCard.vue";
+import ScoresTable from "./ScoresTable.vue";
 import { useScoresData } from "@/composables/useScoresData";
 
 const props = defineProps({
@@ -12,8 +13,10 @@ const props = defineProps({
   },
 });
 
-// Search is now handled directly in the composable
+// State for table view toggle
+const showTableView = ref(true);
 
+// Use the scores data composable
 const scoresData = useScoresData();
 </script>
 
@@ -28,12 +31,23 @@ const scoresData = useScoresData();
       :division-filter="scoresData.divisionFilter.value"
       :conference-filter="scoresData.conferenceFilter.value"
       :selected-teams="scoresData.teamFilter.value"
+      :show-table-view="showTableView"
       @update:division-filter="scoresData.setDivisionFilter"
       @update:conference-filter="scoresData.setConferenceFilter"
       @update:teams="scoresData.setTeamFilter"
       @update:search="scoresData.setSearch"
+      @update:show-table-view="showTableView = $event"
+    />
+
+    <!-- Conditionally render either table or card view -->
+    <ScoresTable
+      v-if="showTableView"
+      :scores="scoresData.filteredScores.value"
+      :loading="scoresData.loading.value"
+      :org-id="orgId"
     />
     <ScoresScoreCard
+      v-else
       :scores="scoresData.filteredScores.value"
       :loading="scoresData.loading.value"
       :org-id="orgId"

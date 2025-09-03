@@ -37,6 +37,10 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  showTableView: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const emit = defineEmits([
@@ -44,6 +48,7 @@ const emit = defineEmits([
   "update:conference-filter",
   "update:teams",
   "update:search",
+  "update:show-table-view",
 ]);
 
 const handleDivisionChange = (value) => {
@@ -61,11 +66,33 @@ const handleTeamChange = (value) => {
 const handleSearchChange = (value) => {
   emit("update:search", value);
 };
+
+const handleShowTableViewChange = (value) => {
+  emit("update:show-table-view", value);
+};
 </script>
 
 <template>
   <v-card class="px-4 pb-4 pt-2">
-    <v-card-title class="pt-0">Scores</v-card-title>
+    <div class="d-flex align-center justify-space-between">
+      <div class="d-flex align-center">
+        <v-card-title :class="smAndDown ? 'pa-0 mr-2 pl-2' : ''" class="pt-0"
+          >Scores</v-card-title
+        >
+        <v-card-subtitle
+          :class="smAndDown ? 'pa-0' : ''"
+          class="text-caption text-left font-weight-light font-italic"
+          >Click Sets & Scores for boxscore</v-card-subtitle
+        >
+      </div>
+      <v-checkbox
+        :model-value="showTableView"
+        label="Table view"
+        density="compact"
+        hide-details
+        @update:model-value="handleShowTableViewChange"
+      />
+    </div>
     <v-row dense no-gutters class="pa-0">
       <v-col :cols="smAndDown ? 12 : 6">
         <v-autocomplete
@@ -78,45 +105,45 @@ const handleSearchChange = (value) => {
           clearable
         />
       </v-col>
-       <v-col :cols="smAndDown ? 12 : 6">
-         <v-autocomplete
-           :model-value="conferenceFilter"
-           @update:model-value="handleConferenceChange"
-           label="Conference"
-           :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
-           :items="conferences"
-           :disabled="loading || !conferences.length"
-           clearable
-           multiple
-           chips
-           closable-chips
-         />
-       </v-col>
-       <v-col :cols="smAndDown ? 12 : 6">
-         <v-autocomplete
-           :model-value="selectedTeams"
-           @update:model-value="handleTeamChange"
-           label="Teams"
-           :class="smAndDown ? 'mb-2' : 'mb-2 mr-2'"
-           :items="teams"
-           :disabled="loading || !teams.length"
-           clearable
-           multiple
-           chips
-           closable-chips
-         />
-       </v-col>
-       <v-col :cols="smAndDown ? 12 : 6">
-         <v-text-field
-           label="Search"
-           :model-value="searchText"
-           @update:model-value="handleSearchChange"
-           prepend-inner-icon="mdi-magnify"
-           :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
-           :disabled="loading"
-           clearable
-         />
-       </v-col>
+      <v-col :cols="smAndDown ? 12 : 6">
+        <v-autocomplete
+          :model-value="conferenceFilter"
+          @update:model-value="handleConferenceChange"
+          label="Conference"
+          :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
+          :items="conferences"
+          :disabled="loading || !conferences.length"
+          clearable
+          multiple
+          chips
+          closable-chips
+        />
+      </v-col>
+      <v-col :cols="smAndDown ? 12 : 6">
+        <v-autocomplete
+          :model-value="selectedTeams"
+          @update:model-value="handleTeamChange"
+          label="Teams"
+          :class="smAndDown ? 'mb-2' : 'mb-2 mr-2'"
+          :items="teams"
+          :disabled="loading || !teams.length"
+          clearable
+          multiple
+          chips
+          closable-chips
+        />
+      </v-col>
+      <v-col :cols="smAndDown ? 12 : 6">
+        <v-text-field
+          label="Search"
+          :model-value="searchText"
+          @update:model-value="handleSearchChange"
+          prepend-inner-icon="mdi-magnify"
+          :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
+          :disabled="loading"
+          clearable
+        />
+      </v-col>
     </v-row>
   </v-card>
 </template>

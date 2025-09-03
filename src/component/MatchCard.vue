@@ -162,12 +162,6 @@ const getSetScoreColor = (teamScore, opponentScore, teamId) => {
     return "text-medium-emphasis";
   }
 };
-
-// Get the maximum number of sets to display (up to 5)
-const maxSetsToShow = computed(() => {
-  if (!hasIndividualSets.value) return 0;
-  return Math.min(props.individualSets.length, 5);
-});
 </script>
 
 <template>
@@ -339,16 +333,23 @@ const maxSetsToShow = computed(() => {
 
       <!-- Box Score Link with Time (if available) -->
       <div v-if="boxScore || time" class="d-flex justify-center align-center">
+        <div v-if="$route.path === '/scores'" class="text-caption pt-1">
+          {{ formattedDate }}
+        </div>
         <v-btn
           v-if="boxScore"
           :href="boxScore"
           target="_blank"
           variant="text"
+          class="mb-1"
           size="small"
           color="primary"
           prepend-icon="mdi-chart-box-outline"
         >
-          {{ matchStatus === "completed" ? "Box Score" : "Live Stats" }}
+          Box Score
+          <div v-if="$route.path !== '/scores'">
+            {{ matchStatus === "completed" ? "Box Score" : "Live Stats" }}
+          </div>
         </v-btn>
         <span
           v-if="time && boxScore"

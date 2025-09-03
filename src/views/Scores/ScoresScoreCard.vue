@@ -74,7 +74,6 @@ const formattedScores = computed(() => {
       return {
         id: game.match_id,
         formattedDate: formatDate(game.date),
-        time: game.time,
         date: game.date,
         team1Name: game.team_1_name,
         team1Img: game.team_1_logo,
@@ -113,8 +112,6 @@ const paginatedData = computed(() => {
 const totalPages = computed(() => {
   return Math.ceil(formattedScores.value.length / itemsPerPage);
 });
-
-
 </script>
 
 <template>
@@ -129,7 +126,6 @@ const totalPages = computed(() => {
       :key="item.id"
       :id="item.id"
       :formatted-date="item.formattedDate"
-      :time="item.time"
       :team1-name="item.team1Name"
       :team1-img="item.team1Img"
       :team1-conference="item.team1Conference"
@@ -173,12 +169,8 @@ const totalPages = computed(() => {
   <v-row v-if="!loading && formattedScores.length === 0" class="justify-center">
     <v-col cols="12" class="text-center pa-4">
       <v-icon size="48" color="medium-emphasis">mdi-volleyball</v-icon>
-      <p class="text-h6 mt-2 text-medium-emphasis">
-        No scores found
-      </p>
-      <p class="text-body-2 text-medium-emphasis">
-        Try adjusting your filters
-      </p>
+      <p class="text-h6 mt-2 text-medium-emphasis">No scores found</p>
+      <p class="text-body-2 text-medium-emphasis">Try adjusting your filters</p>
     </v-col>
   </v-row>
 </template>
