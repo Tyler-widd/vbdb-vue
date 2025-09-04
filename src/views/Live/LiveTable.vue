@@ -26,40 +26,18 @@ const props = defineProps({
 // Define table headers matching ScoresTable structure
 const headers = computed(() => [
   {
-    title: "Date/Time",
-    key: "datetime",
-    sortable: false,
-    width: smAndDown.value ? "100px" : "140px",
-  },
-  {
     title: "Teams",
     key: "team_1",
     sortable: false,
-    width: smAndDown.value ? "180px" : "240px",
+    width: smAndDown.value ? "180px" : "320px",
   },
   {
     title: "Sets & Score",
     key: "scoreAndSets",
     sortable: false,
-    width: smAndDown.value ? "120px" : "280px",
+    width: smAndDown.value ? "" : "auto",
   },
 ]);
-
-// Format date for display
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
-
-// Format time for display
-const formatTime = (timeStr) => {
-  if (!timeStr) return "";
-  return timeStr;
-};
 
 // Helper function to format rank display
 const formatRank = (rank) => {
@@ -70,7 +48,7 @@ const formatRank = (rank) => {
 // Get team name color based on match status and winner
 const getTeamNameColor = (teamId, match, currentSetScore = null) => {
   if (match.status === "not_started") {
-    return "text-primary";
+    return "font-weight-light\\";
   }
 
   if (match.status === "in_progress") {
@@ -137,18 +115,6 @@ const navigateToBoxScore = (event, item) => {
   }
 };
 
-// Get status chip for live matches
-const getStatusChip = (match) => {
-  if (match.status === "in_progress") {
-    return {
-      text: "LIVE",
-      color: "error",
-      showIcon: true,
-    };
-  }
-  return null;
-};
-
 // Format matches data for table
 const formattedMatchesForTable = computed(() => {
   return props.formattedMatches.map((match) => ({
@@ -175,46 +141,12 @@ const formattedMatchesForTable = computed(() => {
       no-data-text="No matches found"
       loading-text="Loading live matches..."
     >
-      <template v-slot:header.datetime>
-        <span class="ml-2 pa-0">Date/Time</span>
+      <template v-slot:header.team_1>
+        <span class="ml-2 pa-0">Teams</span>
       </template>
-
-      <!-- Date/Time column -->
-      <template v-slot:item.datetime="{ item }">
-        <div class="ml-2">
-          <div class="text-body-2">
-            {{ item.formattedDate }}
-            <!-- Add special indicator for ranked matchups -->
-            <v-chip
-              v-if="item.team1IsRanked && item.team2IsRanked"
-              size="x-small"
-              color="warning"
-              class="ml-1"
-              variant="tonal"
-            >
-              TOP
-            </v-chip>
-          </div>
-          <div v-if="item.time" class="text-caption text-medium-emphasis">
-            {{ formatTime(item.time) }}
-          </div>
-          <!-- Live status chip -->
-          <v-chip
-            v-if="item.status === 'in_progress'"
-            size="x-small"
-            color="error"
-            class="mt-1"
-            variant="flat"
-          >
-            <v-icon size="10" class="mr-1">mdi-circle</v-icon>
-            LIVE
-          </v-chip>
-        </div>
-      </template>
-
       <!-- Teams column -->
       <template v-slot:item.team_1="{ item }">
-        <div class="d-flex align-center my-2">
+        <div class="d-flex align-center my-2 ml-2">
           <div class="w-100">
             <!-- Team 1 -->
             <div class="d-flex align-center">
@@ -302,7 +234,11 @@ const formattedMatchesForTable = computed(() => {
       <!-- Combined Score & Sets column -->
       <template v-slot:item.scoreAndSets="{ item }">
         <div class="d-flex align-center">
-          <div class="d-flex flex-column align-center">
+          <!-- Show scores for completed/in-progress matches -->
+          <div
+            v-if="item.status !== 'not_started'"
+            class="d-flex flex-column align-center"
+          >
             <!-- Team 1 score and sets -->
             <div class="button-like" @click="navigateToBoxScore($event, item)">
               <div class="d-flex align-center">
@@ -365,6 +301,19 @@ const formattedMatchesForTable = computed(() => {
               </div>
             </div>
           </div>
+
+          <!-- Show link for upcoming matches -->
+          <div v-else-if="item.live_stats_url" class="d-flex align-center">
+            <v-btn variant="outlined" @click="navigateToBoxScore($event, item)">
+              <v-icon size="16" class="mr-1">mdi-open-in-new</v-icon>
+              Live Stats
+            </v-btn>
+          </div>
+
+          <!-- Show placeholder for upcoming matches without live stats -->
+          <div v-else class="text-caption text-medium-emphasis">Upcoming</div>
+
+          <!-- Current set indicator (only for in-progress matches) -->
           <div
             v-if="item.status === 'in_progress' && item.currentSet"
             class="text-caption text-medium-emphasis ml-4"
