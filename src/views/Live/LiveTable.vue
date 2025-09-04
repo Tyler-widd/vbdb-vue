@@ -304,7 +304,11 @@ const formattedMatchesForTable = computed(() => {
 
           <!-- Show link for upcoming matches -->
           <div v-else-if="item.live_stats_url" class="d-flex align-center">
-            <v-btn variant="outlined" @click="navigateToBoxScore($event, item)">
+            <v-btn
+              variant="outlined"
+              color="primary"
+              @click="navigateToBoxScore($event, item)"
+            >
               <v-icon size="16" class="mr-1">mdi-open-in-new</v-icon>
               Live Stats
             </v-btn>
