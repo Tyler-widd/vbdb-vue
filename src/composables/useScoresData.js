@@ -56,13 +56,24 @@ export function useScoresData() {
     // Extract unique conferences from filtered scores
     const conferenceSet = new Set();
     filteredScores.forEach((score) => {
-      if (score.team_1_conference) {
-        const formatted = formatConference(score.team_1_conference);
-        conferenceSet.add(formatted);
+      // Only add conferences from teams that match the division filter
+      if (
+        !divisionFilter.value ||
+        score.team_1_division === divisionFilter.value
+      ) {
+        if (score.team_1_conference) {
+          const formatted = formatConference(score.team_1_conference);
+          conferenceSet.add(formatted);
+        }
       }
-      if (score.team_2_conference) {
-        const formatted = formatConference(score.team_2_conference);
-        conferenceSet.add(formatted);
+      if (
+        !divisionFilter.value ||
+        score.team_2_division === divisionFilter.value
+      ) {
+        if (score.team_2_conference) {
+          const formatted = formatConference(score.team_2_conference);
+          conferenceSet.add(formatted);
+        }
       }
     });
 
@@ -104,38 +115,75 @@ export function useScoresData() {
       );
     }
 
-    // Extract unique teams from filtered scores, but only include teams that belong to selected conferences
-    const teamSet = new Set();
-
-    filteredScores.forEach((score) => {
-      // Add team 1 if no conference filter is selected, or if it belongs to selected conferences
-      if (score.team_1_name) {
-        if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
-          teamSet.add(score.team_1_name);
-        } else if (
+    // Filter by conferences if selected
+    if (conferenceFilter.value && conferenceFilter.value.length > 0) {
+      filteredScores = filteredScores.filter(
+        (score) =>
           conferenceFilter.value.includes(
             formatConference(score.team_1_conference)
-          )
-        ) {
-          teamSet.add(score.team_1_name);
-        }
-      }
-
-      // Add team 2 if no conference filter is selected, or if it belongs to selected conferences
-      if (score.team_2_name) {
-        if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
-          teamSet.add(score.team_2_name);
-        } else if (
+          ) ||
           conferenceFilter.value.includes(
             formatConference(score.team_2_conference)
           )
-        ) {
-          teamSet.add(score.team_2_name);
-        }
+      );
+    }
+
+    // Extract unique teams from filtered scores
+    const teamMap = new Map();
+
+    filteredScores.forEach((score) => {
+      // Check if team 1 matches current filters
+      const team1MatchesDivision =
+        !divisionFilter.value || score.team_1_division === divisionFilter.value;
+      const team1MatchesConference =
+        conferenceFilter.value.length === 0 ||
+        conferenceFilter.value.includes(
+          formatConference(score.team_1_conference)
+        );
+
+      // Check if team 2 matches current filters
+      const team2MatchesDivision =
+        !divisionFilter.value || score.team_2_division === divisionFilter.value;
+      const team2MatchesConference =
+        conferenceFilter.value.length === 0 ||
+        conferenceFilter.value.includes(
+          formatConference(score.team_2_conference)
+        );
+
+      // Add team 1 if it matches all filters
+      if (
+        team1MatchesDivision &&
+        team1MatchesConference &&
+        score.team_1_name &&
+        score.team_1_id
+      ) {
+        teamMap.set(score.team_1_id, {
+          title: score.team_1_name,
+          value: score.team_1_id,
+          division: score.team_1_division,
+          conference: formatConference(score.team_1_conference),
+        });
+      }
+
+      // Add team 2 if it matches all filters
+      if (
+        team2MatchesDivision &&
+        team2MatchesConference &&
+        score.team_2_name &&
+        score.team_2_id
+      ) {
+        teamMap.set(score.team_2_id, {
+          title: score.team_2_name,
+          value: score.team_2_id,
+          division: score.team_2_division,
+          conference: formatConference(score.team_2_conference),
+        });
       }
     });
 
-    return Array.from(teamSet).sort();
+    return Array.from(teamMap.values()).sort((a, b) =>
+      a.title.localeCompare(b.title)
+    );
   });
 
   // Get ranked teams for easy filtering
@@ -285,12 +333,12 @@ export function useScoresData() {
       );
     }
 
-    // Apply team filter
+    // Apply team filter (now using team IDs)
     if (teamFilter.value && teamFilter.value.length > 0) {
       filtered = filtered.filter(
         (score) =>
-          teamFilter.value.includes(score.team_1_name) ||
-          teamFilter.value.includes(score.team_2_name)
+          teamFilter.value.includes(score.team_1_id) ||
+          teamFilter.value.includes(score.team_2_id)
       );
     }
 
@@ -304,8 +352,12 @@ export function useScoresData() {
       const searchTerm = search.value.toLowerCase();
       filtered = filtered.filter(
         (score) =>
-          score.team_1.toLowerCase().includes(searchTerm) ||
-          score.team_2.toLowerCase().includes(searchTerm) ||
+          score.team_1_name?.toLowerCase().includes(searchTerm) ||
+          score.team_2_name?.toLowerCase().includes(searchTerm) ||
+          score.team_1_conference?.toLowerCase().includes(searchTerm) ||
+          score.team_2_conference?.toLowerCase().includes(searchTerm) ||
+          score.team_1_division?.toLowerCase().includes(searchTerm) ||
+          score.team_2_division?.toLowerCase().includes(searchTerm) ||
           (score.location && score.location.toLowerCase().includes(searchTerm))
       );
     }
@@ -348,12 +400,15 @@ export function useScoresData() {
 
   const setDivisionFilter = (division) => {
     divisionFilter.value = division;
-    // Clear conference filter when division changes since available conferences will change
-    conferenceFilter.value = null;
+    // Clear dependent filters when division changes
+    conferenceFilter.value = [];
+    teamFilter.value = [];
   };
 
-  const setConferenceFilter = (conference) => {
-    conferenceFilter.value = conference;
+  const setConferenceFilter = (conferences) => {
+    conferenceFilter.value = conferences;
+    // Clear team filter when conference changes since available teams will change
+    teamFilter.value = [];
   };
 
   const setTeamFilter = (teams) => {

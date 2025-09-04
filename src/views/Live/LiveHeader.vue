@@ -32,17 +32,13 @@ const props = defineProps({
   },
   showOnlyLive: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   showCompleted: {
     type: Boolean,
     default: false,
   },
   showUpcoming: {
-    type: Boolean,
-    default: false,
-  },
-  showTableView: {
     type: Boolean,
     default: false,
   },
@@ -60,7 +56,6 @@ const emit = defineEmits([
   "update:show-only-live",
   "update:show-completed",
   "update:show-upcoming",
-  "update:show-table-view",
 ]);
 
 // Handle filter changes
@@ -88,10 +83,6 @@ const handleShowUpcomingChange = (value) => {
   emit("update:show-upcoming", value);
 };
 
-const handleShowTableViewChange = (value) => {
-  emit("update:show-table-view", value);
-};
-
 const handleTeamChange = (value) => {
   emit("update:teams", value);
 };
@@ -99,6 +90,15 @@ const handleTeamChange = (value) => {
 
 <template>
   <v-card class="mb-4 px-4 pt-4 pb-2">
+    <v-chip
+      v-if="isPolling"
+      size="x-small"
+      color="success"
+      variant="tonal"
+      class="mb-2"
+    >
+      Auto-refreshing every 20s
+    </v-chip>
     <div class="d-flex align-center justify-space-between">
       <v-card-title class="pt-0">Live</v-card-title>
       <div class="d-flex align-center gap-3 flex-wrap">
@@ -122,13 +122,6 @@ const handleTeamChange = (value) => {
           density="compact"
           hide-details
           @update:model-value="handleShowUpcomingChange"
-        />
-        <v-checkbox
-          :model-value="showTableView"
-          label="Table view"
-          density="compact"
-          hide-details
-          @update:model-value="handleShowTableViewChange"
         />
       </div>
     </div>

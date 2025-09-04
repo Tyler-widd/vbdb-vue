@@ -80,6 +80,7 @@ export default function useLiveData() {
           team1School?.conference === team2School?.conference
             ? team1School.conference
             : null,
+        live_stats_url: match.live_stats_url || null,
       };
     });
   };

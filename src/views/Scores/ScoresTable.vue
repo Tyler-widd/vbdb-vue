@@ -154,7 +154,7 @@ const getTeamNameColor = (teamId, match) => {
 // Get set score color
 const getSetScoreColor = (teamScore, opponentScore) => {
   if (teamScore > opponentScore) {
-    return "text-primary font-weight-bold";
+    return "text-primary";
   }
   return "text-medium-emphasis";
 };
@@ -298,7 +298,6 @@ const getRankBadgeColor = (rank) => {
                   :class="[
                     'mr-2',
                     smAndDown ? 'text-body-2' : 'text-subtitle-1',
-                    'font-weight-bold',
                     getTeamNameColor(item.team1Id, item),
                   ]"
                 >
@@ -329,7 +328,6 @@ const getRankBadgeColor = (rank) => {
                   :class="[
                     'mr-2',
                     smAndDown ? 'text-body-2' : 'text-subtitle-1',
-                    'font-weight-bold',
                     getTeamNameColor(item.team2Id, item),
                   ]"
                 >

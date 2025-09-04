@@ -1,34 +1,85 @@
+<!-- views/Live/LiveView.vue -->
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import useLiveData from "@/composables/useLiveData.js";
 import LiveHeader from "./LiveHeader.vue";
-import LiveScoreCard from "./LiveScoreCard.vue";
 import LiveTable from "./LiveTable.vue";
 
-// Use the live data composable
+// Use the live data composable with polling functionality
 const {
   liveMatches,
   loading,
   error,
   fetchLiveData,
-  getScoreSummary
+  getScoreSummary,
+  startPolling,
+  stopPolling,
+  isPolling,
 } = useLiveData();
 
-// Filter states
+// Filter states - these persist across data refreshes
 const search = ref("");
 const divisionFilter = ref(null);
-const conferenceFilter = ref([]); // Changed to array for multi-select
-const teamFilter = ref([]); // New state for team filter
-const showOnlyLive = ref(false); // New state for live-only filter
-const showCompleted = ref(false); // New state for showing completed matches
-const showUpcoming = ref(false); // New state for showing upcoming matches
-const showTableView = ref(false); // New state for table view toggle
+const conferenceFilter = ref([]); // Array for multi-select
+const teamFilter = ref([]); // Team filter
+const showOnlyLive = ref(true); // Default to show only live matches
+const showCompleted = ref(false); // Show completed matches
+const showUpcoming = ref(false); // Show upcoming matches
 
-// Get unique divisions from live data
+// Props (if needed for orgId)
+const props = defineProps({
+  orgId: {
+    type: String,
+    default: null,
+  },
+});
+
+// Helper function to get filtered matches based on status checkboxes
+const getStatusFilteredMatches = () => {
+  let filtered = [...liveMatches.value];
+
+  // Filter out matches where first set is 0-0
+  filtered = filtered.filter((match) => {
+    const set1Team1 =
+      match.set_1_team_1 !== null && match.set_1_team_1 !== ""
+        ? parseInt(match.set_1_team_1, 10)
+        : null;
+    const set1Team2 =
+      match.set_1_team_2 !== null && match.set_1_team_2 !== ""
+        ? parseInt(match.set_1_team_2, 10)
+        : null;
+    return set1Team1 !== 0 || set1Team2 !== 0;
+  });
+
+  // Apply status filters
+  if (showOnlyLive.value) {
+    filtered = filtered.filter((match) => {
+      const formatted = formatLiveMatchForDisplay(match);
+      return formatted.status === "in_progress";
+    });
+  } else if (showCompleted.value) {
+    filtered = filtered.filter((match) => {
+      const formatted = formatLiveMatchForDisplay(match);
+      return formatted.status === "completed";
+    });
+  } else if (showUpcoming.value) {
+    filtered = filtered.filter((match) => {
+      const formatted = formatLiveMatchForDisplay(match);
+      return formatted.status === "not_started";
+    });
+  }
+
+  return filtered;
+};
+
+// Get unique divisions from live data - filtered by status
 const divisions = computed(() => {
   const divisionSet = new Set();
 
-  liveMatches.value.forEach((match) => {
+  // Use only matches that match the current status filter
+  const statusFilteredMatches = getStatusFilteredMatches();
+
+  statusFilteredMatches.forEach((match) => {
     if (match.team_1_division) divisionSet.add(match.team_1_division);
     if (match.team_2_division) divisionSet.add(match.team_2_division);
   });
@@ -36,9 +87,10 @@ const divisions = computed(() => {
   return Array.from(divisionSet).sort();
 });
 
-// Get available conferences based on selected division
+// Get available conferences based on selected division and status
 const conferences = computed(() => {
-  let matches = liveMatches.value;
+  // Start with status-filtered matches
+  let matches = getStatusFilteredMatches();
 
   // Filter by division if selected
   if (divisionFilter.value) {
@@ -59,9 +111,10 @@ const conferences = computed(() => {
   return Array.from(confs).sort();
 });
 
-// Get available teams based on selected division and conference
+// Get available teams based on selected division, conference, and status
 const teams = computed(() => {
-  let matches = liveMatches.value;
+  // Start with status-filtered matches
+  let matches = getStatusFilteredMatches();
 
   // Filter by division if selected
   if (divisionFilter.value) {
@@ -129,8 +182,10 @@ const formatLiveMatchForDisplay = (match) => {
   let matchCompleted = false;
 
   sets.forEach((set, index) => {
-    const team1Score = set.team1 !== null && set.team1 !== "" ? parseInt(set.team1, 10) : null;
-    const team2Score = set.team2 !== null && set.team2 !== "" ? parseInt(set.team2, 10) : null;
+    const team1Score =
+      set.team1 !== null && set.team1 !== "" ? parseInt(set.team1, 10) : null;
+    const team2Score =
+      set.team2 !== null && set.team2 !== "" ? parseInt(set.team2, 10) : null;
 
     if (team1Score !== null && team2Score !== null) {
       const setNumber = index + 1;
@@ -176,6 +231,7 @@ const formatLiveMatchForDisplay = (match) => {
     team1Conference: match.team_1_conference || "",
     team1Division: match.team_1_division || "",
     team1Id: match.team_1_id,
+    team1Rank: match.team_1_rank || null,
 
     // Team 2 data
     team2Name: match.team_2_name,
@@ -183,6 +239,7 @@ const formatLiveMatchForDisplay = (match) => {
     team2Conference: match.team_2_conference || "",
     team2Division: match.team_2_division || "",
     team2Id: match.team_2_id,
+    team2Rank: match.team_2_rank || null,
 
     // Score data
     team1SetsWon: team1Wins,
@@ -191,20 +248,27 @@ const formatLiveMatchForDisplay = (match) => {
     winnerId,
     status,
     currentSet,
+    boxScore: match.box_score || null,
+
+    live_stats_url: match.live_stats_url || null,
   };
 };
 
-// Get formatted matches for both card and table views
+// Get formatted matches
 const formattedMatches = computed(() => {
-  // Apply the same filtering logic as LiveScoreCard
+  // Apply the same filtering logic
   let filtered = [...liveMatches.value];
 
   // Filter out matches where first set is 0-0
   filtered = filtered.filter((match) => {
-    const set1Team1 = match.set_1_team_1 !== null && match.set_1_team_1 !== ""
-      ? parseInt(match.set_1_team_1, 10) : null;
-    const set1Team2 = match.set_1_team_2 !== null && match.set_1_team_2 !== ""
-      ? parseInt(match.set_1_team_2, 10) : null;
+    const set1Team1 =
+      match.set_1_team_1 !== null && match.set_1_team_1 !== ""
+        ? parseInt(match.set_1_team_1, 10)
+        : null;
+    const set1Team2 =
+      match.set_1_team_2 !== null && match.set_1_team_2 !== ""
+        ? parseInt(match.set_1_team_2, 10)
+        : null;
     return set1Team1 !== 0 || set1Team2 !== 0;
   });
 
@@ -290,7 +354,7 @@ const updateSearch = (value) => {
 const updateDivision = (value) => {
   divisionFilter.value = value;
   // Reset conference filter when division changes
-  conferenceFilter.value = null;
+  conferenceFilter.value = [];
 };
 
 const updateConference = (value) => {
@@ -328,45 +392,30 @@ const updateShowUpcoming = (value) => {
   }
 };
 
-const updateShowTableView = (value) => {
-  showTableView.value = value;
-};
-
 const handleRetry = () => {
   error.value = null;
   fetchLiveData();
 };
 
-// Fetch data on mount
+// Fetch data on mount and start polling
 onMounted(() => {
   fetchLiveData();
+  // Start polling every 20 seconds (20000ms)
+  startPolling(20000);
+});
+
+// Stop polling when component is unmounted
+onUnmounted(() => {
+  stopPolling();
 });
 
 // Watch for division changes to update conferences
 watch(divisionFilter, () => {
-  conferenceFilter.value = null;
+  conferenceFilter.value = [];
 });
 </script>
 
 <template>
-  <!-- Error Alert -->
-  <v-alert
-    v-if="error"
-    type="error"
-    variant="tonal"
-    closable
-    class="mb-4"
-    @click:close="error = null"
-  >
-    <template v-slot:title>Failed to load live matches</template>
-    {{ error }}
-    <template v-slot:append>
-      <v-btn color="error" variant="outlined" size="small" @click="handleRetry">
-        Retry
-      </v-btn>
-    </template>
-  </v-alert>
-
   <!-- Live Header with Filters -->
   <LiveHeader
     class="mt-3"
@@ -379,7 +428,6 @@ watch(divisionFilter, () => {
     :show-only-live="showOnlyLive"
     :show-completed="showCompleted"
     :show-upcoming="showUpcoming"
-    :show-table-view="showTableView"
     :loading="loading"
     @update:search="updateSearch"
     @update:division="updateDivision"
@@ -388,19 +436,12 @@ watch(divisionFilter, () => {
     @update:show-only-live="updateShowOnlyLive"
     @update:show-completed="updateShowCompleted"
     @update:show-upcoming="updateShowUpcoming"
-    @update:show-table-view="updateShowTableView"
   />
 
-  <!-- Live Matches - Card View or Table View -->
-  <LiveScoreCard
-    v-if="!showTableView"
-    :formatted-matches="formattedMatches"
-    :loading="loading"
-  />
-
+  <!-- Live Matches Table -->
   <LiveTable
-    v-else
     :formatted-matches="formattedMatches"
     :loading="loading"
+    :org-id="orgId"
   />
 </template>

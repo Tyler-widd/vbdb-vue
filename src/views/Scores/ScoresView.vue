@@ -2,7 +2,7 @@
 <script setup>
 import { ref } from "vue";
 import ScoresHeader from "./ScoresHeader.vue";
-import ScoresScoreCard from "./ScoresScoreCard.vue";
+// import ScoresScoreCard from "./ScoresScoreCard.vue";
 import ScoresTable from "./ScoresTable.vue";
 import { useScoresData } from "@/composables/useScoresData";
 
@@ -41,16 +41,14 @@ const scoresData = useScoresData();
 
     <!-- Conditionally render either table or card view -->
     <ScoresTable
-      v-if="showTableView"
       :scores="scoresData.filteredScores.value"
       :loading="scoresData.loading.value"
       :org-id="orgId"
     />
-    <ScoresScoreCard
-      v-else
-      :scores="scoresData.filteredScores.value"
-      :loading="scoresData.loading.value"
-      :org-id="orgId"
-    />
+    <!-- <ScoresScoreCard -->
+    <!-- :scores="scoresData.filteredScores.value" -->
+    <!-- :loading="scoresData.loading.value" -->
+    <!-- :org-id="orgId" -->
+    <!-- /> -->
   </div>
 </template>
