@@ -155,7 +155,7 @@ const handlePageChange = (page) => {
   <!-- No data state -->
   <v-card
     v-if="!formattedMatchesForTable || formattedMatchesForTable.length === 0"
-    class="mt-4"
+    class="mt-4 pa-0"
   >
     <v-card-text class="text-center py-8 text-medium-emphasis">
       No matches found
@@ -163,7 +163,7 @@ const handlePageChange = (page) => {
   </v-card>
 
   <!-- Matches columns -->
-  <v-row v-else class="mt-4" no-gutters>
+  <v-row v-else dense class="mt-4" no-gutters>
     <v-col
       v-for="(column, colIndex) in matchColumns"
       :key="colIndex"
@@ -389,15 +389,15 @@ const handlePageChange = (page) => {
   </v-row>
 
   <!-- Pagination (centered) -->
-  <div v-if="totalPages > 1" class="mt-2 bg-surface rounded-lg mb-2">
+  <v-card v-if="totalPages > 1" class="mt-2">
     <v-pagination
       v-model="currentPage"
       :length="totalPages"
-      :total-visible="smAndDown ? 4 : 6"
+      :total-visible="4"
       rounded="circle"
       @update:model-value="handlePageChange"
     ></v-pagination>
-  </div>
+  </v-card>
 </template>
 
 <style scoped>
