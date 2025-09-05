@@ -2,7 +2,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-// import ScoreScrollCard from "../component/ScoreScrollCard.vue";
+import ScoreScrollCard from "../component/ScoreScrollCard.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -32,7 +32,7 @@ const isActiveRoute = (routePath) => {
   <div>
     <!-- Top Scores Bar -->
     <v-app-bar color="background" height="60" density="prominent">
-      <!-- <ScoreScrollCard /> -->
+      <ScoreScrollCard />
     </v-app-bar>
 
     <!-- Main Navigation Bar -->

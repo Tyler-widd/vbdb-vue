@@ -135,7 +135,6 @@ const navigateToBoxScore = (event) => {
     class="mt-3 ma-1"
     :width="smAndDown ? '250' : '300'"
     height="100"
-    density="compact"
     @click="navigateToBoxScore"
   >
     <!-- Date header -->
@@ -149,13 +148,12 @@ const navigateToBoxScore = (event) => {
     <!-- Card content -->
     <div class="d-flex align-center justify-space-between pa-2">
       <!-- Team 1 -->
-      <div class="d-flex align-center" :class="{ winner: winningTeam === 1 }">
+      <div class="d-flex align-center">
         <v-img
-          :src="game.team_1_img"
+          :src="game.team_1_logo"
           width="25"
           height="25"
           :alt="game.team_1_name"
-          class="team-logo"
         />
         <span class="ml-2 text-caption">
           {{ game.team_1_name }}
@@ -164,53 +162,43 @@ const navigateToBoxScore = (event) => {
 
       <!-- Score in the middle (clickable) -->
       <div class="mx-3">
-        <div>
-          <span
-            class="score"
-            :class="{
-              'text-success':
-                !isMatchComplete && currentScores.team1 > currentScores.team2,
-              'winner-score': winningTeam === 1,
-            }"
-          >
-            {{ currentScores.team1 }}
-          </span>
-          <span class="mx-1">-</span>
-          <span
-            class="score"
-            :class="{
-              'text-success':
-                !isMatchComplete && currentScores.team2 > currentScores.team1,
-              'winner-score': winningTeam === 2,
-            }"
-          >
-            {{ currentScores.team2 }}
-          </span>
-        </div>
-        <v-divider></v-divider>
-        <!-- Set wins indicator -->
-        <div
-          v-if="!currentScores.isCompleted && !isMatchComplete"
-          class="text-caption text-center mt-1"
+        <span
+          class="score"
+          :class="{
+            'text-success':
+              !isMatchComplete && currentScores.team1 > currentScores.team2,
+            'winner-score': winningTeam === 1,
+          }"
         >
+          {{ currentScores.team1 }}
+        </span>
+        <span class="mx-1">-</span>
+        <span
+          class="score"
+          :class="{
+            'text-success':
+              !isMatchComplete && currentScores.team2 > currentScores.team1,
+            'winner-score': winningTeam === 2,
+          }"
+        >
+          {{ currentScores.team2 }}
+        </span>
+        <!-- Set wins indicator -->
+        <div class="text-caption text-center mt-2">
           <span class="text-grey">{{ setWins.team1 }}-{{ setWins.team2 }}</span>
         </div>
       </div>
 
       <!-- Team 2 -->
-      <div
-        class="team-section d-flex align-center justify-end"
-        :class="{ winner: winningTeam === 2 }"
-      >
+      <div class="d-flex align-center">
         <span class="team-name mr-2 text-caption text-right">
           {{ game.team_2_name }}
         </span>
         <v-img
-          :src="game.team_2_img"
+          :src="game.team_2_logo"
           width="25"
           height="25"
           :alt="game.team_2_name"
-          class="team-logo"
         />
       </div>
     </div>

@@ -7,22 +7,16 @@ import useLiveData from "@/composables/useLiveData.js";
 import NavScoreCard from "./NavScoreCard.vue";
 
 // Initialize the live data composable
-const {
-  liveMatches,
-  loading,
-  error,
-  fetchLiveData,
-  startPolling,
-  stopPolling,
-} = useLiveData();
-const { mobile } = useDisplay();
+const { liveMatches, loading, fetchLiveData, startPolling, stopPolling } =
+  useLiveData();
+
+const { smAndDown } = useDisplay();
 
 // Initialize router
 const router = useRouter();
 
 // Slide group refs
 const slider = ref(null);
-const currentIndex = ref(0);
 
 // Load live data on component mount
 onMounted(async () => {
@@ -103,18 +97,51 @@ const getMatchScoreData = (match) => {
   };
 };
 
-// Computed property for games to display (with loading placeholders)
+// Shuffle array function
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+// Computed property for games to display (with loading placeholders and random selection)
 const games = computed(() => {
   if (loading.value && liveMatches.value.length === 0) {
     // Only show loading placeholders if we have no data yet
-    return Array.from({ length: 10 }, (_, index) => ({
+    return Array.from({ length: 5 }, (_, index) => ({
       loading: true,
       id: `loading-${index}`,
     }));
   }
 
+  // Filter matches to exclude games where both teams have 0 for set 1
+  const filteredMatches = liveMatches.value.filter((match) => {
+    const set1Team1 =
+      match.set_1_team_1 !== null && match.set_1_team_1 !== ""
+        ? parseInt(match.set_1_team_1, 10)
+        : null;
+    const set1Team2 =
+      match.set_1_team_2 !== null && match.set_1_team_2 !== ""
+        ? parseInt(match.set_1_team_2, 10)
+        : null;
+
+    // Don't show games where both teams have 0 for set 1
+    if (set1Team1 === 0 && set1Team2 === 0) {
+      return false;
+    }
+
+    // Also filter out completely null/empty scores
+    return set1Team1 !== null || set1Team2 !== null;
+  });
+
+  // Shuffle and take 5 random matches
+  const randomMatches = shuffleArray(filteredMatches).slice(0, 5);
+
   // Transform live match data to match the expected game format
-  return liveMatches.value.map((match) => ({
+  return randomMatches.map((match) => ({
     ...match,
     // Map live data fields to expected game format
     team_1_name: match.team_1_name,
@@ -132,15 +159,6 @@ const games = computed(() => {
     ...getMatchScoreData(match),
   }));
 });
-
-// Navigation methods
-const onPrevClick = () => {
-  slider.value?.focus("prev");
-};
-
-const onNextClick = () => {
-  slider.value?.focus("next");
-};
 
 // Method to navigate to game detail or live view
 const gotoGame = (game) => {
@@ -166,89 +184,61 @@ const gotoGame = (game) => {
     });
   }
 };
-
-// Manual refresh function
-const handleRefresh = () => {
-  fetchLiveData(false); // Manual refresh shows loading indicator
-};
 </script>
 
 <template>
-  <div class="score-scroll-container">
-    <!-- Error Alert -->
-    <v-alert
-      v-if="error"
-      type="error"
-      variant="tonal"
-      density="compact"
-      closable
-      class="mb-2"
-      @click:close="error = null"
-    >
-      Failed to load live matches: {{ error }}
-      <template v-slot:append>
-        <v-btn color="error" variant="text" size="small" @click="handleRefresh">
-          Retry
-        </v-btn>
-      </template>
-    </v-alert>
-
-    <!-- No live games message -->
-    <v-container
-      v-if="!loading && !error && games.length === 0"
+  <!-- Desktop: Grid layout -->
+  <v-row v-if="!smAndDown" no-gutters class="justify-space-around">
+    <v-col
+      v-for="(game, index) in games"
+      :key="game.loading ? `loading-${index}` : `live-${game.id}-${index}`"
+      cols="12"
+      sm="6"
+      md="2"
       class="d-flex justify-center"
     >
-      <v-card variant="tonal" class="pa-4">
-        <v-card-text class="text-center"> No Live matches found </v-card-text>
-      </v-card>
-    </v-container>
+      <NavScoreCard
+        :game="game"
+        :box-score="game.live_stats_url || null"
+        @card-click="!game.loading && gotoGame(game)"
+      />
+    </v-col>
+  </v-row>
 
-    <!-- Slide group for live games -->
-    <v-slide-group
-      v-if="games.length > 0"
-      :show-arrows="!mobile"
-      v-model="currentIndex"
-      ref="slider"
-    >
-      <v-slide-group-item
+  <!-- Mobile: Horizontal scroll -->
+  <div v-else class="mobile-scroll-container">
+    <div class="mobile-cards-wrapper">
+      <div
         v-for="(game, index) in games"
         :key="game.loading ? `loading-${index}` : `live-${game.id}-${index}`"
-        v-slot="{ isSelected, toggle }"
+        class="mobile-card-item"
       >
-        <div class="slide-item">
-          <NavScoreCard
-            :game="game"
-            :box-score="game.live_stats_url || null"
-            @card-click="!game.loading && gotoGame(game)"
-          />
-        </div>
-      </v-slide-group-item>
-
-      <!-- Desktop arrows -->
-      <template #prev v-if="!mobile">
-        <v-icon @click="onPrevClick">mdi-chevron-left</v-icon>
-      </template>
-
-      <template #next v-if="!mobile">
-        <v-icon @click="onNextClick">mdi-chevron-right</v-icon>
-      </template>
-    </v-slide-group>
+        <NavScoreCard
+          :game="game"
+          :box-score="game.live_stats_url || null"
+          @card-click="!game.loading && gotoGame(game)"
+        />
+      </div>
+    </div>
   </div>
 </template>
+
 <style scoped>
-@media (max-width: 600px) {
-  .score-scroll-container {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
+.mobile-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  /* Hide scrollbar on webkit browsers for cleaner look */
+  -webkit-overflow-scrolling: touch;
+}
 
-  .v-slide-group__wrapper {
-    overflow-x: auto !important;
-  }
+.mobile-scroll-container {
+  scrollbar-width: none;
+}
 
-  .slide-item {
-    flex: 0 0 auto;
-  }
+.mobile-cards-wrapper {
+  display: flex;
+  gap: 8px;
+  padding: 0 4px;
+  min-width: min-content;
 }
 </style>
