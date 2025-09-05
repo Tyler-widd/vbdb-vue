@@ -13,9 +13,7 @@ export default function useLiveData() {
   // Fetch schools data
   const fetchSchools = async () => {
     try {
-      const response = await fetch(
-        "https://api.volleyballdatabased.com/schools"
-      );
+      const response = await fetch("https://api.volleyballdatabased.com/teams");
       if (!response.ok) {
         throw new Error("Failed to fetch schools data");
       }
@@ -23,11 +21,9 @@ export default function useLiveData() {
       schools.value = data;
     } catch (err) {
       console.error("Error fetching schools:", err);
-      // Don't set error for schools, as we can still show live data without conferences
     }
   };
 
-  // Join live matches with schools data to add conference information
   const enrichLiveMatchesWithConference = (matches, schoolsData) => {
     if (!schoolsData || schoolsData.length === 0) {
       return matches;
@@ -38,8 +34,8 @@ export default function useLiveData() {
     const schoolsByShortName = new Map();
 
     schoolsData.forEach((school) => {
-      if (school.org_id) {
-        schoolsByOrgId.set(school.org_id, school);
+      if (school.team_id) {
+        schoolsByOrgId.set(school.team_id, school);
       }
       if (school.school_short) {
         schoolsByShortName.set(school.school_short.toLowerCase(), school);
@@ -49,7 +45,7 @@ export default function useLiveData() {
     return matches.map((match) => {
       // Try to find team 1's school data
       let team1School = null;
-      // First try by org_id
+      // First try by team_id
       if (match.team_1_id) {
         team1School = schoolsByOrgId.get(match.team_1_id);
       }
@@ -60,7 +56,7 @@ export default function useLiveData() {
 
       // Try to find team 2's school data
       let team2School = null;
-      // First try by org_id
+      // First try by team_id
       if (match.team_2_id) {
         team2School = schoolsByOrgId.get(match.team_2_id);
       }
@@ -69,11 +65,15 @@ export default function useLiveData() {
         team2School = schoolsByShortName.get(match.team_2_name.toLowerCase());
       }
 
-      // Add conference data to the match
+      // Add conference and AVCA ranking data to the match
       return {
         ...match,
         team_1_conference: team1School?.conference || null,
         team_2_conference: team2School?.conference || null,
+        team_1_avca_ranking: team1School?.avca_ranking || null,
+        team_2_avca_ranking: team2School?.avca_ranking || null,
+        team_1_division: team1School?.division || null,
+        team_2_division: team2School?.division || null,
         // If both teams are from the same conference, set a match conference
         conference:
           team1School?.conference &&
@@ -105,7 +105,7 @@ export default function useLiveData() {
       }
       const data = await response.json();
 
-      // Enrich matches with conference data
+      // Enrich matches with conference and ranking data
       liveMatches.value = enrichLiveMatchesWithConference(data, schools.value);
     } catch (err) {
       error.value = err.message;
@@ -148,6 +148,35 @@ export default function useLiveData() {
     });
     return Array.from(conferences).sort();
   });
+
+  // Computed property to get ranked matches (matches with at least one ranked team)
+  const rankedMatches = computed(() => {
+    return liveMatches.value.filter(
+      (match) => match.team_1_avca_ranking || match.team_2_avca_ranking
+    );
+  });
+
+  // Helper function to format AVCA ranking display
+  const formatRanking = (ranking) => {
+    if (!ranking) return null;
+    return `#${ranking}`;
+  };
+
+  // Helper function to get match ranking info
+  const getMatchRankingInfo = (match) => {
+    const team1Ranking = match.team_1_avca_ranking;
+    const team2Ranking = match.team_2_avca_ranking;
+
+    return {
+      hasRankedTeams: !!(team1Ranking || team2Ranking),
+      bothTeamsRanked: !!(team1Ranking && team2Ranking),
+      team1Formatted: formatRanking(team1Ranking),
+      team2Formatted: formatRanking(team2Ranking),
+      isTopTenMatchup:
+        (team1Ranking && team1Ranking <= 10) ||
+        (team2Ranking && team2Ranking <= 10),
+    };
+  };
 
   // Helper function to get match status
   const getMatchStatus = (match) => {
@@ -246,10 +275,13 @@ export default function useLiveData() {
     error,
     isPolling,
     availableConferences,
+    rankedMatches,
     fetchLiveData,
     startPolling,
     stopPolling,
     getMatchStatus,
     getScoreSummary,
+    getMatchRankingInfo,
+    formatRanking,
   };
 }

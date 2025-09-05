@@ -1,4 +1,4 @@
-<!-- views/Schedule/ScheduleTable.vue -->
+<!-- Modified section of ScheduleTable.vue -->
 <script setup>
 import { computed } from "vue";
 import { useDisplay } from "vuetify";
@@ -34,139 +34,75 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  // Add date range props
+  dateFrom: {
+    type: String,
+    default: null,
+  },
+  dateTo: {
+    type: String,
+    default: null,
+  },
 });
 
-// Define table headers
-const headers = computed(() => [
-  {
-    title: "Date",
-    key: "date",
-    sortable: true,
-    width: smAndDown.value ? "80px" : "120px",
-  },
-  {
-    title: "Teams",
-    key: "team_1",
-    sortable: true,
-    width: smAndDown.value ? "180px" : "240px",
-  },
-  {
-    title: "Time",
-    key: "time",
-    sortable: false,
-    width: smAndDown.value ? "120px" : "160px",
-  },
-]);
+// Helper function to convert date to YYYY-MM-DD format for comparison
+const normalizeDate = (dateStr) => {
+  if (!dateStr) return null;
 
-const formatConference = (conference) => {
-  if (conference && conference.includes(".0")) {
-    return `Region ${conference.replace(".0", "")}`;
-  }
-  return conference;
-};
-
-// Format date
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
-
-// Helper function to format rank display
-const formatRank = (rank) => {
-  if (!rank || rank === null) return null;
-  return `#${rank}`;
-};
-
-// Enhanced time formatting that handles both original API format and converted format
-const formatTime = (item) => {
-  // First try to use the original_time if available (for better display)
-  if (item.original_time) {
-    return formatOriginalTime(item.original_time);
+  // If already in YYYY-MM-DD format
+  if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateStr;
   }
 
-  // Fall back to converted time format
-  if (item.time) {
-    return formatConvertedTime(item.time);
-  }
-
-  return "Time TBD";
-};
-
-// Format original API time format ("06:00PM ET")
-const formatOriginalTime = (timeString) => {
-  if (!timeString || typeof timeString !== "string") {
-    return "Time TBD";
-  }
-
-  try {
-    // Remove timezone abbreviation and clean up
-    const timeOnly = timeString
-      .replace(/\s+(ET|CT|MT|PT|EST|CST|MST|PST)$/i, "")
-      .trim();
-
-    // Parse and format the time
-    const timeRegex = /^(\d{1,2}):(\d{2})(AM|PM)$/i;
-    const match = timeOnly.match(timeRegex);
-
-    if (match) {
-      const [, hours, minutes, ampm] = match;
-      return `${hours}:${minutes} ${ampm.toUpperCase()}`;
+  // Handle MM-DD-YYYY format
+  if (dateStr.includes("-") && dateStr.split("-").length === 3) {
+    const parts = dateStr.split("-");
+    if (parts[0].length <= 2) {
+      // MM-DD-YYYY
+      return `${parts[2]}-${parts[0].padStart(2, "0")}-${parts[1].padStart(
+        2,
+        "0"
+      )}`;
     }
-
-    return timeString; // Return original if parsing fails
-  } catch (error) {
-    console.warn("Error formatting original time:", timeString, error);
-    return "Time TBD";
-  }
-};
-
-// Format converted 24-hour time format ("18:00")
-const formatConvertedTime = (timeString) => {
-  if (!timeString || typeof timeString !== "string") {
-    return "Time TBD";
   }
 
-  try {
-    const parts = timeString.split(":");
-    if (parts.length < 2) {
-      return "Invalid time";
+  // Handle MM/DD/YYYY format
+  if (dateStr.includes("/")) {
+    const parts = dateStr.split("/");
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[0].padStart(2, "0")}-${parts[1].padStart(
+        2,
+        "0"
+      )}`;
     }
-
-    const [hours, minutes] = parts;
-    if (!hours || !minutes) {
-      return "Invalid time";
-    }
-
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  } catch (error) {
-    console.warn("Error formatting converted time:", timeString, error);
-    return "Time TBD";
   }
-};
 
-// Get rank badge color based on ranking
-const getRankBadgeColor = (rank) => {
-  if (!rank) return "grey";
-  if (rank <= 5) return "warning"; // Top 5 - gold/yellow
-  if (rank <= 10) return "primary"; // Top 10 - blue
-  if (rank <= 25) return "success"; // Top 25 - green
-  return "info"; // Others - light blue
+  return dateStr;
 };
 
 // Filter the schedule data
 const filteredScheduleData = computed(() => {
   let filtered = [...props.scheduleData];
+
+  // Apply date range filter first
+  if (props.dateFrom || props.dateTo) {
+    filtered = filtered.filter((game) => {
+      const gameDate = normalizeDate(game.date);
+      if (!gameDate) return false;
+
+      let withinRange = true;
+
+      if (props.dateFrom) {
+        withinRange = withinRange && gameDate >= props.dateFrom;
+      }
+
+      if (props.dateTo) {
+        withinRange = withinRange && gameDate <= props.dateTo;
+      }
+
+      return withinRange;
+    });
+  }
 
   // Apply division filter
   if (props.divisionFilter) {
@@ -212,6 +148,93 @@ const filteredScheduleData = computed(() => {
 
   return filtered;
 });
+
+// ... rest of your existing functions remain the same ...
+const formatConference = (conference) => {
+  if (conference && conference.includes(".0")) {
+    return `Region ${conference.replace(".0", "")}`;
+  }
+  return conference;
+};
+
+// Format date
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+// Helper function to format rank display
+const formatRank = (rank) => {
+  if (!rank || rank === null) return null;
+  return `#${rank}`;
+};
+
+// Enhanced time formatting that handles both original API format and converted format
+const formatTime = (item) => {
+  // First try to use the original_time if available (for better display)
+  if (item.time) {
+    return formatOriginalTime(item.time);
+  }
+
+  return "Time TBD";
+};
+
+// Format original API time format ("06:00PM ET")
+const formatOriginalTime = (timeString) => {
+  if (!timeString || typeof timeString !== "string") {
+    return "Time TBD";
+  }
+
+  try {
+    const timeSplit = timeString.split("Attend")[0].trim();
+
+    // Simply ensure proper spacing between time and AM/PM
+    let formatted = timeSplit
+      .replace(/(\d)(AM|PM)/i, "$1 $2") // Add space if missing
+      .replace(/\./g, "") // Remove periods from A.M./P.M.
+      .toUpperCase(); // Convert to uppercase
+
+    return formatted;
+  } catch (error) {
+    console.warn("Error formatting original time:", timeString, error);
+    return "Time TBD";
+  }
+};
+
+// Get rank badge color based on ranking
+const getRankBadgeColor = (rank) => {
+  if (!rank) return "grey";
+  if (rank <= 5) return "warning"; // Top 5 - gold/yellow
+  if (rank <= 10) return "primary"; // Top 10 - blue
+  if (rank <= 25) return "success"; // Top 25 - green
+  return "info"; // Others - light blue
+};
+
+// Define table headers
+const headers = computed(() => [
+  {
+    title: "Date",
+    key: "date",
+    sortable: true,
+    width: smAndDown.value ? "80px" : "120px",
+  },
+  {
+    title: "Teams",
+    key: "team_1",
+    sortable: true,
+    width: smAndDown.value ? "180px" : "240px",
+  },
+  {
+    title: "Time",
+    key: "time",
+    sortable: false,
+    width: smAndDown.value ? "120px" : "160px",
+  },
+]);
 
 // Format schedule data for table
 const formattedSchedule = computed(() => {

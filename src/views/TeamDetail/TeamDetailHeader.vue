@@ -14,8 +14,8 @@ const school = ref(null);
 const selectedYear = ref("2025");
 const gamesData = ref([]);
 
-// Get the org_id from the route
-const orgId = computed(() => route.params.id);
+// Get the team_id from the route
+const teamId = computed(() => route.params.id);
 
 const props = defineProps({
   record: {
@@ -46,9 +46,9 @@ const yearOptions = computed(() => {
 const fetchSchoolData = async () => {
   loading.value = true;
   try {
-    const response = await fetch("https://api.volleyballdatabased.com/schools");
+    const response = await fetch("https://api.volleyballdatabased.com/teams");
     const data = await response.json();
-    school.value = data.find((s) => s.org_id === orgId.value);
+    school.value = data.find((s) => s.team_id === teamId.value);
   } catch (error) {
     console.error("Error fetching school data:", error);
   } finally {
@@ -60,7 +60,7 @@ const fetchSchoolData = async () => {
 const fetchGamesForYears = async () => {
   try {
     const response = await fetch(
-      `https://api.volleyballdatabased.com/games/${orgId.value}`
+      `https://api.volleyballdatabased.com/games/${teamId.value}`
     );
     if (response.ok) {
       const data = await response.json();
@@ -92,8 +92,8 @@ const formatConference = (conference) => {
 };
 
 // Watch for route changes to reload data when navigating between teams
-watch(orgId, (newOrgId) => {
-  if (newOrgId) {
+watch(teamId, (newteamId) => {
+  if (newteamId) {
     // Reset state
     school.value = null;
     gamesData.value = [];

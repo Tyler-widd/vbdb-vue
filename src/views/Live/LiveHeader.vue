@@ -90,18 +90,9 @@ const handleTeamChange = (value) => {
 
 <template>
   <v-card class="mb-4 px-4 pt-4 pb-2">
-    <v-chip
-      v-if="isPolling"
-      size="x-small"
-      color="success"
-      variant="tonal"
-      class="mb-2"
-    >
-      Auto-refreshing every 20s
-    </v-chip>
     <div class="d-flex align-center justify-space-between">
       <v-card-title class="pt-0">Live</v-card-title>
-      <div class="d-flex align-center gap-3 flex-wrap">
+      <div class="d-flex align-center ga-3 flex-wrap">
         <v-checkbox
           :model-value="showOnlyLive"
           label="Show only live"

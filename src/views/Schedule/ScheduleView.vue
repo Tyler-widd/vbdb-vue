@@ -16,10 +16,24 @@ const {
   filterSchedule,
 } = useScheduleData();
 
-// Filter states - Default division to "D-I"
+// Helper function to get date after specified days
+const getDateAfterDays = (days) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split("T")[0];
+};
+
+// Helper function to get today's date
+const getTodayDate = () => {
+  return new Date().toISOString().split("T")[0];
+};
+
+// Filter states - Default division to "D-I" and set default date range to next 7 days
 const search = ref("");
-const divisionFilter = ref("D-I"); // Changed from null to "D-I"
+const divisionFilter = ref("D-I");
 const conferenceFilter = ref(null);
+const dateFrom = ref(getTodayDate());
+const dateTo = ref(getDateAfterDays(7));
 
 // Computed conferences based on selected division
 const availableConferences = computed(() => {
@@ -41,6 +55,14 @@ const updateDivision = (value) => {
 
 const updateConference = (value) => {
   conferenceFilter.value = value;
+};
+
+const updateDateFrom = (value) => {
+  dateFrom.value = value;
+};
+
+const updateDateTo = (value) => {
+  dateTo.value = value;
 };
 
 // Fetch schedule data when component mounts
@@ -86,9 +108,13 @@ const handleRetry = () => {
       :conferences="availableConferences"
       :selected-division="divisionFilter"
       :loading="loading"
+      :date-from="dateFrom"
+      :date-to="dateTo"
       @update:search="updateSearch"
       @update:division="updateDivision"
       @update:conference="updateConference"
+      @update:date-from="updateDateFrom"
+      @update:date-to="updateDateTo"
     />
 
     <!-- Schedule Table -->
@@ -98,6 +124,8 @@ const handleRetry = () => {
       :search="search"
       :division-filter="divisionFilter"
       :conference-filter="conferenceFilter"
+      :date-from="dateFrom"
+      :date-to="dateTo"
       :filter-schedule="filterSchedule"
     />
   </div>
