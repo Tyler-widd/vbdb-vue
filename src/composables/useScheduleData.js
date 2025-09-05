@@ -20,23 +20,17 @@ export function useScheduleData() {
   const convertDateFormat = (dateString) => {
     if (!dateString) return null;
 
-    try {
-      // Handle MM-DD-YYYY format
-      const parts = dateString.split("-");
-      if (parts.length === 3) {
-        const [month, day, year] = parts;
-        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-      }
-
-      return dateString;
-    } catch (error) {
-      console.warn("Error converting date format:", dateString, error);
-      return dateString;
+    // Handle MM-DD-YYYY format
+    const parts = dateString.split("-");
+    if (parts.length === 3) {
+      const [month, day, year] = parts;
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
     }
+
+    return dateString;
   };
 
   // Helper function to convert "06:00PM ET" to "18:00" (24-hour format)
-  // Also handles incorrect AM/PM based on time logic
   const convertTimeFormat = (timeString) => {
     if (!timeString) return null;
 
@@ -53,28 +47,6 @@ export function useScheduleData() {
       if (match) {
         let [, hours, minutes, ampm] = match;
         hours = parseInt(hours);
-        let originalAmPm = ampm.toUpperCase();
-
-        // Smart AM/PM correction logic
-        // If time is before 9:00 AM (excluding 12 AM), it's likely PM
-        // If time is after 9:00 PM (excluding 12 PM), it's likely AM
-        if (originalAmPm === "AM") {
-          // If it's between 1:00 AM and 8:59 AM, convert to PM
-          if (hours >= 1 && hours < 9) {
-            ampm = "PM";
-            console.log(
-              `Correcting ${hours}:${minutes} AM to PM (unlikely morning game)`
-            );
-          }
-        } else if (originalAmPm === "PM") {
-          // If it's 9:00 PM or later (but not 12 PM), convert to AM
-          if (hours >= 9 && hours < 12) {
-            ampm = "AM";
-            console.log(
-              `Correcting ${hours}:${minutes} PM to AM (unlikely late night game)`
-            );
-          }
-        }
 
         // Convert to 24-hour format
         if (ampm.toUpperCase() === "PM" && hours !== 12) {
@@ -83,44 +55,18 @@ export function useScheduleData() {
           hours = 0;
         }
 
-        // Store the corrected time in original_time for display
-        const correctedTime = `${(hours > 12
-          ? hours - 12
-          : hours === 0
-          ? 12
-          : hours
-        )
-          .toString()
-          .padStart(2, "0")}:${minutes}${hours >= 12 ? "PM" : "AM"} ${
-          timeString.match(/[A-Z]+$/)?.[0] || ""
-        }`.trim();
-
-        return {
-          time: `${hours.toString().padStart(2, "0")}:${minutes}`,
-          corrected_time: correctedTime,
-          was_corrected: originalAmPm !== ampm.toUpperCase(),
-        };
+        return `${hours.toString().padStart(2, "0")}:${minutes}`;
       }
 
-      return {
-        time: timeString,
-        corrected_time: timeString,
-        was_corrected: false,
-      };
+      return timeString; // Return as-is if parsing fails
     } catch (error) {
       console.warn("Error parsing time:", timeString, error);
-      return {
-        time: timeString,
-        corrected_time: timeString,
-        was_corrected: false,
-      };
+      return timeString;
     }
   };
 
   // Helper function to transform game data
   const transformGameData = (game) => {
-    const timeData = convertTimeFormat(game.start_time);
-
     return {
       ...game,
       // Transform division values for both teams
@@ -128,16 +74,11 @@ export function useScheduleData() {
       team_2_division: transformDivision(game.team_2_division),
       // Convert date format from MM-DD-YYYY to YYYY-MM-DD
       date: game.date,
-      // Convert time format from "06:00PM ET" to "18:00" with smart AM/PM correction
-      time: typeof timeData === "object" ? timeData.time : timeData,
-      // Keep original values for reference, but use corrected time for display
+      // Convert time format from "06:00PM ET" to "18:00"
+      time: game.time,
+      // Keep original values for reference
       original_date: game.start_date,
-      original_time:
-        typeof timeData === "object"
-          ? timeData.corrected_time
-          : game.start_time,
-      time_was_corrected:
-        typeof timeData === "object" ? timeData.was_corrected : false,
+      original_time: game.start_time,
     };
   };
 
@@ -216,8 +157,7 @@ export function useScheduleData() {
   // Helper function to create a unique key for each game
   const createGameKey = (game) => {
     const teamIds = [game.team_1_id, game.team_2_id].sort().join("-");
-    const gameTime = game.time || "no-time";
-    return `${game.date}_${gameTime}_${teamIds}`;
+    return `${game.date}_${game.time}_${teamIds}`;
   };
 
   // Helper function to remove duplicate games
@@ -264,14 +204,6 @@ export function useScheduleData() {
         console.log(
           `Original count: ${transformedData.length}, Unique count: ${uniqueData.length}`
         );
-      }
-
-      // Log any time corrections for debugging
-      const correctedGames = uniqueData.filter(
-        (game) => game.time_was_corrected
-      );
-      if (correctedGames.length > 0) {
-        console.log(`Corrected AM/PM for ${correctedGames.length} games`);
       }
 
       scheduleData.value = uniqueData;
