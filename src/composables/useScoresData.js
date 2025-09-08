@@ -4,9 +4,10 @@ import { ref, computed } from "vue";
 export function useScoresData() {
   // Reactive state
   const scores = ref([]);
+  const schools = ref([]);
   const loading = ref(false);
   const error = ref(null);
-  const divisionFilter = ref(null);
+  const divisionFilter = ref("D-I");
   const conferenceFilter = ref([]); // Changed to array for multi-select
   const teamFilter = ref([]); // New team filter
   const search = ref("");
@@ -42,63 +43,37 @@ export function useScoresData() {
   });
 
   const conferences = computed(() => {
-    let filteredScores = scores.value;
+    if (!divisionFilter.value) return [];
 
-    // Filter by division if selected
-    if (divisionFilter.value) {
-      filteredScores = filteredScores.filter(
-        (score) =>
-          score.team_1_division === divisionFilter.value ||
-          score.team_2_division === divisionFilter.value
-      );
-    }
-
-    // Extract unique conferences from filtered scores
     const conferenceSet = new Set();
-    filteredScores.forEach((score) => {
-      // Only add conferences from teams that match the division filter
+
+    scores.value.forEach((score) => {
       if (
-        !divisionFilter.value ||
-        score.team_1_division === divisionFilter.value
+        score.team_1_division === divisionFilter.value &&
+        score.team_1_conference
       ) {
-        if (score.team_1_conference) {
-          const formatted = formatConference(score.team_1_conference);
-          conferenceSet.add(formatted);
-        }
+        conferenceSet.add(formatConference(score.team_1_conference));
       }
       if (
-        !divisionFilter.value ||
-        score.team_2_division === divisionFilter.value
+        score.team_2_division === divisionFilter.value &&
+        score.team_2_conference
       ) {
-        if (score.team_2_conference) {
-          const formatted = formatConference(score.team_2_conference);
-          conferenceSet.add(formatted);
-        }
+        conferenceSet.add(formatConference(score.team_2_conference));
       }
     });
 
-    // Convert to array and sort
     const conferenceArray = Array.from(conferenceSet);
 
-    // Custom sort to handle "Region X" format properly
+    // Sort with Region ordering first
     return conferenceArray.sort((a, b) => {
-      // Check if both are region format
       const regionA = a.match(/^Region (\d+)$/);
       const regionB = b.match(/^Region (\d+)$/);
 
-      if (regionA && regionB) {
-        // Both are regions, sort numerically
+      if (regionA && regionB)
         return parseInt(regionA[1]) - parseInt(regionB[1]);
-      } else if (regionA) {
-        // A is region, B is not - regions first
-        return -1;
-      } else if (regionB) {
-        // B is region, A is not - regions first
-        return 1;
-      } else {
-        // Neither are regions, sort alphabetically
-        return a.localeCompare(b);
-      }
+      if (regionA) return -1;
+      if (regionB) return 1;
+      return a.localeCompare(b);
     });
   });
 
@@ -377,22 +352,40 @@ export function useScoresData() {
       });
   });
 
-  // Methods
   const fetchScores = async () => {
     loading.value = true;
     error.value = null;
 
     try {
-      const response = await fetch(
-        "https://api.volleyballdatabased.com/results"
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch scores data");
-      }
-      const data = await response.json();
-      scores.value = data;
+      // Fetch both scores and schools
+      const [scoresResponse, schoolsResponse] = await Promise.all([
+        fetch("https://api.volleyballdatabased.com/results"),
+        fetch("https://api.volleyballdatabased.com/schools"),
+      ]);
+
+      if (!scoresResponse.ok) throw new Error("Failed to fetch scores data");
+      if (!schoolsResponse.ok) throw new Error("Failed to fetch schools data");
+
+      const scoresData = await scoresResponse.json();
+      const schoolsData = await schoolsResponse.json();
+
+      // Build lookup map by org_id
+      const schoolMap = new Map(schoolsData.map((s) => [String(s.org_id), s]));
+
+      // Attach logos to scores
+      scores.value = scoresData.map((game) => {
+        const team1School = schoolMap.get(String(game.team_1_id));
+        const team2School = schoolMap.get(String(game.team_2_id));
+        return {
+          ...game,
+          team1Img: team1School?.logo || null,
+          team2Img: team2School?.logo || null,
+        };
+      });
+
+      schools.value = schoolsData;
     } catch (err) {
-      error.value = err.message || "Failed to fetch scores";
+      error.value = err.message || "Failed to fetch data";
     } finally {
       loading.value = false;
     }

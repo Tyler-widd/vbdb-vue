@@ -143,11 +143,11 @@ onMounted(() => {
   <v-row v-else>
     <v-col cols="12">
       <!-- Header Card with School Info -->
-      <v-card class="mb-4 px-4 pt-4 pb-2">
+      <v-card class="mb-4 pa-2">
         <v-row class="align-center">
           <v-col cols="auto">
             <v-avatar :size="smAndDown ? '80' : '120'">
-              <v-img :src="school.img" :alt="school.name_official" cover />
+              <v-img :src="school.logo" :alt="school.name_official" cover />
             </v-avatar>
           </v-col>
           <v-col>
@@ -156,18 +156,16 @@ onMounted(() => {
                 smAndDown ? 'pa-0 text-h5 text-wrap pb-1' : 'pa-0 text-h4 pb-1'
               "
             >
-              {{ school.name_official }}
+              {{ school.name }}
             </div>
             <div class="text-body-1">
               {{ school.division }} |
               {{ formatConference(school.conference) }}
             </div>
-            <div class="text-body-1">
-              {{ selectedYear }} Record: {{ record }}
-            </div>
+            <div class="text-body-1">Record: {{ record }}</div>
           </v-col>
         </v-row>
-        <v-col :cols="smAndDown ? 12 : 3">
+        <!-- <v-col :cols="smAndDown ? 12 : 3">
           <v-select
             label="Season"
             v-model="selectedYear"
@@ -176,7 +174,7 @@ onMounted(() => {
             density="comfortable"
             @update:model-value="handleYearChange"
           />
-        </v-col>
+        </v-col> -->
       </v-card>
     </v-col>
   </v-row>

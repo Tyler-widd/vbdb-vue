@@ -1,18 +1,35 @@
 <!-- NavBar.vue -->
 <script setup>
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ScoreScrollCard from "../component/ScoreScrollCard.vue";
+import NavScoreCard from "../component/NavScoreCard.vue";
+import useLiveData from "@/composables/useLiveData.js";
 
 const router = useRouter();
 const route = useRoute();
 const drawer = ref(false);
 
+// Get live matches data
+const { liveMatches, loading, fetchLiveData, startPolling } = useLiveData();
+
+// Check if there are any live matches
+const hasLiveMatches = computed(() => {
+  if (loading.value) return true; // Show loading state
+  return liveMatches.value && liveMatches.value.length > 0;
+});
+
+// Initialize live data on component mount
+onMounted(async () => {
+  await fetchLiveData();
+  startPolling(30000); // Poll every 30 seconds
+});
+
 const tabs = [
   { name: "Home", value: "Home", route: "/" },
   { name: "Live", value: "Live", route: "/live" },
   { name: "Scores", value: "Scores", route: "/scores" },
-  { name: "Rankings", value: "Standings", route: "/rankings" },
+  { name: "Rankings", value: "Rankings", route: "/rankings" },
   { name: "Schedule", value: "Schedule", route: "/schedule" },
   { name: "Players", value: "Players", route: "/players" },
   { name: "Teams", value: "Teams", route: "/teams" },
@@ -31,8 +48,15 @@ const isActiveRoute = (routePath) => {
 <template>
   <div>
     <!-- Top Scores Bar -->
-    <v-app-bar color="background" height="60" density="prominent">
-      <ScoreScrollCard />
+    <v-app-bar
+      color="background"
+      :height="hasLiveMatches ? '60' : '48'"
+      :density="hasLiveMatches ? 'prominent' : 'default'"
+    >
+      <ScoreScrollCard v-if="hasLiveMatches" />
+      <div v-else class="d-flex align-center justify-center w-100">
+        <span class="text-h6 text-center">Volleyball scores simplified.</span>
+      </div>
     </v-app-bar>
 
     <!-- Main Navigation Bar -->

@@ -76,22 +76,11 @@ const handleSearchChange = (value) => {
   <v-card class="px-4 pb-4 pt-2">
     <div class="d-flex align-center justify-space-between">
       <div class="d-flex align-center">
-        <v-card-title :class="smAndDown ? 'pa-0 mr-2 pl-2' : ''" class="pa-1"
-          >Scores</v-card-title
-        >
-        <v-card-subtitle
-          :class="smAndDown ? 'pa-0 mt-1' : 'pa-1 mt-1'"
-          class="text-caption font-weight-light font-italic"
+        <v-card-title class="pt-0">Scores</v-card-title>
+        <v-card-subtitle class="text-caption font-weight-light font-italic"
           >Click Scores for boxscore</v-card-subtitle
         >
       </div>
-      <!-- <v-checkbox -->
-      <!-- :model-value="showTableView" -->
-      <!-- label="Table view" -->
-      <!-- density="compact" -->
-      <!-- hide-details -->
-      <!-- @update:model-value="handleShowTableViewChange" -->
-      <!-- /> -->
     </div>
     <v-row dense no-gutters class="pa-0">
       <v-col :cols="smAndDown ? 12 : 6">

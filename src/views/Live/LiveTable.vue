@@ -364,7 +364,7 @@ const handlePageChange = (page) => {
                 class="d-flex align-center justify-end"
               >
                 <v-btn
-                  variant="outlined"
+                  variant="text"
                   color="primary"
                   size="small"
                   @click="navigateToBoxScore($event, item)"

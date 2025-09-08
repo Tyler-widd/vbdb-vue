@@ -89,7 +89,7 @@ const handleTeamChange = (value) => {
 </script>
 
 <template>
-  <v-card class="mb-4 px-4 pt-4 pb-2">
+  <v-card class="px-4 pb-4 pt-2">
     <div class="d-flex align-center justify-space-between">
       <v-card-title class="pt-0">Live</v-card-title>
       <div class="d-flex align-center ga-3 flex-wrap">

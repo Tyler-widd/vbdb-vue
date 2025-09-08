@@ -1,8 +1,10 @@
 <!-- src/views/Rankings/RankingsTable.vue -->
 <script setup>
-import { computed } from "vue";
 import { useDisplay } from "vuetify";
+import { useRouter } from "vue-router";
+import { navigateToTeam } from "../../helpers/navigateToTeam.js";
 
+const router = useRouter();
 const { smAndDown } = useDisplay();
 
 const props = defineProps({
@@ -17,42 +19,16 @@ const props = defineProps({
 });
 
 // Define table headers
-const headers = computed(() => {
-  const baseHeaders = [
-    { title: "Rank", key: "rank", sortable: false, width: "70px" },
-    { title: "Team", key: "team_name", sortable: true },
-    { title: "Conference", key: "conference", sortable: true },
-    { title: "W", key: "wins", sortable: true, width: "60px", align: "center" },
-    {
-      title: "L",
-      key: "losses",
-      sortable: true,
-      width: "60px",
-      align: "center",
-    },
-    {
-      title: "Win %",
-      key: "winPercentage",
-      sortable: true,
-      width: "90px",
-      align: "center",
-    },
-    {
-      title: "Record",
-      key: "overall_record",
-      sortable: false,
-      width: "100px",
-      align: "center",
-    },
-  ];
-
-  // Hide conference column on small screens
-  if (smAndDown.value) {
-    return baseHeaders.filter((h) => h.key !== "conference");
-  }
-
-  return baseHeaders;
-});
+const headers = [
+  { title: "Team", key: "team_name", sortable: true },
+  { title: "W", key: "wins", sortable: true, align: "start" },
+  {
+    title: "L",
+    key: "losses",
+    sortable: true,
+    align: "start",
+  },
+];
 
 // Format win percentage for display
 const formatWinPercentage = (percentage) => {
@@ -71,61 +47,35 @@ const formatWinPercentage = (percentage) => {
       loading-text="Loading standings..."
       class="standings-table"
     >
-      <!-- Rank column -->
-      <template v-slot:item.rank="{ index }">
-        <span class="font-weight-bold">{{ index + 1 }}</span>
+      <template v-slot:header.team_name>
+        <span class="ml-2 pa-0">Team</span>
       </template>
 
       <!-- Team column with location -->
       <template v-slot:item.team_name="{ item }">
-        <div>
-          <span class="font-weight-medium">{{ item.team_name }}</span>
-          <div
-            v-if="item.location && !smAndDown"
-            class="text-caption text-grey"
-          >
-            {{ item.location }}
+        <div class="text-body-2 ml-2">
+          <div class="d-flex align-center">
+            <v-avatar :size="smAndDown ? '24' : '32'" class="mr-2">
+              <v-img :src="item.img" :alt="item.team_name" />
+            </v-avatar>
+
+            <span
+              :class="[
+                smAndDown ? 'text-body-2' : 'text-subtitle-1',
+                item.team1Id ? 'button-like' : '',
+              ]"
+              @click="
+                item.team_id ? navigateToTeam(router, item.team_id) : null
+              "
+            >
+              {{ item.team_name }}
+              <div class="text-caption text-grey">
+                {{ item.conference }}
+              </div>
+            </span>
           </div>
         </div>
-      </template>
-
-      <!-- Conference column -->
-      <template v-slot:item.conference="{ item }">
-        <v-chip size="small" variant="tonal">
-          {{ item.conference }}
-        </v-chip>
-      </template>
-
-      <!-- Win percentage with color coding -->
-      <template v-slot:item.winPercentage="{ item }">
-        <v-chip
-          :color="
-            item.winPercentage >= 0.7
-              ? 'success'
-              : item.winPercentage >= 0.5
-              ? 'info'
-              : item.winPercentage >= 0.3
-              ? 'warning'
-              : 'error'
-          "
-          variant="tonal"
-          size="small"
-        >
-          {{ formatWinPercentage(item.winPercentage) }}
-        </v-chip>
-      </template>
-
-      <!-- Overall record -->
-      <template v-slot:item.overall_record="{ item }">
-        <span class="font-weight-medium">{{ item.overall_record }}</span>
       </template>
     </v-data-table>
   </v-card>
 </template>
-
-<style scoped>
-.standings-table :deep(.v-data-table__td) {
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-</style>

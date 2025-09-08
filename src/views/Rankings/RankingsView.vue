@@ -1,11 +1,10 @@
-<!-- Rankings/RankingsView.vue -->
+<!-- views/Rankings/RankingsView.vue -->
 <script setup>
-import { ref, computed, watch } from "vue";
+import { computed, watch } from "vue";
 import RankingsHeader from "./RankingsHeader.vue";
 import RankingsTable from "./RankingsTable.vue";
 import { useScoresData } from "@/composables/useScoresData";
 
-// Use the scores data composable
 const {
   scores,
   loading,
@@ -17,53 +16,39 @@ const {
   setConferenceFilter,
 } = useScoresData();
 
-// Compute standings based on filters
+// local helpers
+const formatConference = (c) => {
+  if (c == null) return c;
+  const s = String(c).trim();
+  const m = s.match(/^(\d+)(?:\.0)?$/);
+  return m ? `Region ${m[1]}` : s;
+};
+
+// ---------- STRICT STANDINGS ----------
 const standings = computed(() => {
-  // Filter games based on selected division and conference
-  let filteredGames = scores.value;
+  const selected = new Set(
+    (conferenceFilter.value || []).map((c) => formatConference(c))
+  );
 
-  // Apply division filter
-  if (divisionFilter.value) {
-    filteredGames = filteredGames.filter(
-      (score) =>
-        score.team_1_division === divisionFilter.value ||
-        score.team_2_division === divisionFilter.value
-    );
-  }
+  // 1) Division gate: both teams must be in the chosen division
+  const div = divisionFilter.value;
+  const games = div
+    ? scores.value.filter(
+        (g) => g.team_1_division === div && g.team_2_division === div
+      )
+    : scores.value;
 
-  // Apply conference filter (multi-select)
-  if (conferenceFilter.value && conferenceFilter.value.length > 0) {
-    filteredGames = filteredGames.filter((score) => {
-      const team1Conf = formatConference(score.team_1_conference);
-      const team2Conf = formatConference(score.team_2_conference);
-      return (
-        conferenceFilter.value.includes(team1Conf) ||
-        conferenceFilter.value.includes(team2Conf)
-      );
-    });
-  }
+  // 2) Build stats keyed by team_id
+  const stats = new Map();
 
-  // Create a map to track team statistics
-  const teamStats = new Map();
-
-  // Process each game
-  filteredGames.forEach((game) => {
-    // Skip games where winner hasn't been determined yet
-    if (!game.winner_id) return;
-
-    const team1Id = game.team_1_id;
-    const team2Id = game.team_2_id;
-    const team1Name = game.team_1_name;
-    const team2Name = game.team_2_name;
-
-    // Initialize team stats if not exists
-    if (!teamStats.has(team1Id)) {
-      teamStats.set(team1Id, {
-        team_id: team1Id,
-        team_name: team1Name,
-        division: game.team_1_division || "Unknown",
-        conference: formatConference(game.team_1_conference) || "Unknown",
-        location: game.team_1_location || "",
+  const ensure = (id, name, conf, div, img) => {
+    if (!stats.has(id)) {
+      stats.set(id, {
+        img,
+        team_id: id,
+        team_name: name,
+        division: div || "Unknown",
+        conference: formatConference(conf) || "Unknown",
         wins: 0,
         losses: 0,
         games: 0,
@@ -71,103 +56,93 @@ const standings = computed(() => {
         setsLost: 0,
       });
     }
+    return stats.get(id);
+  };
 
-    if (!teamStats.has(team2Id)) {
-      teamStats.set(team2Id, {
-        team_id: team2Id,
-        team_name: team2Name,
-        division: game.team_2_division || "Unknown",
-        conference: formatConference(game.team_2_conference) || "Unknown",
-        location: game.team_2_location || "",
-        wins: 0,
-        losses: 0,
-        games: 0,
-        setsWon: 0,
-        setsLost: 0,
-      });
-    }
+  const shouldInclude = (conf) =>
+    selected.size === 0 || selected.has(formatConference(conf));
 
-    // Count sets won by each team
-    let team1Sets = 0;
-    let team2Sets = 0;
+  for (const g of games) {
+    // team meta
+    const t1 = {
+      id: g.team_1_id,
+      name: g.team_1_name ?? g.team_1,
+      conf: g.team_1_conference,
+      div: g.team_1_division,
+      img: g.team1Img,
+    };
+    const t2 = {
+      id: g.team_2_id,
+      name: g.team_2_name ?? g.team_2,
+      conf: g.team_2_conference,
+      div: g.team_2_division,
+      img: g.team2Img,
+    };
 
-    // Check each set
+    const inc1 = shouldInclude(t1.conf);
+    const inc2 = shouldInclude(t2.conf);
+
+    // count sets (from your original logic)
+    let s1 = 0;
+    let s2 = 0;
     for (let i = 1; i <= 5; i++) {
-      const team1Score = game[`set_${i}_team_1`];
-      const team2Score = game[`set_${i}_team_2`];
-
-      if (
-        team1Score !== null &&
-        team2Score !== null &&
-        team1Score !== 0 &&
-        team2Score !== 0
-      ) {
-        if (team1Score > team2Score) {
-          team1Sets++;
-        } else if (team2Score > team1Score) {
-          team2Sets++;
-        }
+      const a = g[`set_${i}_team_1`];
+      const b = g[`set_${i}_team_2`];
+      if (a != null && b != null && a !== 0 && b !== 0) {
+        if (a > b) s1++;
+        else if (b > a) s2++;
       }
     }
 
-    // Update game counts and set counts
-    teamStats.get(team1Id).games++;
-    teamStats.get(team2Id).games++;
-    teamStats.get(team1Id).setsWon += team1Sets;
-    teamStats.get(team1Id).setsLost += team2Sets;
-    teamStats.get(team2Id).setsWon += team2Sets;
-    teamStats.get(team2Id).setsLost += team1Sets;
-
-    // Update win/loss records based on winner_id
-    if (game.winner_id === team1Id) {
-      teamStats.get(team1Id).wins++;
-      teamStats.get(team2Id).losses++;
-    } else if (game.winner_id === team2Id) {
-      teamStats.get(team2Id).wins++;
-      teamStats.get(team1Id).losses++;
+    // increment per-team only if that team is included
+    if (inc1) {
+      const A = ensure(t1.id, t1.name, t1.conf, t1.div, t1.img);
+      A.games++;
+      A.setsWon += s1;
+      A.setsLost += s2;
     }
-  });
+    if (inc2) {
+      const B = ensure(t2.id, t2.name, t2.conf, t2.div, t2.img);
+      B.games++;
+      B.setsWon += s2;
+      B.setsLost += s1;
+    }
 
-  // Convert to array and calculate win percentages
-  const standingsArray = Array.from(teamStats.values()).map((team) => ({
-    ...team,
-    winPercentage: team.games > 0 ? team.wins / team.games : 0,
-    overall_record: `${team.wins}-${team.losses}`,
+    // wins / losses only for included teams
+    if (g.winner_id) {
+      const loserId = g.winner_id === t1.id ? t2.id : t1.id;
+      if (inc1 && g.winner_id === t1.id) stats.get(t1.id).wins++;
+      if (inc2 && g.winner_id === t2.id) stats.get(t2.id).wins++;
+      if (inc1 && loserId === t1.id) stats.get(t1.id).losses++;
+      if (inc2 && loserId === t2.id) stats.get(t2.id).losses++;
+    }
+  }
+
+  // 3) finalize
+  const rows = Array.from(stats.values()).map((t) => ({
+    ...t,
+    winPercentage: t.games ? t.wins / t.games : 0,
+    overall_record: `${t.wins}-${t.losses}`,
     setRatio:
-      team.setsLost > 0
-        ? (team.setsWon / team.setsLost).toFixed(2)
-        : team.setsWon.toFixed(2),
+      t.setsLost > 0
+        ? (t.setsWon / t.setsLost).toFixed(2)
+        : t.setsWon.toFixed(2),
   }));
 
-  // Sort by win percentage (descending), then by wins (descending), then by set ratio
-  return standingsArray.sort((a, b) => {
-    if (b.winPercentage !== a.winPercentage) {
+  // 4) sort
+  rows.sort((a, b) => {
+    if (b.winPercentage !== a.winPercentage)
       return b.winPercentage - a.winPercentage;
-    }
-    if (b.wins !== a.wins) {
-      return b.wins - a.wins;
-    }
+    if (b.wins !== a.wins) return b.wins - a.wins;
     return parseFloat(b.setRatio) - parseFloat(a.setRatio);
   });
+
+  return rows;
 });
 
-// Helper function to format conference names (copied from composable for local use)
-const formatConference = (conference) => {
-  if (!conference) return conference;
-
-  const numericMatch = conference.toString().match(/^(\d+)(?:\.0)?$/);
-  if (numericMatch) {
-    return `Region ${numericMatch[1]}`;
-  }
-
-  return conference;
-};
-
-// Watch for division changes to clear conference filter
-watch(divisionFilter, (newValue, oldValue) => {
-  if (newValue !== oldValue) {
-    setConferenceFilter([]);
-  }
+// reset conferences when division changes
+watch(divisionFilter, (n, o) => {
+  if (n !== o) setConferenceFilter([]);
 });
 </script>
 
@@ -178,10 +153,8 @@ watch(divisionFilter, (newValue, oldValue) => {
       :divisions="divisions"
       :conferences="conferences"
       :loading="loading"
-      :division-filter="divisionFilter"
-      :conference-filter="conferenceFilter"
-      @update:division-filter="setDivisionFilter"
-      @update:conference-filter="setConferenceFilter"
+      v-model:division-filter="divisionFilter"
+      v-model:conference-filter="conferenceFilter"
     />
     <RankingsTable :standings="standings" :loading="loading" />
   </div>

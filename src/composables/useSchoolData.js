@@ -10,14 +10,20 @@ export default function useSchoolData() {
     loading.value = true;
     error.value = null;
     try {
-      const response = await fetch(
-        "https://api.volleyballdatabased.com/schools",
-      );
+      const response = await fetch("https://api.volleyballdatabased.com/teams");
       if (!response.ok) {
         throw new Error("Failed to fetch schools data");
       }
       const data = await response.json();
-      schools.value = data;
+      schools.value = data.map((team) => ({
+        org_id: team.team_id,
+        name_official: team.name,
+        school_short: team.short_name,
+        division: team.division,
+        conference: team.conference,
+        img: team.logo,
+        avca_ranking: team.avca_ranking,
+      }));
     } catch (err) {
       error.value = err.message;
       console.error("Error fetching schools:", err);

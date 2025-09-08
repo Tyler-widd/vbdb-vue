@@ -122,7 +122,6 @@ const setThisMonth = () => {
 <template>
   <v-card class="px-4 pb-4 pt-2">
     <v-card-title class="pt-0">Schedule</v-card-title>
-
     <!-- First Row: Division and Conference -->
     <v-row dense no-gutters class="pa-0">
       <v-col :cols="smAndDown ? 12 : 6">
