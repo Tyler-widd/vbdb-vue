@@ -1,5 +1,5 @@
 // composables/useScheduleData.js
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 
 export function useScheduleData() {
   const scheduleData = ref([]);
@@ -14,55 +14,6 @@ export function useScheduleData() {
       D3: "D-III",
     };
     return divisionMap[division] || division;
-  };
-
-  // Helper function to convert MM-DD-YYYY to YYYY-MM-DD
-  const convertDateFormat = (dateString) => {
-    if (!dateString) return null;
-
-    // Handle MM-DD-YYYY format
-    const parts = dateString.split("-");
-    if (parts.length === 3) {
-      const [month, day, year] = parts;
-      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-    }
-
-    return dateString;
-  };
-
-  // Helper function to convert "06:00PM ET" to "18:00" (24-hour format)
-  const convertTimeFormat = (timeString) => {
-    if (!timeString) return null;
-
-    try {
-      // Remove timezone info (ET, CT, etc.)
-      const timeOnly = timeString
-        .replace(/\s+(ET|CT|MT|PT|EST|CST|MST|PST)$/i, "")
-        .trim();
-
-      // Parse 12-hour format
-      const timeRegex = /^(\d{1,2}):(\d{2})(AM|PM)$/i;
-      const match = timeOnly.match(timeRegex);
-
-      if (match) {
-        let [, hours, minutes, ampm] = match;
-        hours = parseInt(hours);
-
-        // Convert to 24-hour format
-        if (ampm.toUpperCase() === "PM" && hours !== 12) {
-          hours += 12;
-        } else if (ampm.toUpperCase() === "AM" && hours === 12) {
-          hours = 0;
-        }
-
-        return `${hours.toString().padStart(2, "0")}:${minutes}`;
-      }
-
-      return timeString; // Return as-is if parsing fails
-    } catch (error) {
-      console.warn("Error parsing time:", timeString, error);
-      return timeString;
-    }
   };
 
   // Helper function to transform game data
@@ -196,14 +147,6 @@ export function useScheduleData() {
       const uniqueData = removeDuplicateGames(transformedData);
 
       if (transformedData.length !== uniqueData.length) {
-        console.log(
-          `Removed ${
-            transformedData.length - uniqueData.length
-          } duplicate games`
-        );
-        console.log(
-          `Original count: ${transformedData.length}, Unique count: ${uniqueData.length}`
-        );
       }
 
       scheduleData.value = uniqueData;

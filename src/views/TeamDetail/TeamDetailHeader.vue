@@ -12,7 +12,6 @@ const emit = defineEmits(["update:year"]);
 const loading = ref(false);
 const school = ref(null);
 const selectedYear = ref("2025");
-const gamesData = ref([]);
 
 // Get the team_id from the route
 const teamId = computed(() => route.params.id);
@@ -22,24 +21,6 @@ const props = defineProps({
     type: String,
     default: "",
   },
-});
-
-// Generate year options from games data
-const yearOptions = computed(() => {
-  if (!gamesData.value.length) return ["2025", "2024", "2023", "2022"];
-
-  const years = [
-    ...new Set(
-      gamesData.value.map((game) => {
-        return game.date.split("/")[2];
-      })
-    ),
-    "2025",
-  ];
-
-  const uniqueYears = [...new Set(years)];
-
-  return uniqueYears.sort((a, b) => b - a);
 });
 
 // Fetch school data
@@ -53,29 +34,6 @@ const fetchSchoolData = async () => {
     console.error("Error fetching school data:", error);
   } finally {
     loading.value = false;
-  }
-};
-
-// Fetch games to get available years
-const fetchGamesForYears = async () => {
-  try {
-    const response = await fetch(
-      `https://api.volleyballdatabased.com/games/${teamId.value}`
-    );
-    if (response.ok) {
-      const data = await response.json();
-      gamesData.value = data;
-
-      // Set default year to most recent year with data
-      if (
-        yearOptions.value.length > 0 &&
-        !yearOptions.value.includes(selectedYear.value)
-      ) {
-        selectedYear.value = yearOptions.value[0];
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching games for years:", error);
   }
 };
 
@@ -96,19 +54,16 @@ watch(teamId, (newteamId) => {
   if (newteamId) {
     // Reset state
     school.value = null;
-    gamesData.value = [];
     selectedYear.value = "2025";
 
     // Fetch new data
     fetchSchoolData();
-    fetchGamesForYears();
     emit("update:year", selectedYear.value);
   }
 });
 
 onMounted(() => {
   fetchSchoolData();
-  fetchGamesForYears();
   emit("update:year", selectedYear.value);
 });
 </script>
@@ -140,7 +95,7 @@ onMounted(() => {
   </v-row>
 
   <!-- School found - display content -->
-  <v-row v-else>
+  <v-row v-else dense no-gutters>
     <v-col cols="12">
       <!-- Header Card with School Info -->
       <v-card class="mb-4 pa-2">
@@ -165,16 +120,6 @@ onMounted(() => {
             <div class="text-body-1">Record: {{ record }}</div>
           </v-col>
         </v-row>
-        <!-- <v-col :cols="smAndDown ? 12 : 3">
-          <v-select
-            label="Season"
-            v-model="selectedYear"
-            :items="yearOptions"
-            variant="outlined"
-            density="comfortable"
-            @update:model-value="handleYearChange"
-          />
-        </v-col> -->
       </v-card>
     </v-col>
   </v-row>

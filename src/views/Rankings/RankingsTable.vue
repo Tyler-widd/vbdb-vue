@@ -60,10 +60,8 @@ const formatWinPercentage = (percentage) => {
             </v-avatar>
 
             <span
-              :class="[
-                smAndDown ? 'text-body-2' : 'text-subtitle-1',
-                item.team1Id ? 'button-like' : '',
-              ]"
+              :class="[smAndDown ? 'text-body-2' : 'text-subtitle-1']"
+              class="button-like"
               @click="
                 item.team_id ? navigateToTeam(router, item.team_id) : null
               "

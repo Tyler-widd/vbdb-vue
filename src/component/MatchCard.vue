@@ -1,4 +1,4 @@
-<!-- components/MatchCard.vue (Updated) -->
+<!-- components/MatchCard.vue -->
 <script setup>
 import { computed } from "vue";
 import { useRouter } from "vue-router";
@@ -247,16 +247,35 @@ const getSetScoreColor = (teamScore, opponentScore, teamId) => {
         >
           <div class="text-center">
             <div v-if="time" class="text-caption text-medium-emphasis">
-              {{ time }}
-            </div>
-            <div class="text-body-1 text-medium-emphasis font-weight-bold">
-              VS
+              {{ time.replace("Attend:", "") }}
             </div>
           </div>
         </div>
       </div>
 
-      <v-divider class="my-1" />
+      <!-- Box Score and Date section - MOVED UP HERE -->
+      <div v-if="boxScore || time" class="d-flex flex-column align-center pa-0">
+        <span v-if="formattedDate" class="text-caption text-medium-emphasis">
+          {{ formattedDate }}
+        </span>
+        <v-btn
+          v-if="boxScore"
+          :href="boxScore"
+          target="_blank"
+          variant="text"
+          size="small"
+          color="primary"
+          prepend-icon="mdi-chart-box-outline"
+          class="pa-1"
+        >
+          <span v-if="$route.path !== '/scores'" class="text-caption"
+            >Box Score</span
+          >
+        </v-btn>
+        <div v-else-if="$route.path === '/scores'" class="text-caption">
+          {{ boxScore }}
+        </div>
+      </div>
 
       <!-- Team 2 Row -->
       <div class="d-flex align-center">
@@ -329,36 +348,6 @@ const getSetScoreColor = (teamScore, opponentScore, teamId) => {
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Box Score Link with Time (if available) -->
-      <div v-if="boxScore || time" class="d-flex justify-center align-center">
-        <div v-if="$route.path === '/scores'" class="text-caption pt-1">
-          {{ formattedDate }}
-        </div>
-        <v-btn
-          v-if="boxScore"
-          :href="boxScore"
-          target="_blank"
-          variant="text"
-          class="mb-1"
-          size="small"
-          color="primary"
-          prepend-icon="mdi-chart-box-outline"
-        >
-          Box Score
-          <div v-if="$route.path !== '/scores'">
-            {{ matchStatus === "completed" ? "Box Score" : "Live Stats" }}
-          </div>
-        </v-btn>
-        <span
-          v-if="time && boxScore"
-          class="mx-2 text-caption text-medium-emphasis"
-          >•</span
-        >
-        <span v-if="time" class="text-caption text-medium-emphasis">{{
-          time
-        }}</span>
       </div>
     </v-card>
   </div>
