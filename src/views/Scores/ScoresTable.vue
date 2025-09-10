@@ -1,6 +1,6 @@
 <!-- views/Scores/ScoresTable.vue -->
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useDisplay } from "vuetify";
 import { useRouter } from "vue-router";
 import { navigateToTeam } from "../../helpers/navigateToTeam.js";
@@ -23,28 +23,11 @@ const props = defineProps({
   },
 });
 
-// Define table headers
-const headers = computed(() => [
-  {
-    title: "Date",
-    key: "date",
-    sortable: true,
-    width: smAndDown.value ? "80px" : "120px",
-  },
-  {
-    title: "Teams",
-    key: "team_1",
-    sortable: true,
-    width: smAndDown.value ? "180px" : "240px", // Increased width for rankings
-  },
-  {
-    title: "Sets & Score",
-    key: "scoreAndSets",
-    sortable: false,
-    width: smAndDown.value ? "120px" : "280px",
-  },
-]);
+// Pagination state
+const currentPage = ref(1);
+const itemsPerColumn = 10; // Increased from 8 to show more scores
 
+// Navigate to box score
 const navigateToBoxScore = (event, item) => {
   if (item.boxScore) {
     event.stopPropagation();
@@ -68,7 +51,16 @@ const formatRank = (rank) => {
   return `#${rank}`;
 };
 
-// Format scores data for table
+// Get rank badge color based on ranking
+const getRankBadgeColor = (rank) => {
+  if (!rank) return "grey";
+  if (rank <= 5) return "warning"; // Top 5 - gold/yellow
+  if (rank <= 10) return "primary"; // Top 10 - blue
+  if (rank <= 25) return "success"; // Top 25 - green
+  return "info"; // Others - light blue
+};
+
+// Format scores data for display
 const formattedScores = computed(() => {
   if (!props.scores.length) return [];
 
@@ -148,7 +140,7 @@ const getTeamNameColor = (teamId, match) => {
   } else if (match.winnerId && match.winnerId !== teamId) {
     return "text-error";
   }
-  return "text-primary";
+  return "text-medium-emphasis";
 };
 
 // Get set score color
@@ -159,213 +151,290 @@ const getSetScoreColor = (teamScore, opponentScore) => {
   return "text-medium-emphasis";
 };
 
-// Get rank badge color based on ranking
-const getRankBadgeColor = (rank) => {
-  if (!rank) return "grey";
-  if (rank <= 5) return "warning"; // Top 5 - gold/yellow
-  if (rank <= 10) return "primary"; // Top 10 - blue
-  if (rank <= 25) return "success"; // Top 25 - green
-  return "info"; // Others - light blue
+// Calculate paginated matches
+const paginatedMatches = computed(() => {
+  const itemsPerPage = smAndDown.value ? itemsPerColumn : itemsPerColumn * 2;
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return formattedScores.value.slice(start, end);
+});
+
+// Split matches into two columns for desktop view
+const matchColumns = computed(() => {
+  if (smAndDown.value) {
+    return [paginatedMatches.value];
+  }
+
+  const midPoint = Math.ceil(paginatedMatches.value.length / 2);
+  return [
+    paginatedMatches.value.slice(0, midPoint),
+    paginatedMatches.value.slice(midPoint),
+  ];
+});
+
+// Calculate total pages
+const totalPages = computed(() => {
+  const itemsPerPage = smAndDown.value ? itemsPerColumn : itemsPerColumn * 2;
+  return Math.ceil(formattedScores.value.length / itemsPerPage);
+});
+
+// Handle page change
+const handlePageChange = (page) => {
+  currentPage.value = page;
 };
 </script>
 
 <template>
-  <v-card class="mt-4">
-    <v-data-table
-      :headers="headers"
-      :items="formattedScores"
-      :loading="loading"
-      :items-per-page="20"
-      no-data-text="No scores found"
-      loading-text="Loading scores..."
+  <div>
+    <!-- Loading state -->
+    <v-card v-if="loading" class="mt-4 pa-0">
+      <v-card-text class="text-center py-8">
+        <v-progress-circular indeterminate></v-progress-circular>
+        <div class="mt-4">Loading scores...</div>
+      </v-card-text>
+    </v-card>
+
+    <!-- No data state -->
+    <v-card
+      v-else-if="!formattedScores || formattedScores.length === 0"
+      class="mt-4 pa-0"
     >
-      <template v-slot:header.date>
-        <span class="ml-2 pa-0">Date</span>
-      </template>
+      <v-card-text class="text-center py-8 text-medium-emphasis">
+        No scores found
+      </v-card-text>
+    </v-card>
 
-      <!-- Date column -->
-      <template v-slot:item.date="{ item }">
-        <div class="text-body-2 ml-2">
-          {{ item.formattedDate }}
-          <!-- Add special indicator for ranked matchups -->
-          <v-chip
-            v-if="item.team1IsRanked && item.team2IsRanked"
-            size="x-small"
-            color="warning"
-            class="ml-1"
-            variant="tonal"
-          >
-            TOP
-          </v-chip>
-        </div>
-      </template>
+    <!-- Matches columns -->
+    <v-row v-else dense class="mt-4" no-gutters>
+      <v-col
+        v-for="(column, colIndex) in matchColumns"
+        :key="colIndex"
+        :cols="smAndDown ? 12 : 6"
+        :class="[
+          !smAndDown && colIndex === 0 ? 'pr-1' : '',
+          !smAndDown && colIndex === 1 ? 'pl-1' : '',
+        ]"
+      >
+        <v-card>
+          <!-- Header -->
+          <v-card-title class="d-flex align-center pa-3 bg-grey-darken-3">
+            <span class="text-subtitle-1" style="flex: 0.8">Date</span>
+            <span class="text-subtitle-1" style="flex: 1.5">Teams</span>
+            <span class="text-subtitle-1 text-right" style="flex: 1"
+              >Sets & Score</span
+            >
+          </v-card-title>
 
-      <!-- Teams column -->
-      <template v-slot:item.team_1="{ item }">
-        <div class="d-flex align-center my-2">
-          <!-- Team 1 -->
-          <div class="w-100">
-            <div class="d-flex align-center mb-1">
-              <v-avatar :size="smAndDown ? '24' : '32'" class="mr-2">
-                <v-img
-                  v-if="item.team1Img"
-                  :src="item.team1Img"
-                  :alt="item.team1Name"
-                />
-                <v-icon v-else :size="smAndDown ? '16' : '20'"
-                  >mdi-school</v-icon
-                >
-              </v-avatar>
-
-              <!-- Rank badge for team 1 -->
-              <v-chip
-                v-if="item.team1IsRanked"
-                :color="getRankBadgeColor(item.team1Rank)"
-                size="small"
-                class="mr-2"
-                variant="tonal"
-              >
-                {{ item.team1RankDisplay }}
-              </v-chip>
-
-              <span
-                :class="[
-                  smAndDown ? 'text-body-2' : 'text-subtitle-1',
-                  item.team1Id ? 'button-like' : '',
-                  getTeamNameColor(item.team1Id, item),
-                ]"
-                @click="
-                  item.team1Id
-                    ? navigateToTeam(router, item.team1Id, orgId)
-                    : null
-                "
-              >
-                {{ item.team1Name }}
-              </span>
-            </div>
-
-            <!-- Team 2 -->
-            <div class="d-flex align-center">
-              <v-avatar :size="smAndDown ? '24' : '32'" class="mr-2">
-                <v-img
-                  v-if="item.team2Img"
-                  :src="item.team2Img"
-                  :alt="item.team2Name"
-                />
-                <v-icon v-else :size="smAndDown ? '16' : '20'"
-                  >mdi-school</v-icon
-                >
-              </v-avatar>
-
-              <!-- Rank badge for team 2 -->
-              <v-chip
-                v-if="item.team2IsRanked"
-                :color="getRankBadgeColor(item.team2Rank)"
-                size="small"
-                class="mr-2"
-                variant="tonal"
-              >
-                {{ item.team2RankDisplay }}
-              </v-chip>
-
-              <span
-                :class="[
-                  smAndDown ? 'text-body-2' : 'text-subtitle-1',
-                  item.team2Id ? 'button-like' : '',
-                  getTeamNameColor(item.team2Id, item),
-                ]"
-                @click="
-                  item.team2Id
-                    ? navigateToTeam(router, item.team2Id, orgId)
-                    : null
-                "
-              >
-                {{ item.team2Name }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <!-- Combined Score & Sets column -->
-      <template v-slot:item.scoreAndSets="{ item }">
-        <div class="d-flex align-center">
-          <div class="d-flex flex-column align-center">
-            <!-- Team 1 score and sets -->
-            <div class="button-like" @click="navigateToBoxScore($event, item)">
-              <div class="d-flex align-center">
-                <span
-                  :class="[
-                    'mr-2',
-                    smAndDown ? 'text-body-2' : 'text-subtitle-1',
-                    getTeamNameColor(item.team1Id, item),
-                  ]"
-                >
-                  ({{ item.team1SetsWon }})
-                </span>
-                <div class="d-flex">
-                  <span class="mr-1">[</span>
-                  <template
-                    v-for="(set, index) in item.individualSets"
-                    :key="`team1-set-${index}`"
+          <!-- Matches list -->
+          <div v-for="(item, index) in column" :key="index">
+            <div class="d-flex align-stretch pa-3">
+              <!-- Date column -->
+              <div class="d-flex align-center" style="flex: 0.8">
+                <div>
+                  <div class="text-body-2">
+                    {{ item.formattedDate }}
+                  </div>
+                  <!-- Add special indicator for ranked matchups -->
+                  <v-chip
+                    v-if="item.team1IsRanked && item.team2IsRanked"
+                    size="x-small"
+                    color="warning"
+                    class="mt-1"
+                    variant="tonal"
                   >
-                    <span
-                      :class="[
-                        'text-caption mx-1',
-                        getSetScoreColor(set.team1Score, set.team2Score),
-                      ]"
-                    >
-                      {{ set.team1Score }}
-                    </span>
-                  </template>
-                  <span class="ml-1">]</span>
+                    TOP
+                  </v-chip>
                 </div>
               </div>
 
-              <!-- Team 2 score and sets -->
-              <div class="d-flex align-center">
-                <span
-                  :class="[
-                    'mr-2',
-                    smAndDown ? 'text-body-2' : 'text-subtitle-1',
-                    getTeamNameColor(item.team2Id, item),
-                  ]"
-                >
-                  ({{ item.team2SetsWon }})
-                </span>
-                <div class="d-flex">
-                  <span class="mr-1">[</span>
-                  <template
-                    v-for="(set, index) in item.individualSets"
-                    :key="`team2-set-${index}`"
-                  >
+              <!-- Teams column -->
+              <div class="d-flex align-center" style="flex: 1.5">
+                <div style="flex: 1">
+                  <!-- Team 1 -->
+                  <div class="d-flex align-center mb-2">
+                    <v-avatar
+                      :size="smAndDown ? 24 : 32"
+                      class="mr-2 flex-shrink-0"
+                    >
+                      <v-img
+                        v-if="item.team1Img"
+                        :src="item.team1Img"
+                        :alt="item.team1Name"
+                      />
+                      <v-icon v-else :size="smAndDown ? 16 : 20"
+                        >mdi-school</v-icon
+                      >
+                    </v-avatar>
+
+                    <!-- Rank badge for team 1 -->
+                    <v-chip
+                      v-if="item.team1IsRanked"
+                      :color="getRankBadgeColor(item.team1Rank)"
+                      size="small"
+                      class="mr-2 flex-shrink-0"
+                      variant="tonal"
+                    >
+                      {{ item.team1RankDisplay }}
+                    </v-chip>
+
                     <span
                       :class="[
-                        'text-caption mx-1',
-                        getSetScoreColor(set.team2Score, set.team1Score),
+                        smAndDown ? 'text-body-2' : 'text-subtitle-1',
+                        item.team1Id ? 'button-like' : '',
+                        getTeamNameColor(item.team1Id, item),
+                        'text-truncate',
                       ]"
+                      @click="
+                        item.team1Id
+                          ? navigateToTeam(router, item.team1Id, orgId)
+                          : null
+                      "
                     >
-                      {{ set.team2Score }}
+                      {{ item.team1Name }}
                     </span>
-                  </template>
-                  <span class="ml-1">]</span>
+                  </div>
+
+                  <!-- Team 2 -->
+                  <div class="d-flex align-center">
+                    <v-avatar
+                      :size="smAndDown ? 24 : 32"
+                      class="mr-2 flex-shrink-0"
+                    >
+                      <v-img
+                        v-if="item.team2Img"
+                        :src="item.team2Img"
+                        :alt="item.team2Name"
+                      />
+                      <v-icon v-else :size="smAndDown ? 16 : 20"
+                        >mdi-school</v-icon
+                      >
+                    </v-avatar>
+
+                    <!-- Rank badge for team 2 -->
+                    <v-chip
+                      v-if="item.team2IsRanked"
+                      :color="getRankBadgeColor(item.team2Rank)"
+                      size="small"
+                      class="mr-2 flex-shrink-0"
+                      variant="tonal"
+                    >
+                      {{ item.team2RankDisplay }}
+                    </v-chip>
+
+                    <span
+                      :class="[
+                        smAndDown ? 'text-body-2' : 'text-subtitle-1',
+                        item.team2Id ? 'button-like' : '',
+                        getTeamNameColor(item.team2Id, item),
+                        'text-truncate',
+                      ]"
+                      @click="
+                        item.team2Id
+                          ? navigateToTeam(router, item.team2Id, orgId)
+                          : null
+                      "
+                    >
+                      {{ item.team2Name }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Score & Sets column -->
+              <div class="d-flex align-center justify-end" style="flex: 1">
+                <div class="text-right">
+                  <div
+                    class="button-like"
+                    @click="navigateToBoxScore($event, item)"
+                  >
+                    <!-- Team 1 scores -->
+                    <div class="d-flex align-center justify-end mb-1">
+                      <div class="d-flex align-center">
+                        <span class="mr-1">[</span>
+                        <template
+                          v-for="(set, setIndex) in item.individualSets"
+                          :key="`team1-set-${setIndex}`"
+                        >
+                          <span
+                            :class="[
+                              'text-caption mx-1',
+                              getSetScoreColor(set.team1Score, set.team2Score),
+                            ]"
+                          >
+                            {{ set.team1Score }}
+                          </span>
+                        </template>
+                        <span class="ml-1 mr-2">]</span>
+                        <span
+                          :class="[
+                            smAndDown ? 'text-body-2' : 'text-subtitle-1',
+                            getTeamNameColor(item.team1Id, item),
+                            'font-weight-medium',
+                          ]"
+                        >
+                          ({{ item.team1SetsWon }})
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Team 2 scores -->
+                    <div class="d-flex align-center justify-end">
+                      <div class="d-flex align-center">
+                        <span class="mr-1">[</span>
+                        <template
+                          v-for="(set, setIndex) in item.individualSets"
+                          :key="`team2-set-${setIndex}`"
+                        >
+                          <span
+                            :class="[
+                              'text-caption mx-1',
+                              getSetScoreColor(set.team2Score, set.team1Score),
+                            ]"
+                          >
+                            {{ set.team2Score }}
+                          </span>
+                        </template>
+                        <span class="ml-1 mr-2">]</span>
+                        <span
+                          :class="[
+                            smAndDown ? 'text-body-2' : 'text-subtitle-1',
+                            getTeamNameColor(item.team2Id, item),
+                            'font-weight-medium',
+                          ]"
+                        >
+                          ({{ item.team2SetsWon }})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <!-- Add divider between matches (not after the last one) -->
+            <v-divider v-if="index < column.length - 1"></v-divider>
           </div>
-        </div>
-      </template>
-    </v-data-table>
-  </v-card>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Pagination (centered) -->
+    <v-card v-if="totalPages > 1" class="mt-2">
+      <v-pagination
+        v-model="currentPage"
+        :length="totalPages"
+        :total-visible="4"
+        rounded="circle"
+        @update:model-value="handlePageChange"
+      ></v-pagination>
+    </v-card>
+  </div>
 </template>
 
 <style scoped>
-.button-like {
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.button-like:hover {
-  opacity: 0.8;
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
