@@ -24,31 +24,27 @@ const formatConference = (c) => {
   return m ? `Region ${m[1]}` : s;
 };
 
-// ---------- STRICT STANDINGS ----------
+// ---------- FIXED STANDINGS ----------
 const standings = computed(() => {
   const selected = new Set(
     (conferenceFilter.value || []).map((c) => formatConference(c))
   );
 
-  // 1) Division gate: both teams must be in the chosen division
+  // 1) Get all games (don't filter by division here)
   const div = divisionFilter.value;
-  const games = div
-    ? scores.value.filter(
-        (g) => g.team_1_division === div && g.team_2_division === div
-      )
-    : scores.value;
+  const games = scores.value;
 
   // 2) Build stats keyed by team_id
   const stats = new Map();
 
-  const ensure = (id, name, conf, div, img) => {
+  const ensure = (id, name, conf, division, img) => {
     if (!stats.has(id)) {
       stats.set(id, {
         img,
         team_id: id,
         team_name: name,
-        division: div || "Unknown",
-        conference: formatConference(conf) || "Unknown",
+        division: division || "Unknown",
+        conference: formatConference(conf) || "",
         wins: 0,
         losses: 0,
         games: 0,
@@ -79,8 +75,20 @@ const standings = computed(() => {
       img: g.team2Img,
     };
 
-    const inc1 = shouldInclude(t1.conf);
-    const inc2 = shouldInclude(t2.conf);
+    // Check if teams match our division filter
+    const t1MatchesDivision = !div || t1.div === div;
+    const t2MatchesDivision = !div || t2.div === div;
+
+    // Check if teams match our conference filter
+    const t1MatchesConference = shouldInclude(t1.conf);
+    const t2MatchesConference = shouldInclude(t2.conf);
+
+    // Only include teams that match both division and conference filters
+    const inc1 = t1MatchesDivision && t1MatchesConference;
+    const inc2 = t2MatchesDivision && t2MatchesConference;
+
+    // Skip this game if neither team should be included
+    if (!inc1 && !inc2) continue;
 
     // count sets (from your original logic)
     let s1 = 0;

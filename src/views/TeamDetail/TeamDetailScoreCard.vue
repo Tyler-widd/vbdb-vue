@@ -392,13 +392,6 @@ const getResultColor = (item) => {
   return item.isWinner ? "text-success" : "text-error";
 };
 
-const getResultText = (item) => {
-  if (!item.hasResult) {
-    return item.time ? "" : "";
-  }
-  return item.isWinner ? "W" : "L";
-};
-
 const handleOpponentClick = (item) => {
   if (item.opponentId) {
     navigateToTeam(router, item.opponentId, props.orgId);

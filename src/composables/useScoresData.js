@@ -372,8 +372,48 @@ export function useScoresData() {
       // Build lookup map by org_id
       const schoolMap = new Map(schoolsData.map((s) => [String(s.org_id), s]));
 
-      // Attach logos to scores
-      scores.value = scoresData.map((game) => {
+      // Deduplicate games using multiple strategies
+      const uniqueGames = new Map();
+
+      scoresData.forEach((game) => {
+        // Create multiple possible keys for this game
+        const keys = [];
+
+        // Primary key: match_id if available
+        if (game.match_id) {
+          keys.push(`match_${game.match_id}`);
+        }
+
+        // Secondary key: date + teams (both orders)
+        const team1 = game.team_1_id || game.team_1;
+        const team2 = game.team_2_id || game.team_2;
+        const date = game.date;
+
+        if (team1 && team2 && date) {
+          keys.push(`teams_${date}_${team1}_${team2}`);
+          keys.push(`teams_${date}_${team2}_${team1}`); // Handle swapped teams
+        }
+
+        // Check if any of these keys already exist
+        const existingKey = keys.find((key) => uniqueGames.has(key));
+
+        if (!existingKey) {
+          // Use the first key as the primary key for this game
+          const primaryKey = keys[0];
+          uniqueGames.set(primaryKey, game);
+
+          // Also set all other keys to point to this same game (to catch future duplicates)
+          keys.slice(1).forEach((key) => {
+            uniqueGames.set(key, game);
+          });
+        }
+      });
+
+      // Get unique games (remove duplicates that were added for key mapping)
+      const uniqueGamesList = Array.from(new Set(uniqueGames.values()));
+
+      // Convert to final format and attach logos
+      scores.value = uniqueGamesList.map((game) => {
         const team1School = schoolMap.get(String(game.team_1_id));
         const team2School = schoolMap.get(String(game.team_2_id));
         return {
@@ -384,13 +424,16 @@ export function useScoresData() {
       });
 
       schools.value = schoolsData;
+
+      console.log(
+        `Loaded ${scoresData.length} total games, ${scores.value.length} unique games`
+      );
     } catch (err) {
       error.value = err.message || "Failed to fetch data";
     } finally {
       loading.value = false;
     }
   };
-
   const setDivisionFilter = (division) => {
     divisionFilter.value = division;
     // Clear dependent filters when division changes

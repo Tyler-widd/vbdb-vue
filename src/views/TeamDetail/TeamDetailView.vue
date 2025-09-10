@@ -31,7 +31,6 @@ watch(
   (newId) => {
     if (newId) {
       // Reset the year when navigating to a new team
-      selectedYear.value = "2024";
       record.value = "";
     }
   }
@@ -42,7 +41,6 @@ watch(
   () => props.id,
   (newId) => {
     if (newId) {
-      selectedYear.value = "2024";
       record.value = "";
     }
   }

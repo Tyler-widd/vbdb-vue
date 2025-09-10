@@ -37,11 +37,6 @@ const fetchSchoolData = async () => {
   }
 };
 
-const handleYearChange = (value) => {
-  selectedYear.value = value;
-  emit("update:year", value);
-};
-
 const formatConference = (conference) => {
   if (conference && conference.includes(".0")) {
     return `Region ${conference.replace(".0", "")}`;
@@ -54,8 +49,6 @@ watch(teamId, (newteamId) => {
   if (newteamId) {
     // Reset state
     school.value = null;
-    selectedYear.value = "2025";
-
     // Fetch new data
     fetchSchoolData();
     emit("update:year", selectedYear.value);

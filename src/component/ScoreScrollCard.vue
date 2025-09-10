@@ -15,9 +15,6 @@ const { smAndDown } = useDisplay();
 // Initialize router
 const router = useRouter();
 
-// Slide group refs
-const slider = ref(null);
-
 // Load live data on component mount
 onMounted(async () => {
   // Initial load with loading indicator
@@ -188,6 +185,16 @@ const gotoGame = (game) => {
 
 <template>
   <!-- Desktop: Grid layout -->
+  <v-app-bar
+    v-if="games.length === 0"
+    color="background"
+    :height="hasLiveMatches ? '60' : '48'"
+    :density="hasLiveMatches ? 'prominent' : 'default'"
+  >
+    <div class="d-flex align-center justify-center w-100">
+      <span class="text-h6 text-center">Volleyball scores simplified.</span>
+    </div>
+  </v-app-bar>
   <v-row v-if="!smAndDown" no-gutters class="justify-space-around">
     <v-col
       v-for="(game, index) in games"

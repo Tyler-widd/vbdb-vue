@@ -3,7 +3,6 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ScoreScrollCard from "../component/ScoreScrollCard.vue";
-import NavScoreCard from "../component/NavScoreCard.vue";
 import useLiveData from "@/composables/useLiveData.js";
 
 const router = useRouter();
@@ -47,17 +46,7 @@ const isActiveRoute = (routePath) => {
 
 <template>
   <div>
-    <!-- Top Scores Bar -->
-    <v-app-bar
-      color="background"
-      :height="hasLiveMatches ? '60' : '48'"
-      :density="hasLiveMatches ? 'prominent' : 'default'"
-    >
-      <ScoreScrollCard v-if="hasLiveMatches" />
-      <div v-else class="d-flex align-center justify-center w-100">
-        <span class="text-h6 text-center">Volleyball scores simplified.</span>
-      </div>
-    </v-app-bar>
+    <ScoreScrollCard />
 
     <!-- Main Navigation Bar -->
     <v-app-bar class="flat" color="surface">
