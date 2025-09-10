@@ -34,133 +34,6 @@ const props = defineProps({
   },
 });
 
-// Helper function to get filtered matches based on status checkboxes
-const getStatusFilteredMatches = () => {
-  let filtered = [...liveMatches.value];
-
-  // Filter out matches where first set is 0-0
-  filtered = filtered.filter((match) => {
-    const set1Team1 =
-      match.set_1_team_1 !== null && match.set_1_team_1 !== ""
-        ? parseInt(match.set_1_team_1, 10)
-        : null;
-    const set1Team2 =
-      match.set_1_team_2 !== null && match.set_1_team_2 !== ""
-        ? parseInt(match.set_1_team_2, 10)
-        : null;
-    return set1Team1 !== 0 || set1Team2 !== 0;
-  });
-
-  // Apply status filters
-  if (showOnlyLive.value) {
-    filtered = filtered.filter((match) => {
-      const formatted = formatLiveMatchForDisplay(match);
-      return formatted.status === "in_progress";
-    });
-  } else if (showCompleted.value) {
-    filtered = filtered.filter((match) => {
-      const formatted = formatLiveMatchForDisplay(match);
-      return formatted.status === "completed";
-    });
-  } else if (showUpcoming.value) {
-    filtered = filtered.filter((match) => {
-      const formatted = formatLiveMatchForDisplay(match);
-      return formatted.status === "not_started";
-    });
-  }
-
-  return filtered;
-};
-
-// Get unique divisions from live data - filtered by status
-const divisions = computed(() => {
-  const divisionSet = new Set();
-
-  // Use only matches that match the current status filter
-  const statusFilteredMatches = getStatusFilteredMatches();
-
-  statusFilteredMatches.forEach((match) => {
-    if (match.team_1_division) divisionSet.add(match.team_1_division);
-    if (match.team_2_division) divisionSet.add(match.team_2_division);
-  });
-
-  return Array.from(divisionSet).sort();
-});
-
-// Get available conferences based on selected division and status
-const conferences = computed(() => {
-  // Start with status-filtered matches
-  let matches = getStatusFilteredMatches();
-
-  // Filter by division if selected
-  if (divisionFilter.value) {
-    matches = matches.filter(
-      (match) =>
-        match.team_1_division === divisionFilter.value ||
-        match.team_2_division === divisionFilter.value
-    );
-  }
-
-  // Extract unique conferences from filtered matches
-  const confs = new Set();
-  matches.forEach((match) => {
-    if (match.team_1_conference) confs.add(match.team_1_conference);
-    if (match.team_2_conference) confs.add(match.team_2_conference);
-  });
-
-  return Array.from(confs).sort();
-});
-
-// Get available teams based on selected division, conference, and status
-const teams = computed(() => {
-  // Start with status-filtered matches
-  let matches = getStatusFilteredMatches();
-
-  // Filter by division if selected
-  if (divisionFilter.value) {
-    matches = matches.filter(
-      (match) =>
-        match.team_1_division === divisionFilter.value ||
-        match.team_2_division === divisionFilter.value
-    );
-  }
-
-  // Extract unique teams from filtered matches, but only include teams that belong to selected conferences
-  const teamSet = new Set();
-
-  matches.forEach((match) => {
-    // Add team 1 if no conference filter is selected, or if it belongs to selected conferences
-    if (match.team_1_name) {
-      if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
-        teamSet.add(match.team_1_name);
-      } else if (conferenceFilter.value.includes(match.team_1_conference)) {
-        teamSet.add(match.team_1_name);
-      }
-    }
-
-    // Add team 2 if no conference filter is selected, or if it belongs to selected conferences
-    if (match.team_2_name) {
-      if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
-        teamSet.add(match.team_2_name);
-      } else if (conferenceFilter.value.includes(match.team_2_conference)) {
-        teamSet.add(match.team_2_name);
-      }
-    }
-  });
-
-  return Array.from(teamSet).sort();
-});
-
-// Format date for display
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
-
 // Format live match data for display
 const formatLiveMatchForDisplay = (match) => {
   const scoreSummary = getScoreSummary(match);
@@ -180,6 +53,7 @@ const formatLiveMatchForDisplay = (match) => {
   let team2Wins = 0;
   let currentSet = null;
   let matchCompleted = false;
+  let hasAnyScores = false;
 
   sets.forEach((set, index) => {
     const team1Score =
@@ -188,6 +62,7 @@ const formatLiveMatchForDisplay = (match) => {
       set.team2 !== null && set.team2 !== "" ? parseInt(set.team2, 10) : null;
 
     if (team1Score !== null && team2Score !== null) {
+      hasAnyScores = true;
       const setNumber = index + 1;
       const minPoints = setNumber === 5 ? 15 : 25;
 
@@ -211,13 +86,15 @@ const formatLiveMatchForDisplay = (match) => {
   matchCompleted = team1Wins >= 3 || team2Wins >= 3;
 
   let winnerId = null;
-  let status = scoreSummary.status;
+  let status;
 
   if (matchCompleted) {
     winnerId = team1Wins > team2Wins ? match.team_1_id : match.team_2_id;
     status = "completed";
-  } else if (currentSet) {
+  } else if (hasAnyScores && currentSet) {
     status = "in_progress";
+  } else {
+    status = "not_started";
   }
 
   return {
@@ -254,84 +131,83 @@ const formatLiveMatchForDisplay = (match) => {
   };
 };
 
-// Get formatted matches
-const formattedMatches = computed(() => {
-  // Apply the same filtering logic
-  let filtered = [...liveMatches.value];
+// Format date for display
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
-  // Filter out matches where first set is 0-0
-  filtered = filtered.filter((match) => {
-    const set1Team1 =
-      match.set_1_team_1 !== null && match.set_1_team_1 !== ""
-        ? parseInt(match.set_1_team_1, 10)
-        : null;
-    const set1Team2 =
-      match.set_1_team_2 !== null && match.set_1_team_2 !== ""
-        ? parseInt(match.set_1_team_2, 10)
-        : null;
-    return set1Team1 !== 0 || set1Team2 !== 0;
+// Get formatted matches with all filtering applied
+const formattedMatches = computed(() => {
+  // Start with all matches and format them first
+  const allFormattedMatches = liveMatches.value.map(formatLiveMatchForDisplay);
+
+  // Filter out matches where first set is 0-0 (these are usually not real matches)
+  let filtered = allFormattedMatches.filter((match) => {
+    if (match.individualSets.length === 0) return true; // Allow upcoming matches with no scores
+    const firstSet = match.individualSets[0];
+    return !(
+      firstSet &&
+      firstSet.team1Score === 0 &&
+      firstSet.team2Score === 0
+    );
   });
 
   // Apply status filters
   if (showOnlyLive.value) {
-    filtered = filtered.filter((match) => {
-      const formatted = formatLiveMatchForDisplay(match);
-      return formatted.status === "in_progress";
-    });
+    filtered = filtered.filter((match) => match.status === "in_progress");
   } else if (showCompleted.value) {
-    filtered = filtered.filter((match) => {
-      const formatted = formatLiveMatchForDisplay(match);
-      return formatted.status === "completed";
-    });
+    filtered = filtered.filter((match) => match.status === "completed");
   } else if (showUpcoming.value) {
-    filtered = filtered.filter((match) => {
-      const formatted = formatLiveMatchForDisplay(match);
-      return formatted.status === "not_started";
-    });
+    filtered = filtered.filter((match) => match.status === "not_started");
   }
 
-  // Apply other filters
+  // Apply division filter
   if (divisionFilter.value) {
     filtered = filtered.filter(
       (match) =>
-        match.team_1_division === divisionFilter.value ||
-        match.team_2_division === divisionFilter.value
+        match.team1Division === divisionFilter.value ||
+        match.team2Division === divisionFilter.value
     );
   }
 
+  // Apply conference filter
   if (conferenceFilter.value && conferenceFilter.value.length > 0) {
     filtered = filtered.filter(
       (match) =>
-        conferenceFilter.value.includes(match.team_1_conference) ||
-        conferenceFilter.value.includes(match.team_2_conference)
+        conferenceFilter.value.includes(match.team1Conference) ||
+        conferenceFilter.value.includes(match.team2Conference)
     );
   }
 
+  // Apply team filter
   if (teamFilter.value && teamFilter.value.length > 0) {
     filtered = filtered.filter(
       (match) =>
-        teamFilter.value.includes(match.team_1_name) ||
-        teamFilter.value.includes(match.team_2_name)
+        teamFilter.value.includes(match.team1Name) ||
+        teamFilter.value.includes(match.team2Name)
     );
   }
 
+  // Apply search filter
   if (search.value) {
     const searchLower = search.value.toLowerCase();
     filtered = filtered.filter(
       (match) =>
-        match.team_1_name.toLowerCase().includes(searchLower) ||
-        match.team_2_name.toLowerCase().includes(searchLower) ||
-        match.date.includes(search.value) ||
-        (match.location &&
-          match.location.toLowerCase().includes(searchLower)) ||
-        (match.team_1_conference &&
-          match.team_1_conference.toLowerCase().includes(searchLower)) ||
-        (match.team_2_conference &&
-          match.team_2_conference.toLowerCase().includes(searchLower))
+        match.team1Name.toLowerCase().includes(searchLower) ||
+        match.team2Name.toLowerCase().includes(searchLower) ||
+        match.formattedDate.includes(search.value) ||
+        match.team1Conference.toLowerCase().includes(searchLower) ||
+        match.team2Conference.toLowerCase().includes(searchLower)
     );
   }
 
-  return filtered.map(formatLiveMatchForDisplay).sort((a, b) => {
+  // Sort by status and date
+  return filtered.sort((a, b) => {
     // Sort by status: in_progress first, then not_started, then completed
     const statusOrder = { in_progress: 0, not_started: 1, completed: 2 };
     const aOrder = statusOrder[a.status] || 3;
@@ -344,6 +220,99 @@ const formattedMatches = computed(() => {
     // Within same status, sort by date
     return new Date(a.formattedDate) - new Date(b.formattedDate);
   });
+});
+
+// Helper function to get filtered matches for computing available options
+const getBaseFilteredMatches = () => {
+  const allFormattedMatches = liveMatches.value.map(formatLiveMatchForDisplay);
+
+  // Apply status filter only
+  let filtered = allFormattedMatches;
+
+  if (showOnlyLive.value) {
+    filtered = filtered.filter((match) => match.status === "in_progress");
+  } else if (showCompleted.value) {
+    filtered = filtered.filter((match) => match.status === "completed");
+  } else if (showUpcoming.value) {
+    filtered = filtered.filter((match) => match.status === "not_started");
+  }
+
+  return filtered;
+};
+
+// Get unique divisions from filtered data
+const divisions = computed(() => {
+  const divisionSet = new Set();
+  const statusFilteredMatches = getBaseFilteredMatches();
+
+  statusFilteredMatches.forEach((match) => {
+    if (match.team1Division) divisionSet.add(match.team1Division);
+    if (match.team2Division) divisionSet.add(match.team2Division);
+  });
+
+  return Array.from(divisionSet).sort();
+});
+
+// Get available conferences based on selected division and status
+const conferences = computed(() => {
+  let matches = getBaseFilteredMatches();
+
+  // Filter by division if selected
+  if (divisionFilter.value) {
+    matches = matches.filter(
+      (match) =>
+        match.team1Division === divisionFilter.value ||
+        match.team2Division === divisionFilter.value
+    );
+  }
+
+  // Extract unique conferences from filtered matches
+  const confs = new Set();
+  matches.forEach((match) => {
+    if (match.team1Conference) confs.add(match.team1Conference);
+    if (match.team2Conference) confs.add(match.team2Conference);
+  });
+
+  return Array.from(confs).sort();
+});
+
+// Get available teams based on selected division, conference, and status
+const teams = computed(() => {
+  let matches = getBaseFilteredMatches();
+
+  // Filter by division if selected
+  if (divisionFilter.value) {
+    matches = matches.filter(
+      (match) =>
+        match.team1Division === divisionFilter.value ||
+        match.team2Division === divisionFilter.value
+    );
+  }
+
+  // Extract unique teams from filtered matches, but only include teams that belong to selected conferences
+  const teamSet = new Set();
+
+  matches.forEach((match) => {
+    // Add team 1 if no conference filter is selected, or if it belongs to selected conferences
+    if (match.team1Name) {
+      if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
+        teamSet.add(match.team1Name);
+      } else if (conferenceFilter.value.includes(match.team1Conference)) {
+        teamSet.add(match.team1Name);
+      }
+    }
+
+    // Add team 2 if no conference filter is selected, or if it belongs to selected conferences
+    if (match.team2Name) {
+      if (!conferenceFilter.value || conferenceFilter.value.length === 0) {
+        teamSet.add(match.team2Name);
+      } else if (conferenceFilter.value.includes(match.team2Conference)) {
+        teamSet.add(match.team2Name);
+      }
+    }
+  });
+
+  return Array.from(teamSet).sort();
 });
 
 // Event handlers
@@ -392,11 +361,6 @@ const updateShowUpcoming = (value) => {
   }
 };
 
-const handleRetry = () => {
-  error.value = null;
-  fetchLiveData();
-};
-
 // Fetch data on mount and start polling
 onMounted(() => {
   fetchLiveData();
@@ -443,5 +407,6 @@ watch(divisionFilter, () => {
     :formatted-matches="formattedMatches"
     :loading="loading"
     :org-id="orgId"
+    :show-upcoming="showUpcoming"
   />
 </template>
