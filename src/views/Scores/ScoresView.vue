@@ -31,6 +31,7 @@ const scoresData = useScoresData();
       :division-filter="scoresData.divisionFilter.value"
       :conference-filter="scoresData.conferenceFilter.value"
       :selected-teams="scoresData.teamFilter.value"
+      :search-text="scoresData.search.value"
       :show-table-view="showTableView"
       @update:division-filter="scoresData.setDivisionFilter"
       @update:conference-filter="scoresData.setConferenceFilter"
@@ -39,16 +40,10 @@ const scoresData = useScoresData();
       @update:show-table-view="showTableView = $event"
     />
 
-    <!-- Conditionally render either table or card view -->
     <ScoresTable
       :scores="scoresData.filteredScores.value"
       :loading="scoresData.loading.value"
       :org-id="orgId"
     />
-    <!-- <ScoresScoreCard -->
-    <!-- :scores="scoresData.filteredScores.value" -->
-    <!-- :loading="scoresData.loading.value" -->
-    <!-- :org-id="orgId" -->
-    <!-- /> -->
   </div>
 </template>

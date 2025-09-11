@@ -5,6 +5,7 @@ export function useScoresData() {
   // Reactive state
   const scores = ref([]);
   const schools = ref([]);
+  const teams = ref([]); // Add teams data
   const loading = ref(false);
   const error = ref(null);
   const divisionFilter = ref("D-I");
@@ -30,6 +31,139 @@ export function useScoresData() {
   const formatRank = (rank) => {
     if (!rank || rank === null) return null;
     return `#${rank}`;
+  };
+
+  // Helper function to enrich game data with team information
+  const enrichGameWithTeamData = (game, teamsData, schoolsData) => {
+    if (!teamsData || teamsData.length === 0) {
+      return game;
+    }
+
+    // Create lookup maps for efficient joining
+    const teamsByOrgId = new Map();
+    const teamsByShortName = new Map();
+    const teamsByName = new Map();
+    const schoolsByOrgId = new Map();
+
+    teamsData.forEach((team) => {
+      if (team.team_id) {
+        teamsByOrgId.set(team.team_id, team);
+      }
+      if (team.short_name) {
+        teamsByShortName.set(team.short_name.toLowerCase(), team);
+      }
+      if (team.name) {
+        teamsByName.set(team.name.toLowerCase(), team);
+      }
+    });
+
+    // Also create schools lookup for logos (fallback)
+    if (schoolsData) {
+      schoolsData.forEach((school) => {
+        if (school.org_id) {
+          schoolsByOrgId.set(String(school.org_id), school);
+        }
+      });
+    }
+
+    // Helper function to find team data with fallback logic
+    const findTeamData = (teamId, teamName) => {
+      let teamData = null;
+
+      // First try by team_id if provided
+      if (teamId) {
+        teamData = teamsByOrgId.get(teamId);
+      }
+
+      // If not found and teamName exists, try by short_name
+      if (!teamData && teamName) {
+        teamData = teamsByShortName.get(teamName.toLowerCase());
+      }
+
+      // If still not found, try by full name
+      if (!teamData && teamName) {
+        teamData = teamsByName.get(teamName.toLowerCase());
+      }
+
+      return teamData;
+    };
+
+    // Helper function to merge team data with priority to teams data
+    const mergeTeamData = (gameTeamData, teamData, schoolData, teamNumber) => {
+      const result = {};
+
+      // Use team data if available, otherwise fall back to game data
+      if (teamData) {
+        result[`team_${teamNumber}_id`] = teamData.team_id || gameTeamData.id;
+        result[`team_${teamNumber}_name`] =
+          teamData.short_name || teamData.name || gameTeamData.name;
+        result[`team_${teamNumber}_division`] =
+          teamData.division || gameTeamData.division;
+        result[`team_${teamNumber}_conference`] =
+          teamData.conference || gameTeamData.conference;
+        result[`team_${teamNumber}_rank`] =
+          teamData.avca_ranking || gameTeamData.rank;
+        // For logo, prefer team data, then school data, then game data
+        result[`team${teamNumber}Img`] =
+          teamData.logo || schoolData?.logo || gameTeamData.logo;
+      } else {
+        // Use game data as fallback
+        result[`team_${teamNumber}_id`] = gameTeamData.id;
+        result[`team_${teamNumber}_name`] = gameTeamData.name;
+        result[`team_${teamNumber}_division`] = gameTeamData.division;
+        result[`team_${teamNumber}_conference`] = gameTeamData.conference;
+        result[`team_${teamNumber}_rank`] = gameTeamData.rank;
+        result[`team${teamNumber}Img`] = schoolData?.logo || gameTeamData.logo;
+      }
+
+      return result;
+    };
+
+    // Extract current game data for both teams
+    const team1GameData = {
+      id: game.team_1_id,
+      name: game.team_1_name || game.team_1,
+      division: game.team_1_division,
+      conference: game.team_1_conference,
+      rank: game.team_1_rank,
+      logo: game.team1Img,
+    };
+
+    const team2GameData = {
+      id: game.team_2_id,
+      name: game.team_2_name || game.team_2,
+      division: game.team_2_division,
+      conference: game.team_2_conference,
+      rank: game.team_2_rank,
+      logo: game.team2Img,
+    };
+
+    // Find team data for both teams
+    const team1Data = findTeamData(
+      game.team_1_id,
+      game.team_1_name || game.team_1
+    );
+    const team2Data = findTeamData(
+      game.team_2_id,
+      game.team_2_name || game.team_2
+    );
+
+    // Find school data for logos (fallback)
+    const team1School = schoolsByOrgId.get(String(game.team_1_id));
+    const team2School = schoolsByOrgId.get(String(game.team_2_id));
+
+    // Merge team data with teams data taking priority
+    const team1Merged = mergeTeamData(team1GameData, team1Data, team1School, 1);
+    const team2Merged = mergeTeamData(team2GameData, team2Data, team2School, 2);
+
+    // Create the enriched game object
+    const enrichedGame = {
+      ...game,
+      ...team1Merged,
+      ...team2Merged,
+    };
+
+    return enrichedGame;
   };
 
   // Computed properties
@@ -78,7 +212,7 @@ export function useScoresData() {
   });
 
   // Get available teams based on selected division and conference
-  const teams = computed(() => {
+  const availableTeams = computed(() => {
     let filteredScores = scores.value;
 
     // Filter by division if selected
@@ -125,7 +259,7 @@ export function useScoresData() {
           formatConference(score.team_2_conference)
         );
 
-      // Add team 1 if it matches all filters
+      // Add team 1 if it matches all filters and has required data
       if (
         team1MatchesDivision &&
         team1MatchesConference &&
@@ -140,7 +274,7 @@ export function useScoresData() {
         });
       }
 
-      // Add team 2 if it matches all filters
+      // Add team 2 if it matches all filters and has required data
       if (
         team2MatchesDivision &&
         team2MatchesConference &&
@@ -290,7 +424,7 @@ export function useScoresData() {
   const filteredScores = computed(() => {
     let filtered = transformedScores.value;
 
-    // Apply division filter
+    // Apply division filter first
     if (divisionFilter.value) {
       filtered = filtered.filter(
         (score) =>
@@ -299,16 +433,20 @@ export function useScoresData() {
       );
     }
 
-    // Apply conference filter (array)
+    // Apply conference filter (array) - but only if we have conferences selected
     if (conferenceFilter.value && conferenceFilter.value.length > 0) {
-      filtered = filtered.filter(
-        (score) =>
-          conferenceFilter.value.includes(score.team_1_conference) ||
-          conferenceFilter.value.includes(score.team_2_conference)
-      );
+      filtered = filtered.filter((score) => {
+        const team1Conference = formatConference(score.team_1_conference);
+        const team2Conference = formatConference(score.team_2_conference);
+
+        return (
+          conferenceFilter.value.includes(team1Conference) ||
+          conferenceFilter.value.includes(team2Conference)
+        );
+      });
     }
 
-    // Apply team filter (now using team IDs)
+    // Apply team filter (using team IDs) - but only if we have teams selected
     if (teamFilter.value && teamFilter.value.length > 0) {
       filtered = filtered.filter(
         (score) =>
@@ -322,17 +460,27 @@ export function useScoresData() {
       filtered = filtered.filter((score) => score.has_ranked_team);
     }
 
-    // Apply search filter
-    if (search.value) {
-      const searchTerm = search.value.toLowerCase();
+    // Apply search filter last
+    if (search.value && search.value.trim() !== "") {
+      const searchTerm = search.value.toLowerCase().trim();
       filtered = filtered.filter(
         (score) =>
-          score.team_1_name?.toLowerCase().includes(searchTerm) ||
-          score.team_2_name?.toLowerCase().includes(searchTerm) ||
-          score.team_1_conference?.toLowerCase().includes(searchTerm) ||
-          score.team_2_conference?.toLowerCase().includes(searchTerm) ||
-          score.team_1_division?.toLowerCase().includes(searchTerm) ||
-          score.team_2_division?.toLowerCase().includes(searchTerm) ||
+          (score.team_1_name &&
+            score.team_1_name.toLowerCase().includes(searchTerm)) ||
+          (score.team_2_name &&
+            score.team_2_name.toLowerCase().includes(searchTerm)) ||
+          (score.team_1_conference &&
+            formatConference(score.team_1_conference)
+              .toLowerCase()
+              .includes(searchTerm)) ||
+          (score.team_2_conference &&
+            formatConference(score.team_2_conference)
+              .toLowerCase()
+              .includes(searchTerm)) ||
+          (score.team_1_division &&
+            score.team_1_division.toLowerCase().includes(searchTerm)) ||
+          (score.team_2_division &&
+            score.team_2_division.toLowerCase().includes(searchTerm)) ||
           (score.location && score.location.toLowerCase().includes(searchTerm))
       );
     }
@@ -357,19 +505,23 @@ export function useScoresData() {
     error.value = null;
 
     try {
-      // Fetch both scores and schools
-      const [scoresResponse, schoolsResponse] = await Promise.all([
-        fetch("https://api.volleyballdatabased.com/results"),
-        fetch("https://api.volleyballdatabased.com/schools"),
-      ]);
+      // Fetch scores, schools, and teams
+      const [scoresResponse, schoolsResponse, teamsResponse] =
+        await Promise.all([
+          fetch("https://api.volleyballdatabased.com/results"),
+          fetch("https://api.volleyballdatabased.com/schools"),
+          fetch("https://api.volleyballdatabased.com/teams"),
+        ]);
 
       if (!scoresResponse.ok) throw new Error("Failed to fetch scores data");
       if (!schoolsResponse.ok) throw new Error("Failed to fetch schools data");
+      if (!teamsResponse.ok) throw new Error("Failed to fetch teams data");
 
       const scoresData = await scoresResponse.json();
       const schoolsData = await schoolsResponse.json();
+      const teamsData = await teamsResponse.json();
 
-      // Build lookup map by org_id
+      // Build lookup map by org_id for schools (for fallback logos)
       const schoolMap = new Map(schoolsData.map((s) => [String(s.org_id), s]));
 
       // Deduplicate games using multiple strategies
@@ -412,18 +564,24 @@ export function useScoresData() {
       // Get unique games (remove duplicates that were added for key mapping)
       const uniqueGamesList = Array.from(new Set(uniqueGames.values()));
 
-      // Convert to final format and attach logos
+      // Convert to final format and enrich with team data
       scores.value = uniqueGamesList.map((game) => {
+        // First add basic school logo lookup
         const team1School = schoolMap.get(String(game.team_1_id));
         const team2School = schoolMap.get(String(game.team_2_id));
-        return {
+
+        const gameWithLogos = {
           ...game,
           team1Img: team1School?.logo || null,
           team2Img: team2School?.logo || null,
         };
+
+        // Then enrich with team data
+        return enrichGameWithTeamData(gameWithLogos, teamsData, schoolsData);
       });
 
       schools.value = schoolsData;
+      teams.value = teamsData;
 
       console.log(
         `Loaded ${scoresData.length} total games, ${scores.value.length} unique games`
@@ -434,21 +592,25 @@ export function useScoresData() {
       loading.value = false;
     }
   };
+
   const setDivisionFilter = (division) => {
     divisionFilter.value = division;
-    // Clear dependent filters when division changes
-    conferenceFilter.value = [];
-    teamFilter.value = [];
+    // Only clear dependent filters if division actually changed
+    // and we're not just clearing it
+    if (division !== null) {
+      conferenceFilter.value = [];
+      teamFilter.value = [];
+    }
   };
 
   const setConferenceFilter = (conferences) => {
-    conferenceFilter.value = conferences;
-    // Clear team filter when conference changes since available teams will change
+    conferenceFilter.value = Array.isArray(conferences) ? conferences : [];
+    // Only clear team filter if we're actually changing conferences
     teamFilter.value = [];
   };
 
   const setTeamFilter = (teams) => {
-    teamFilter.value = teams;
+    teamFilter.value = Array.isArray(teams) ? teams : [];
   };
 
   const setRankedOnlyFilter = (rankedOnly) => {
@@ -456,7 +618,7 @@ export function useScoresData() {
   };
 
   const setSearch = (searchTerm) => {
-    search.value = searchTerm;
+    search.value = searchTerm || "";
   };
 
   const clearFilters = () => {
@@ -484,7 +646,7 @@ export function useScoresData() {
     // Computed
     divisions,
     conferences,
-    teams,
+    teams: availableTeams, // Renamed for consistency
     rankedTeams,
     transformedScores,
     filteredScores,

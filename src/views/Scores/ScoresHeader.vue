@@ -124,9 +124,9 @@ const handleSearchChange = (value) => {
       </v-col>
       <v-col :cols="smAndDown ? 12 : 6">
         <v-text-field
-          label="Search"
           :model-value="searchText"
           @update:model-value="handleSearchChange"
+          label="Search"
           prepend-inner-icon="mdi-magnify"
           :class="smAndDown ? 'mb-2' : 'mb-2 ml-2'"
           :disabled="loading"

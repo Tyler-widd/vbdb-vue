@@ -32,6 +32,7 @@ export default function useLiveData() {
     // Create lookup maps for efficient joining
     const schoolsByOrgId = new Map();
     const schoolsByShortName = new Map();
+    const schoolsByName = new Map();
 
     schoolsData.forEach((school) => {
       if (school.team_id) {
@@ -40,48 +41,115 @@ export default function useLiveData() {
       if (school.school_short) {
         schoolsByShortName.set(school.school_short.toLowerCase(), school);
       }
+      if (school.short_name) {
+        schoolsByShortName.set(school.short_name.toLowerCase(), school);
+      }
+      if (school.name) {
+        schoolsByName.set(school.name.toLowerCase(), school);
+      }
     });
 
+    // Helper function to find school data with fallback logic
+    const findSchoolData = (teamId, teamName, currentData) => {
+      let schoolData = null;
+
+      // First try by team_id if provided
+      if (teamId) {
+        schoolData = schoolsByOrgId.get(teamId);
+      }
+
+      // If not found and teamName exists, try by short_name
+      if (!schoolData && teamName) {
+        schoolData = schoolsByShortName.get(teamName.toLowerCase());
+      }
+
+      // If still not found, try by full name
+      if (!schoolData && teamName) {
+        schoolData = schoolsByName.get(teamName.toLowerCase());
+      }
+
+      return schoolData;
+    };
+
+    // Helper function to merge team data with priority to schools data
+    const mergeTeamData = (liveTeamData, schoolData, teamNumber) => {
+      const result = {};
+
+      // Use school data if available, otherwise fall back to live data
+      if (schoolData) {
+        result[`team_${teamNumber}_id`] = schoolData.team_id || liveTeamData.id;
+        result[`team_${teamNumber}_name`] =
+          schoolData.short_name || schoolData.name || liveTeamData.name;
+        result[`team_${teamNumber}_logo`] =
+          schoolData.logo || liveTeamData.logo;
+        result[`team_${teamNumber}_division`] =
+          schoolData.division || liveTeamData.division;
+        result[`team_${teamNumber}_conference`] =
+          schoolData.conference || liveTeamData.conference;
+        result[`team_${teamNumber}_avca_ranking`] =
+          schoolData.avca_ranking || null;
+      } else {
+        // Use live data as fallback
+        result[`team_${teamNumber}_id`] = liveTeamData.id;
+        result[`team_${teamNumber}_name`] = liveTeamData.name;
+        result[`team_${teamNumber}_logo`] = liveTeamData.logo;
+        result[`team_${teamNumber}_division`] = liveTeamData.division;
+        result[`team_${teamNumber}_conference`] = liveTeamData.conference;
+        result[`team_${teamNumber}_avca_ranking`] = null;
+      }
+
+      return result;
+    };
+
     return matches.map((match) => {
-      // Try to find team 1's school data
-      let team1School = null;
-      // First try by team_id
-      if (match.team_1_id) {
-        team1School = schoolsByOrgId.get(match.team_1_id);
-      }
-      // If not found, try by school name
-      if (!team1School && match.team_1_name) {
-        team1School = schoolsByShortName.get(match.team_1_name.toLowerCase());
-      }
+      // Extract current live data for both teams
+      const team1LiveData = {
+        id: match.team_1_id,
+        name: match.team_1_name,
+        logo: match.team_1_logo,
+        division: match.team_1_division,
+        conference: match.team_1_conference,
+      };
 
-      // Try to find team 2's school data
-      let team2School = null;
-      // First try by team_id
-      if (match.team_2_id) {
-        team2School = schoolsByOrgId.get(match.team_2_id);
-      }
-      // If not found, try by school name
-      if (!team2School && match.team_2_name) {
-        team2School = schoolsByShortName.get(match.team_2_name.toLowerCase());
-      }
+      const team2LiveData = {
+        id: match.team_2_id,
+        name: match.team_2_name,
+        logo: match.team_2_logo,
+        division: match.team_2_division,
+        conference: match.team_2_conference,
+      };
 
-      // Add conference and AVCA ranking data to the match
-      return {
+      // Find school data for both teams
+      const team1School = findSchoolData(
+        match.team_1_id,
+        match.team_1_name,
+        team1LiveData
+      );
+      const team2School = findSchoolData(
+        match.team_2_id,
+        match.team_2_name,
+        team2LiveData
+      );
+
+      // Merge team data with school data taking priority
+      const team1Data = mergeTeamData(team1LiveData, team1School, 1);
+      const team2Data = mergeTeamData(team2LiveData, team2School, 2);
+
+      // Create the enriched match object
+      const enrichedMatch = {
         ...match,
-        team_1_conference: team1School?.conference || null,
-        team_2_conference: team2School?.conference || null,
-        team_1_avca_ranking: team1School?.avca_ranking || null,
-        team_2_avca_ranking: team2School?.avca_ranking || null,
-        team_1_division: team1School?.division || null,
-        team_2_division: team2School?.division || null,
+        ...team1Data,
+        ...team2Data,
         // If both teams are from the same conference, set a match conference
         conference:
-          team1School?.conference &&
-          team1School?.conference === team2School?.conference
-            ? team1School.conference
+          team1Data.team_1_conference &&
+          team1Data.team_1_conference === team2Data.team_2_conference
+            ? team1Data.team_1_conference
             : null,
         live_stats_url: match.live_stats_url || null,
       };
+
+      return enrichedMatch;
     });
   };
 

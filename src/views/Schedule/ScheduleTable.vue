@@ -407,14 +407,3 @@ const formattedSchedule = computed(() => {
     </v-data-table>
   </v-card>
 </template>
-
-<style scoped>
-.button-like {
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.button-like:hover {
-  opacity: 0.8;
-}
-</style>

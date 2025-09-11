@@ -298,6 +298,7 @@ const handlePageChange = (page) => {
                 <!-- Show scores for completed/in-progress matches -->
                 <div v-if="item.status !== 'not_started'" class="text-right">
                   <div
+                    :class="smAndDown ? 'text-body-2' : 'text-subtitle-1'"
                     class="button-like"
                     @click="navigateToBoxScore($event, item)"
                   >

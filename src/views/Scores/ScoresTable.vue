@@ -246,7 +246,6 @@ const handlePageChange = (page) => {
                   </v-chip>
                 </div>
               </div>
-
               <!-- Teams column -->
               <div class="d-flex align-center" style="flex: 1.5">
                 <div style="flex: 1">
@@ -344,6 +343,7 @@ const handlePageChange = (page) => {
               <div class="d-flex align-center justify-end" style="flex: 1">
                 <div class="text-right">
                   <div
+                    :class="smAndDown ? 'text-body-2' : 'text-subtitle-1'"
                     class="button-like"
                     @click="navigateToBoxScore($event, item)"
                   >
