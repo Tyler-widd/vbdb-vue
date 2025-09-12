@@ -3,7 +3,7 @@ import axios from 'axios'
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'https://api.volleyballdatabased.com',
   headers: {
-    'x-api-key': import.meta.env.VITE_API_KEY,
+    'x-api-key': import.meta.env.VITE_API_KEY || 'Office366!Starcraf1!',
     'Content-Type': 'application/json'
   }
 })
