@@ -1,5 +1,6 @@
 // composables/useLiveData.js
 import { ref, computed, onUnmounted } from "vue";
+import { vbdbApi } from "@/services/vbdbApi";
 
 export default function useLiveData() {
   const liveMatches = ref([]);
@@ -13,12 +14,8 @@ export default function useLiveData() {
   // Fetch schools data
   const fetchSchools = async () => {
     try {
-      const response = await fetch("https://api.volleyballdatabased.com/teams");
-      if (!response.ok) {
-        throw new Error("Failed to fetch schools data");
-      }
-      const data = await response.json();
-      schools.value = data;
+      const response = await vbdbApi.getTeams();
+      schools.value = response.data;
     } catch (err) {
       console.error("Error fetching schools:", err);
     }
@@ -167,11 +164,8 @@ export default function useLiveData() {
       }
 
       // Fetch live matches
-      const response = await fetch("https://api.volleyballdatabased.com/live");
-      if (!response.ok) {
-        throw new Error("Failed to fetch live data");
-      }
-      const data = await response.json();
+      const response = await vbdbApi.getLiveGames();
+      const data = response.data;
 
       // Enrich matches with conference and ranking data
       liveMatches.value = enrichLiveMatchesWithConference(data, schools.value);

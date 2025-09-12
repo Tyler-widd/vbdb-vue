@@ -1,5 +1,6 @@
 // composables/useScoresData.js
 import { ref, computed } from "vue";
+import { vbdbApi } from "@/services/vbdbApi";
 
 export function useScoresData() {
   // Reactive state
@@ -508,18 +509,14 @@ export function useScoresData() {
       // Fetch scores, schools, and teams
       const [scoresResponse, schoolsResponse, teamsResponse] =
         await Promise.all([
-          fetch("https://api.volleyballdatabased.com/results"),
-          fetch("https://api.volleyballdatabased.com/schools"),
-          fetch("https://api.volleyballdatabased.com/teams"),
+          vbdbApi.getResults(),
+          vbdbApi.getSchools(),
+          vbdbApi.getTeams(),
         ]);
 
-      if (!scoresResponse.ok) throw new Error("Failed to fetch scores data");
-      if (!schoolsResponse.ok) throw new Error("Failed to fetch schools data");
-      if (!teamsResponse.ok) throw new Error("Failed to fetch teams data");
-
-      const scoresData = await scoresResponse.json();
-      const schoolsData = await schoolsResponse.json();
-      const teamsData = await teamsResponse.json();
+      const scoresData = scoresResponse.data;
+      const schoolsData = schoolsResponse.data;
+      const teamsData = teamsResponse.data;
 
       // Build lookup map by org_id for schools (for fallback logos)
       const schoolMap = new Map(schoolsData.map((s) => [String(s.org_id), s]));
@@ -587,7 +584,7 @@ export function useScoresData() {
         `Loaded ${scoresData.length} total games, ${scores.value.length} unique games`
       );
     } catch (err) {
-      error.value = err.message || "Failed to fetch data";
+      error.value = err.message || err.response?.data?.message || "Failed to fetch data";
     } finally {
       loading.value = false;
     }

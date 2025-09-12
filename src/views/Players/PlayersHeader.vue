@@ -3,6 +3,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 import { usePlayersData } from "../../composables/usePlayersData";
+import { vbdbApi } from "@/services/vbdbApi";
 
 const { smAndDown } = useDisplay();
 const { loading, error } = usePlayersData();
@@ -42,13 +43,11 @@ onMounted(async () => {
     const divisions = ["D-I", "D-II", "D-III"];
     const promises = divisions.map(async (division) => {
       try {
-        const response = await fetch(
-          `https://api.volleyballdatabased.com/players?division=${division}&per_page=1000`,
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        const response = await vbdbApi.getPlayers({
+          division: division,
+          per_page: "1000"
+        });
+        const data = response.data;
         return data.players || [];
       } catch (err) {
         console.error(`Error loading ${division} players:`, err);

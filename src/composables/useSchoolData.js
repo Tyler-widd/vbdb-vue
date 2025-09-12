@@ -1,5 +1,6 @@
 // composables/useSchoolData.js
 import { ref } from "vue";
+import { vbdbApi } from "@/services/vbdbApi";
 
 export default function useSchoolData() {
   const schools = ref([]);
@@ -10,11 +11,8 @@ export default function useSchoolData() {
     loading.value = true;
     error.value = null;
     try {
-      const response = await fetch("https://api.volleyballdatabased.com/teams");
-      if (!response.ok) {
-        throw new Error("Failed to fetch schools data");
-      }
-      const data = await response.json();
+      const response = await vbdbApi.getTeams();
+      const data = response.data;
       schools.value = data.map((team) => ({
         org_id: team.team_id,
         name_official: team.name,
@@ -25,7 +23,7 @@ export default function useSchoolData() {
         avca_ranking: team.avca_ranking,
       }));
     } catch (err) {
-      error.value = err.message;
+      error.value = err.message || err.response?.data?.message || "Failed to fetch schools";
       console.error("Error fetching schools:", err);
     } finally {
       loading.value = false;

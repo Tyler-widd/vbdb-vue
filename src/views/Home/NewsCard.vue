@@ -1,6 +1,7 @@
 <!-- src/views/Home/News/NewsCard.vue -->
 <script>
 import { ref, onMounted, computed, watch } from "vue";
+import { vbdbApi } from "@/services/vbdbApi";
 
 export default {
   name: "NewsCard",
@@ -79,18 +80,10 @@ export default {
       error.value = null;
 
       try {
-        const response = await fetch(
-          "https://api.volleyballdatabased.com/news"
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        newsItems.value = data;
+        const response = await vbdbApi.getNews();
+        newsItems.value = response.data;
       } catch (err) {
-        error.value = `Failed to fetch news: ${err.message}`;
+        error.value = `Failed to fetch news: ${err.message || err.response?.data?.message || "Unknown error"}`;
         console.error("Error fetching news:", err);
       } finally {
         loading.value = false;

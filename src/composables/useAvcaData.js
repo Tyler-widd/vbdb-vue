@@ -1,5 +1,6 @@
 // composables/useAvcaData.js
 import { ref, onMounted } from "vue";
+import { vbdbApi } from "@/services/vbdbApi";
 
 export const useAvcaData = () => {
   const avcaData = ref([]);
@@ -11,17 +12,10 @@ export const useAvcaData = () => {
     error.value = null;
 
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch(
-        "https://api.volleyballdatabased.com/avca_rankings"
-      ); // or wherever your data comes from
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      avcaData.value = data;
+      const response = await vbdbApi.getAvcaRankings();
+      avcaData.value = response.data;
     } catch (err) {
-      error.value = err.message;
+      error.value = err.message || err.response?.data?.message || "Failed to fetch AVCA rankings";
       console.error("Error fetching AVCA data:", err);
     } finally {
       loading.value = false;

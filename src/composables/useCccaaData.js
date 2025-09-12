@@ -1,5 +1,6 @@
 // composables/useCccaaData.js
 import { ref, onMounted } from "vue";
+import { vbdbApi } from "@/services/vbdbApi";
 
 export const useCccaaData = () => {
   const loading = ref(false);
@@ -11,15 +12,8 @@ export const useCccaaData = () => {
     error.value = null;
 
     try {
-      const response = await fetch(
-        "https://api.volleyballdatabased.com/cccaa_standings"
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const response = await vbdbApi.getCccaaStandings();
+      const data = response.data;
       // Sort by win percentage (highest first)
       cccaaStandings.value = data.sort((a, b) => {
         const aWinPct = a.win_percentage || 0;
@@ -28,7 +22,7 @@ export const useCccaaData = () => {
       });
     } catch (err) {
       console.error("Error fetching CCCAA standings:", err);
-      error.value = err.message;
+      error.value = err.message || err.response?.data?.message || "Failed to fetch CCCAA standings";
       cccaaStandings.value = [];
     } finally {
       loading.value = false;

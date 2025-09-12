@@ -1,5 +1,6 @@
 // composables/usePlayersData.js
 import { ref } from "vue";
+import { vbdbApi } from "@/services/vbdbApi";
 
 export function usePlayersData() {
   const loading = ref(false);
@@ -77,14 +78,10 @@ export function usePlayersData() {
           params.append("search", search);
         }
 
-        const url = `https://api.volleyballdatabased.com/players?${params.toString()}`;
-
         try {
-          const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
+          const queryParams = Object.fromEntries(params.entries());
+          const response = await vbdbApi.getPlayers(queryParams);
+          const data = response.data;
           return data.players.map(formatPlayer);
         } catch (err) {
           console.error(`Error fetching ${div} players:`, err);
@@ -143,15 +140,12 @@ export function usePlayersData() {
   const getAllPlayers = async () => {
     try {
       // Fetch a limited set of players to populate filters
-      const response = await fetch(
-        "https://api.volleyballdatabased.com/players?division=D-I&per_page=1000",
-      );
+      const response = await vbdbApi.getPlayers({
+        division: "D-I",
+        per_page: "1000"
+      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = response.data;
       return data.players.map(formatPlayer);
     } catch (err) {
       console.error("Error fetching all players:", err);

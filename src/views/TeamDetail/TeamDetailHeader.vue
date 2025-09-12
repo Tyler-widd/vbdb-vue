@@ -3,6 +3,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useDisplay } from "vuetify";
+import { vbdbApi } from "@/services/vbdbApi";
 
 const { smAndDown } = useDisplay();
 const route = useRoute();
@@ -27,8 +28,8 @@ const props = defineProps({
 const fetchSchoolData = async () => {
   loading.value = true;
   try {
-    const response = await fetch("https://api.volleyballdatabased.com/teams");
-    const data = await response.json();
+    const response = await vbdbApi.getTeams();
+    const data = response.data;
     school.value = data.find((s) => s.team_id === teamId.value);
   } catch (error) {
     console.error("Error fetching school data:", error);

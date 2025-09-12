@@ -1,5 +1,6 @@
 // composables/useScheduleData.js
 import { computed, ref } from "vue";
+import { vbdbApi } from "@/services/vbdbApi";
 
 export function useScheduleData() {
   const scheduleData = ref([]);
@@ -133,13 +134,8 @@ export function useScheduleData() {
     error.value = null;
 
     try {
-      const response = await fetch(
-        "https://api.volleyballdatabased.com/schedule"
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const rawData = await response.json();
+      const response = await vbdbApi.getSchedule();
+      const rawData = response.data;
 
       // Transform the data to match expected format
       const transformedData = rawData.map(transformGameData);
@@ -151,7 +147,7 @@ export function useScheduleData() {
 
       scheduleData.value = uniqueData;
     } catch (err) {
-      error.value = err.message;
+      error.value = err.message || err.response?.data?.message || "Failed to fetch schedule";
       console.error("Error fetching schedule:", err);
     } finally {
       loading.value = false;

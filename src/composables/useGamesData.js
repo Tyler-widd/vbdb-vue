@@ -1,5 +1,6 @@
 // composables/useGamesData.js
 import { ref } from "vue";
+import { vbdbApi } from "@/services/vbdbApi";
 
 export function useGamesData() {
   const loading = ref(false);
@@ -35,31 +36,20 @@ export function useGamesData() {
     error.value = null;
 
     try {
-      let url = `https://api.volleyballdatabased.com/games`;
-      const params = new URLSearchParams();
-
+      const params = {};
+      
       if (date) {
-        params.append("date", date);
+        params.date = date;
       }
 
       if (orgId) {
-        params.append("orgId", orgId);
+        params.orgId = orgId;
       }
 
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
+      const response = await vbdbApi.getGames(params);
+      return response.data;
     } catch (err) {
-      error.value = err.message;
+      error.value = err.message || err.response?.data?.message || "Failed to fetch games";
       console.error("Error fetching games by date:", err);
       return [];
     } finally {
@@ -73,17 +63,9 @@ export function useGamesData() {
     error.value = null;
 
     try {
-      const url = orgId
-        ? `https://api.volleyballdatabased.com/${orgId}`
-        : `https://api.volleyballdatabased.com/`;
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const allGames = await response.json();
+      const params = orgId ? { orgId } : {};
+      const response = await vbdbApi.getGames(params);
+      const allGames = response.data;
 
       // Convert targetDate to YYYY-MM-DD format for comparison
       const dateParts = targetDate.split("/");
@@ -99,7 +81,7 @@ export function useGamesData() {
 
       return filteredGames;
     } catch (err) {
-      error.value = err.message;
+      error.value = err.message || err.response?.data?.message || "Failed to fetch games";
       console.error("Error fetching games:", err);
       return [];
     } finally {
